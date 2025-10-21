@@ -10,7 +10,7 @@ export default function FaceScan() {
   // โหลดโมเดล face-api.js
   useEffect(() => {
     const loadModels = async () => {
-      const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights";
+      const MODEL_URL = "/models";
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
