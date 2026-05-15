@@ -57,6 +57,8 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
+        if (!db) throw new Error("ไม่พบ Supabase client");
+
         profile = await AppLIFF.init();
         if (!profile) return;
 
@@ -93,8 +95,7 @@
               id,
               filename,
               preview_url,
-              watermark_url,
-              path
+              watermark_url
             )
           )
         `)
@@ -130,6 +131,8 @@
             ไม่พบรายการภาพใน Order นี้
           </div>
         `;
+        grid.classList.remove("hidden");
+        return;
       }
 
       items.forEach(item => {
@@ -139,6 +142,11 @@
           photo.preview_url ||
           "https://placehold.co/600x800?text=Photo";
 
+        const downloadUrl =
+          photo.preview_url ||
+          photo.watermark_url ||
+          "";
+
         const card = document.createElement("article");
         card.className = "bg-white rounded-3xl overflow-hidden shadow-sm";
 
@@ -147,11 +155,12 @@
 
           <div class="p-4">
             <p class="font-bold truncate">${escapeHtml(photo.filename || item.photo_id)}</p>
-            <p class="text-xs text-slate-500 mt-1">ดาวน์โหลดภาพต้นฉบับ</p>
+            <p class="text-xs text-slate-500 mt-1">ดาวน์โหลดภาพที่อนุมัติแล้ว</p>
 
             <button
-              onclick="downloadPhoto('${item.photo_id}', '${escapeAttr(photo.filename || item.photo_id)}')"
+              onclick="downloadFile('${escapeAttr(downloadUrl)}', '${escapeAttr(photo.filename || item.photo_id)}')"
               class="mt-4 w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
+              ${downloadUrl ? "" : "disabled"}
             >
               ดาวน์โหลด
             </button>
@@ -164,47 +173,19 @@
       grid.classList.remove("hidden");
     }
 
-    async function downloadPhoto(photoId, filename) {
-      try {
-        Swal.fire({
-          title: "กำลังเตรียมไฟล์...",
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
-
-        const { data: photo, error } = await db
-          .from("photos")
-          .select("*")
-          .eq("id", photoId)
-          .single();
-
-        if (error) throw error;
-
-        const fileUrl =
-          photo.original_url ||
-          photo.download_url ||
-          photo.public_url ||
-          photo.preview_url ||
-          photo.watermark_url;
-
-        if (!fileUrl) {
-          throw new Error("ไม่พบ URL สำหรับดาวน์โหลด");
-        }
-
-        const a = document.createElement("a");
-        a.href = fileUrl;
-        a.target = "_blank";
-        a.download = filename || "photo";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        Swal.close();
-
-      } catch (err) {
-        console.error(err);
-        Swal.fire("ดาวน์โหลดไม่สำเร็จ", err.message || "ไม่พบไฟล์", "error");
+    function downloadFile(url, filename) {
+      if (!url) {
+        Swal.fire("ไม่พบไฟล์", "ยังไม่มี URL สำหรับดาวน์โหลด", "warning");
+        return;
       }
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.download = filename || "photo";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     function goOrder() {
