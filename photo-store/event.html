@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Event Photos - KEITA PHOTO</title>
+  <title>KEITA PHOTO</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/promptpay-qr@0.5.0/dist/promptpay-qr.min.js"></script> -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 
 <body class="bg-slate-100 min-h-screen pb-32">
 
 <header class="bg-black text-white p-5 sticky top-0 z-40">
-  <a href="index.html" class="text-sm text-gray-300">← กลับหน้า Event</a>
+  <a href="index.html" class="text-sm text-gray-300">
+    ← กลับหน้า Event
+  </a>
 
-  <a href="download.html"class="inline-block mt-3 bg-white text-black px-4 py-2 rounded-xl font-semibold">ดาวน์โหลดรูปที่ซื้อแล้ว</a>
-  
   <div class="flex justify-between items-center mt-2 gap-3">
-    <h1 id="eventTitle" class="text-2xl font-bold">กำลังโหลด...</h1>
+    <h1 id="eventTitle" class="text-2xl font-bold">
+      กำลังโหลด...
+    </h1>
 
     <a
       id="faceSearchBtn"
@@ -32,12 +32,21 @@
 </header>
 
 <main class="max-w-7xl mx-auto p-4">
+
   <div class="mb-5">
-    <h2 class="text-xl font-bold text-slate-800">เลือกรูปภาพ</h2>
-    <p id="photoCount" class="text-sm text-slate-500">กำลังโหลด...</p>
+    <h2 class="text-xl font-bold text-slate-800">
+      เลือกรูปภาพ
+    </h2>
+
+    <p id="photoCount" class="text-sm text-slate-500">
+      กำลังโหลด...
+    </p>
   </div>
 
-  <div id="loading" class="text-center py-10 text-slate-500">
+  <div
+    id="loading"
+    class="text-center py-10 text-slate-500"
+  >
     กำลังโหลดรูปภาพ...
   </div>
 
@@ -45,18 +54,25 @@
     id="photoGrid"
     class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
   ></div>
+
 </main>
 
-<!-- CART BAR -->
+<!-- CART -->
 <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-2xl z-50">
   <div class="max-w-7xl mx-auto p-4">
+
     <div class="flex items-center justify-between gap-3">
+
       <div>
         <p class="font-bold text-slate-800">
-          ตะกร้า: <span id="cartCount">0</span> รูป
+          ตะกร้า:
+          <span id="cartCount">0</span>
+          รูป
         </p>
+
         <p class="text-sm text-slate-500">
-          รวม <span id="cartTotal">฿0</span>
+          รวม
+          <span id="cartTotal">฿0</span>
         </p>
       </div>
 
@@ -66,46 +82,74 @@
       >
         ชำระเงิน
       </button>
+
     </div>
+
   </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
-<div id="checkoutModal" class="hidden fixed inset-0 bg-black/60 z-[100] overflow-y-auto">
+<!-- MODAL -->
+<div
+  id="checkoutModal"
+  class="hidden fixed inset-0 bg-black/60 z-[100] overflow-y-auto"
+>
+
   <div class="max-w-2xl mx-auto p-4">
+
     <div class="bg-white rounded-2xl shadow p-5 mt-8 mb-8">
 
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">ชำระเงิน</h2>
-        <button onclick="closeCheckout()" class="text-slate-500 text-xl">✕</button>
+
+        <h2 class="text-xl font-bold">
+          ชำระเงิน
+        </h2>
+
+        <button
+          onclick="closeCheckout()"
+          class="text-slate-500 text-xl"
+        >
+          ✕
+        </button>
+
       </div>
 
-      <div id="checkoutList" class="space-y-3 mb-4"></div>
+      <div
+        id="checkoutList"
+        class="space-y-3 mb-4"
+      ></div>
 
       <div class="border-t pt-4 flex justify-between text-xl font-bold mb-5">
         <span>ยอดชำระ</span>
         <span id="checkoutTotal">฿0</span>
       </div>
 
+      <!-- QR -->
       <div class="bg-slate-100 rounded-2xl p-4 text-center mb-4">
-        <p class="font-bold text-lg">สแกนชำระเงิน</p>
+
+        <p class="font-bold text-lg">
+          สแกนชำระเงิน
+        </p>
 
         <img
-  id="qrImage"
-  src=""
-  class="mx-auto my-3 bg-white p-2 rounded-xl w-[240px] h-[240px]"
-  alt="PromptPay QR"
-/>
+          id="qrImage"
+          src=""
+          class="mx-auto my-3 bg-white p-2 rounded-xl w-[240px] h-[240px]"
+          alt="PromptPay QR"
+        />
 
         <p class="text-sm text-slate-600">
-          PromptPay: <span id="promptpayText">-</span>
+          PromptPay:
+          <span id="promptpayText">-</span>
         </p>
 
         <p class="text-sm font-bold text-slate-800 mt-1">
-          ยอดชำระ: <span id="qrAmount">฿0</span>
+          ยอดชำระ:
+          <span id="qrAmount">฿0</span>
         </p>
+
       </div>
 
+      <!-- FORM -->
       <input
         id="customerName"
         type="text"
@@ -138,154 +182,173 @@
       <div id="statusBox" class="mt-4 text-sm"></div>
 
     </div>
+
   </div>
+
 </div>
 
 <script src="js/config.js"></script>
 
 <script>
-  const PROMPTPAY_ID = "0936494961"; // เปลี่ยนเป็นเบอร์พร้อมเพย์ของร้าน
 
-  const params = new URLSearchParams(window.location.search);
-  const eventId = params.get("event");
+const PROMPTPAY_ID = "0936494961";
 
-  const eventTitle = document.getElementById("eventTitle");
-  const photoGrid = document.getElementById("photoGrid");
-  const loading = document.getElementById("loading");
-  const photoCount = document.getElementById("photoCount");
-  const faceSearchBtn = document.getElementById("faceSearchBtn");
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get("event");
 
-  const cartCount = document.getElementById("cartCount");
-  const cartTotal = document.getElementById("cartTotal");
-  const checkoutModal = document.getElementById("checkoutModal");
-  const checkoutList = document.getElementById("checkoutList");
-  const checkoutTotal = document.getElementById("checkoutTotal");
-  const statusBox = document.getElementById("statusBox");
-  const submitBtn = document.getElementById("submitBtn");
+const eventTitle = document.getElementById("eventTitle");
+const photoGrid = document.getElementById("photoGrid");
+const loading = document.getElementById("loading");
+const photoCount = document.getElementById("photoCount");
 
-  let allPhotos = [];
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const cartCount = document.getElementById("cartCount");
+const cartTotal = document.getElementById("cartTotal");
 
-  async function loadEvent() {
-    if (!eventId) {
-      eventTitle.innerText = "ไม่พบ Event";
-      loading.style.display = "none";
-      return;
-    }
+const checkoutModal = document.getElementById("checkoutModal");
+const checkoutList = document.getElementById("checkoutList");
+const checkoutTotal = document.getElementById("checkoutTotal");
 
-    faceSearchBtn.href = `search-face.html?event=${eventId}`;
+const statusBox = document.getElementById("statusBox");
+const submitBtn = document.getElementById("submitBtn");
 
-    const { data: eventData, error: eventError } = await supabaseClient
-      .from("events")
-      .select("*")
-      .eq("id", eventId)
-      .single();
+let allPhotos = [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    if (eventError) {
-      console.error(eventError);
-      eventTitle.innerText = "โหลด Event ไม่สำเร็จ";
-      loading.style.display = "none";
-      return;
-    }
+async function loadEvent() {
 
+  if (!eventId) {
+    eventTitle.innerText = "ไม่พบ Event";
+    return;
+  }
+
+  const { data: eventData } = await supabaseClient
+    .from("events")
+    .select("*")
+    .eq("id", eventId)
+    .single();
+
+  if (eventData) {
     eventTitle.innerText = eventData.title;
+  }
 
-    const { data: photos, error: photoError } = await supabaseClient
-      .from("photos")
-      .select("*")
-      .eq("event_id", eventId)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
+  const { data: photos, error } = await supabaseClient
+    .from("photos")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
-    loading.style.display = "none";
+  loading.style.display = "none";
 
-    if (photoError) {
-      console.error(photoError);
-      photoGrid.innerHTML = `
-        <div class="col-span-full bg-red-100 text-red-700 p-4 rounded-xl">
-          โหลดรูปไม่สำเร็จ
+  if (error) {
+
+    photoGrid.innerHTML = `
+      <div class="col-span-full bg-red-100 text-red-700 p-4 rounded-xl">
+        โหลดรูปไม่สำเร็จ
+      </div>
+    `;
+
+    return;
+  }
+
+  allPhotos = photos || [];
+
+  photoCount.innerText = `${allPhotos.length} รูป`;
+
+  renderPhotos();
+  updateCartBar();
+}
+
+function renderPhotos() {
+
+  if (allPhotos.length === 0) {
+
+    photoGrid.innerHTML = `
+      <div class="col-span-full bg-white p-6 rounded-xl text-center text-slate-500">
+        ยังไม่มีรูปภาพ
+      </div>
+    `;
+
+    return;
+  }
+
+  photoGrid.innerHTML = allPhotos.map(photo => {
+
+    const selected = cart.includes(photo.id);
+
+    return `
+      <div class="bg-white rounded-2xl overflow-hidden shadow">
+
+        <div class="aspect-square bg-slate-200">
+
+          <img
+            src="${photo.preview_url || photo.watermark_url}"
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+
         </div>
-      `;
-      return;
-    }
 
-    allPhotos = photos || [];
-    photoCount.innerText = `${allPhotos.length} รูป`;
+        <div class="p-3">
 
-    cart = cart.filter(id => allPhotos.some(photo => photo.id === id));
-    localStorage.setItem("cart", JSON.stringify(cart));
+          <p class="font-bold text-slate-800">
+            ฿${photo.price || 0}
+          </p>
 
-    renderPhotos();
-    updateCartBar();
-  }
+          <p class="text-xs text-slate-400 truncate mb-2">
+            ${photo.filename || ""}
+          </p>
 
-  function renderPhotos() {
-    if (allPhotos.length === 0) {
-      photoGrid.innerHTML = `
-        <div class="col-span-full bg-white p-6 rounded-xl text-center text-slate-500">
-          ยังไม่มีรูปภาพ
+          <button
+            onclick="toggleCart('${photo.id}')"
+            class="w-full ${selected ? 'bg-green-600' : 'bg-black'} text-white px-3 py-2 rounded-xl text-sm"
+          >
+            ${selected ? 'เลือกแล้ว' : 'เพิ่มลงตะกร้า'}
+          </button>
+
         </div>
-      `;
-      return;
-    }
 
-    photoGrid.innerHTML = allPhotos.map(photo => {
-      const selected = cart.includes(photo.id);
+      </div>
+    `;
+  }).join("");
+}
 
-      return `
-        <div class="bg-white rounded-2xl overflow-hidden shadow">
-          <div class="aspect-square bg-slate-200">
-            <img
-              src="${photo.preview_url || photo.watermark_url}"
-              class="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
+function toggleCart(photoId) {
 
-          <div class="p-3">
-            <p class="font-bold text-slate-800">฿${photo.price || 0}</p>
-            <p class="text-xs text-slate-400 truncate mb-2">
-              ${photo.filename || ""}
-            </p>
+  if (cart.includes(photoId)) {
 
-            <button
-              onclick="toggleCart('${photo.id}')"
-              class="w-full ${selected ? 'bg-green-600' : 'bg-black'} text-white px-3 py-2 rounded-xl text-sm"
-            >
-              ${selected ? 'เลือกแล้ว' : 'เพิ่มลงตะกร้า'}
-            </button>
-          </div>
-        </div>
-      `;
-    }).join("");
+    cart = cart.filter(id => id !== photoId);
+
+  } else {
+
+    cart.push(photoId);
   }
 
-  function toggleCart(photoId) {
-    if (cart.includes(photoId)) {
-      cart = cart.filter(id => id !== photoId);
-    } else {
-      cart.push(photoId);
-    }
+  localStorage.setItem("cart", JSON.stringify(cart));
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    renderPhotos();
-    updateCartBar();
-  }
+  renderPhotos();
+  updateCartBar();
+}
 
-  function getCartPhotos() {
-    return allPhotos.filter(photo => cart.includes(photo.id));
-  }
+function getCartPhotos() {
+  return allPhotos.filter(photo => cart.includes(photo.id));
+}
 
-  function updateCartBar() {
-    const cartPhotos = getCartPhotos();
-    const total = cartPhotos.reduce((sum, item) => sum + Number(item.price || 0), 0);
+function updateCartBar() {
 
-    cartCount.innerText = cartPhotos.length;
-    cartTotal.innerText = `฿${total}`;
-    checkoutTotal.innerText = `฿${total}`;
-  }
+  const cartPhotos = getCartPhotos();
 
-  function generatePromptPayQR(amount) {
+  const total = cartPhotos.reduce((sum, item) => {
+    return sum + Number(item.price || 0);
+  }, 0);
+
+  cartCount.innerText = cartPhotos.length;
+  cartTotal.innerText = `฿${total}`;
+  checkoutTotal.innerText = `฿${total}`;
+}
+
+function generatePromptPayQR(amount) {
+
   const qrImage = document.getElementById("qrImage");
   const promptpayText = document.getElementById("promptpayText");
   const qrAmount = document.getElementById("qrAmount");
@@ -296,86 +359,110 @@
   qrImage.src = `https://promptpay.io/${PROMPTPAY_ID}/${amount}.png`;
 }
 
-  function openCheckout() {
-    const cartPhotos = getCartPhotos();
+function openCheckout() {
 
-    if (cartPhotos.length === 0) {
-      alert("กรุณาเลือกรูปก่อน");
-      return;
-    }
+  const cartPhotos = getCartPhotos();
 
-    checkoutList.innerHTML = cartPhotos.map(photo => `
+  if (cartPhotos.length === 0) {
+    alert("กรุณาเลือกรูปก่อน");
+    return;
+  }
+
+  checkoutList.innerHTML = cartPhotos.map(photo => {
+
+    return `
       <div class="flex gap-3 items-center bg-slate-50 rounded-xl p-2">
+
         <img
           src="${photo.preview_url || photo.watermark_url}"
           class="w-16 h-16 object-cover rounded-xl"
         />
 
         <div class="flex-1">
-          <p class="font-semibold text-sm">${photo.filename || "Photo"}</p>
-          <p class="text-slate-500 text-sm">฿${photo.price || 0}</p>
+
+          <p class="font-semibold text-sm">
+            ${photo.filename || "Photo"}
+          </p>
+
+          <p class="text-slate-500 text-sm">
+            ฿${photo.price || 0}
+          </p>
+
         </div>
 
-        <button
-          onclick="toggleCart('${photo.id}'); openCheckout();"
-          class="text-red-600 text-sm"
-        >
-          ลบ
-        </button>
       </div>
-    `).join("");
+    `;
+  }).join("");
 
-    const total = cartPhotos.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const total = cartPhotos.reduce((sum, item) => {
+    return sum + Number(item.price || 0);
+  }, 0);
 
-    updateCartBar();
-    generatePromptPayQR(total);
+  generatePromptPayQR(total);
 
-    checkoutModal.classList.remove("hidden");
+  checkoutModal.classList.remove("hidden");
+}
+
+function closeCheckout() {
+  checkoutModal.classList.add("hidden");
+}
+
+async function submitOrder() {
+
+  const cartPhotos = getCartPhotos();
+
+  const total = cartPhotos.reduce((sum, item) => {
+    return sum + Number(item.price || 0);
+  }, 0);
+
+  const customerName =
+    document.getElementById("customerName").value.trim();
+
+  const customerPhone =
+    document.getElementById("customerPhone").value.trim();
+
+  const slipFile =
+    document.getElementById("slipInput").files[0];
+
+  if (cartPhotos.length === 0) {
+    alert("กรุณาเลือกรูปก่อน");
+    return;
   }
 
-  function closeCheckout() {
-    checkoutModal.classList.add("hidden");
+  if (!customerName || !customerPhone) {
+    alert("กรุณากรอกชื่อและเบอร์โทร");
+    return;
   }
 
-  async function submitOrder() {
-    const cartPhotos = getCartPhotos();
-    const total = cartPhotos.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  if (!slipFile) {
+    alert("กรุณาแนบสลิป");
+    return;
+  }
 
-    const customerName = document.getElementById("customerName").value.trim();
-    const customerPhone = document.getElementById("customerPhone").value.trim();
-    const slipFile = document.getElementById("slipInput").files[0];
+  submitBtn.disabled = true;
+  submitBtn.innerText = "กำลังบันทึก...";
 
-    if (cartPhotos.length === 0) {
-      alert("กรุณาเลือกรูปก่อน");
-      return;
-    }
+  const slipName =
+    `slip-${Date.now()}-${slipFile.name}`;
 
-    if (!customerName || !customerPhone) {
-      alert("กรุณากรอกชื่อและเบอร์โทร");
-      return;
-    }
-
-    if (!slipFile) {
-      alert("กรุณาแนบสลิป");
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.innerText = "กำลังบันทึก...";
-
-    const slipName = `slip-${Date.now()}-${slipFile.name}`;
-
-    const { error: uploadError } = await supabaseClient.storage
+  // upload slip
+  const { error: uploadError } =
+    await supabaseClient.storage
       .from("slips")
       .upload(slipName, slipFile);
 
-    if (uploadError) return showError(uploadError.message);
+  if (uploadError) {
+    return showError(uploadError.message);
+  }
 
-    const { data: slipUrlData } = supabaseClient.storage
+  const { data: slipUrlData } =
+    supabaseClient.storage
       .from("slips")
       .getPublicUrl(slipName);
 
-    const { data: userData, error: userError } = await supabaseClient
+  // create user
+  const { data: userData, error: userError } =
+    await supabaseClient
       .from("users")
       .insert({
         display_name: customerName,
@@ -385,9 +472,13 @@
       .select()
       .single();
 
-    if (userError) return showError(userError.message);
+  if (userError) {
+    return showError(userError.message);
+  }
 
-    const { data: orderData, error: orderError } = await supabaseClient
+  // create order
+  const { data: orderData, error: orderError } =
+    await supabaseClient
       .from("orders")
       .insert({
         user_id: userData.id,
@@ -396,24 +487,32 @@
         status: "paid",
         payment_method: "promptpay"
       })
-      .select()
+      .select("id, order_no")
       .single();
 
-    if (orderError) return showError(orderError.message);
+  if (orderError) {
+    return showError(orderError.message);
+  }
 
-    const orderItems = cartPhotos.map(photo => ({
-      order_id: orderData.id,
-      photo_id: photo.id,
-      price: photo.price || 0
-    }));
+  // order items
+  const orderItems = cartPhotos.map(photo => ({
+    order_id: orderData.id,
+    photo_id: photo.id,
+    price: photo.price || 0
+  }));
 
-    const { error: itemError } = await supabaseClient
+  const { error: itemError } =
+    await supabaseClient
       .from("order_items")
       .insert(orderItems);
 
-    if (itemError) return showError(itemError.message);
+  if (itemError) {
+    return showError(itemError.message);
+  }
 
-    const { error: paymentError } = await supabaseClient
+  // payment
+  const { error: paymentError } =
+    await supabaseClient
       .from("payments")
       .insert({
         order_id: orderData.id,
@@ -423,37 +522,68 @@
         status: "uploaded"
       });
 
-    if (paymentError) return showError(paymentError.message);
-
-    cart = [];
-    localStorage.removeItem("cart");
-
-    renderPhotos();
-    updateCartBar();
-
-    statusBox.innerHTML = `
-      <div class="bg-green-100 text-green-700 p-4 rounded-xl">
-        ✅ แจ้งชำระเงินสำเร็จ<br>
-        เลขคำสั่งซื้อ: <b>${orderData.order_no}</b><br>
-        รอแอดมินตรวจสอบสลิป
-      </div>
-    `;
-
-    submitBtn.innerText = "บันทึกสำเร็จ";
+  if (paymentError) {
+    return showError(paymentError.message);
   }
 
-  function showError(message) {
-    statusBox.innerHTML = `
-      <div class="bg-red-100 text-red-700 p-4 rounded-xl">
-        ❌ ${message}
+  cart = [];
+
+  localStorage.removeItem("cart");
+
+  renderPhotos();
+  updateCartBar();
+
+  statusBox.innerHTML = `
+    <div class="bg-green-100 text-green-700 p-4 rounded-xl text-center">
+
+      ✅ แจ้งชำระเงินสำเร็จ
+
+      <div class="text-sm mt-2">
+        เลขคำสั่งซื้อของคุณคือ
       </div>
-    `;
 
-    submitBtn.disabled = false;
-    submitBtn.innerText = "แจ้งชำระเงิน";
-  }
+      <div class="text-2xl font-bold my-2">
+        ${orderData.order_no}
+      </div>
 
-  loadEvent();
+      <button
+        onclick="copyOrderNo('${orderData.order_no}')"
+        class="bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
+      >
+        คัดลอกเลข Order
+      </button>
+
+      <p class="text-xs mt-3">
+        กรุณาบันทึกเลขนี้ไว้ ใช้สำหรับดาวน์โหลดรูปหลังแอดมินอนุมัติ
+      </p>
+
+    </div>
+  `;
+
+  submitBtn.innerText = "บันทึกสำเร็จ";
+}
+
+function showError(message) {
+
+  statusBox.innerHTML = `
+    <div class="bg-red-100 text-red-700 p-4 rounded-xl">
+      ❌ ${message}
+    </div>
+  `;
+
+  submitBtn.disabled = false;
+  submitBtn.innerText = "แจ้งชำระเงิน";
+}
+
+function copyOrderNo(orderNo) {
+
+  navigator.clipboard.writeText(orderNo);
+
+  alert("คัดลอกเลข Order แล้ว");
+}
+
+loadEvent();
+
 </script>
 
 </body>
