@@ -250,52 +250,85 @@
       }).join("");
     }
 
-    async function approveOrder(orderId) {
-      const result = await Swal.fire({
-        icon: "question",
-        title: "อนุมัติ Order?",
-        text: "ลูกค้าจะสามารถดาวน์โหลดภาพได้",
-        showCancelButton: true,
-        confirmButtonText: "อนุมัติ",
-        cancelButtonText: "ยกเลิก"
-      });
+   async function approveOrder(orderId) {
+  const result = await Swal.fire({
+    icon: "question",
+    title: "อนุมัติ Order?",
+    text: "ระบบจะแจ้ง LINE ให้ลูกค้าทันที",
+    showCancelButton: true,
+    confirmButtonText: "อนุมัติ",
+    cancelButtonText: "ยกเลิก"
+  });
 
-      if (!result.isConfirmed) return;
+  if (!result.isConfirmed) return;
 
-      try {
-        Swal.fire({
-          title: "กำลังอนุมัติ...",
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
+  try {
+    Swal.fire({
+      title: "กำลังอนุมัติ...",
+      text: "กำลังบันทึกสถานะและส่งแจ้งเตือน LINE",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
 
-        const { error: orderError } = await db
-          .from("orders")
-          .update({
-            status: "paid",
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", orderId);
+    const { error: orderError } = await db
+      .from("orders")
+      .update({
+        status: "paid",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", orderId);
 
-        if (orderError) throw orderError;
+    if (orderError) throw orderError;
 
-        const { error: paymentError } = await db
-          .from("payments")
-          .update({
-            status: "paid"
-          })
-          .eq("order_id", orderId);
+    const { error: paymentError } = await db
+      .from("payments")
+      .update({
+        status: "paid"
+      })
+      .eq("order_id", orderId);
 
-        if (paymentError) console.warn(paymentError.message);
-
-        Swal.fire("สำเร็จ", "อนุมัติ Order แล้ว", "success");
-        await loadOrders();
-
-      } catch (err) {
-        console.error(err);
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "อนุมัติไม่สำเร็จ", "error");
-      }
+    if (paymentError) {
+      console.warn("payments update error:", paymentError.message);
     }
+
+    const notifyRes = await fetch(
+      `${CONFIG.SUPABASE_URL}/functions/v1/send-order-approved`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          order_id: orderId
+        })
+      }
+    );
+
+    const notifyData = await notifyRes.json();
+
+    if (!notifyRes.ok || !notifyData.success) {
+      console.warn("LINE notify error:", notifyData);
+      Swal.fire(
+        "อนุมัติแล้ว แต่แจ้ง LINE ไม่สำเร็จ",
+        notifyData.error || "กรุณาตรวจสอบ Edge Function / LINE Token",
+        "warning"
+      );
+      await loadOrders();
+      return;
+    }
+
+    Swal.fire("สำเร็จ", "อนุมัติ Order และแจ้ง LINE ลูกค้าแล้ว", "success");
+    await loadOrders();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire(
+      "เกิดข้อผิดพลาด",
+      err.message || "อนุมัติไม่สำเร็จ",
+      "error"
+    );
+  }
+}
 
     async function rejectOrder(orderId) {
       const result = await Swal.fire({
