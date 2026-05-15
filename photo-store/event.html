@@ -281,23 +281,37 @@
     checkoutTotal.innerText = `฿${total}`;
   }
 
-  function generatePromptPayQR(amount) {
-    const canvas = document.getElementById("qrCanvas");
-    const promptpayText = document.getElementById("promptpayText");
-    const qrAmount = document.getElementById("qrAmount");
+  async function generatePromptPayQR(amount) {
 
-    promptpayText.innerText = PROMPTPAY_ID;
-    qrAmount.innerText = `฿${amount}`;
+  const canvas = document.getElementById("qrCanvas");
+  const promptpayText = document.getElementById("promptpayText");
+  const qrAmount = document.getElementById("qrAmount");
 
-    const payload = promptpay(PROMPTPAY_ID, {
-      amount: Number(amount)
-    });
+  promptpayText.innerText = PROMPTPAY_ID;
+  qrAmount.innerText = `฿${amount}`;
 
-    QRCode.toCanvas(canvas, payload, {
-      width: 240,
-      margin: 2
-    });
-  }
+  // ใช้ PromptPay API
+  const qrUrl =
+    `https://promptpay.io/${PROMPTPAY_ID}/${amount}.png`;
+
+  // โหลดรูป QR
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+
+  img.onload = function () {
+
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 240;
+    canvas.height = 240;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.drawImage(img, 0, 0, 240, 240);
+  };
+
+  img.src = qrUrl;
+}
 
   function openCheckout() {
     const cartPhotos = getCartPhotos();
