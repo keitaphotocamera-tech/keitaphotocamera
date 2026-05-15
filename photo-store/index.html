@@ -2,96 +2,271 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>KEITA PHOTO - Event</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Photo Store</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-
-<body class="bg-slate-100 min-h-screen">
-
-  <header class="bg-black text-white p-5">
-    <h1 class="text-2xl font-bold">KEITA PHOTO</h1>
-    <p class="text-sm text-gray-300">ระบบค้นหาและสั่งซื้อภาพงานวิ่ง</p>
-  </header>
-
-  <main class="p-4 max-w-5xl mx-auto">
-    <div class="mb-5">
-      <h2 class="text-xl font-bold text-slate-800">เลือกงาน Event</h2>
-      <p class="text-sm text-slate-500">เลือกงานที่ต้องการค้นหารูปภาพ</p>
-    </div>
-
-    <div id="loading" class="text-center text-slate-500 py-10">
-      กำลังโหลดข้อมูล...
-    </div>
-
-    <div id="eventGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
-  </main>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script src="js/config.js"></script>
+  <script src="js/liff-helper.js"></script>
 
-  <script>
-    async function loadEvents() {
-      const loading = document.getElementById("loading");
-      const eventGrid = document.getElementById("eventGrid");
-
-      const { data, error } = await supabaseClient
-        .from("events")
-        .select("*")
-        .eq("status", "published")
-        .order("event_date", { ascending: false });
-
-      loading.style.display = "none";
-
-      if (error) {
-        console.error(error);
-        eventGrid.innerHTML = `
-          <div class="col-span-full bg-red-100 text-red-700 p-4 rounded-xl">
-            โหลดข้อมูลไม่สำเร็จ: ${error.message}
-          </div>
-        `;
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        eventGrid.innerHTML = `
-          <div class="col-span-full bg-white p-6 rounded-xl text-center text-slate-500">
-            ยังไม่มี Event ที่เปิดใช้งาน
-          </div>
-        `;
-        return;
-      }
-
-      eventGrid.innerHTML = data.map(event => `
-        <div class="bg-white rounded-2xl shadow overflow-hidden">
-          <div class="h-44 bg-slate-300">
-            ${
-              event.cover_url
-                ? `<img src="${event.cover_url}" class="w-full h-full object-cover">`
-                : `<div class="w-full h-full flex items-center justify-center text-slate-500">ไม่มีภาพปก</div>`
-            }
-          </div>
-
-          <div class="p-4">
-            <h3 class="font-bold text-lg text-slate-800">${event.title}</h3>
-            <p class="text-sm text-slate-500 mt-1">${event.location || ""}</p>
-            <p class="text-sm text-slate-400 mt-1">${event.event_date || ""}</p>
-
-            <a 
-              href="event.html?event=${event.id}"
-              class="block mt-4 bg-black text-white text-center py-2 rounded-xl font-semibold"
-            >
-              ดูรูปภาพ
-            </a>
-          </div>
-        </div>
-      `).join("");
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
     }
 
-    loadEvents();
-  </script>
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
 
+    .line-clamp-1 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+
+    .line-clamp-2 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+  </style>
+</head>
+
+<body class="text-slate-800 safe-bottom">
+  <main class="max-w-4xl mx-auto px-4 pb-24">
+    <header class="sticky top-0 z-30 -mx-4 px-4 pt-4 pb-3 bg-white/90 backdrop-blur border-b border-slate-100">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs text-slate-500">LINE Mini App</p>
+          <h1 class="text-2xl font-bold text-slate-900">Photo Store</h1>
+          <p class="text-sm text-slate-500">เลือกงานถ่ายภาพที่ต้องการ</p>
+        </div>
+
+        <button onclick="goOrder()" class="shrink-0 rounded-full bg-slate-900 text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95">
+          ออเดอร์ของฉัน
+        </button>
+      </div>
+
+      <section id="profileBox" class="hidden mt-4 rounded-2xl bg-slate-50 border border-slate-100 p-3">
+        <div class="flex items-center gap-3">
+          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" alt="LINE Profile" />
+          <div class="min-w-0">
+            <p id="lineName" class="font-semibold line-clamp-1">-</p>
+            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <section class="mt-4">
+      <input
+        id="searchInput"
+        type="search"
+        oninput="searchEvents()"
+        placeholder="ค้นหาชื่องาน / สถานที่"
+        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none shadow-sm focus:ring-4 focus:ring-slate-900/10"
+      />
+    </section>
+
+    <section id="loadingBox" class="mt-8 text-center text-slate-500">
+      กำลังโหลดรายการ Event...
+    </section>
+
+    <section id="eventGrid" class="hidden mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4"></section>
+
+    <section id="emptyBox" class="hidden mt-12 text-center">
+      <div class="mx-auto w-20 h-20 rounded-full bg-white border border-slate-100 flex items-center justify-center text-4xl shadow-sm">📷</div>
+      <h2 class="mt-4 text-lg font-bold">ยังไม่มี Event</h2>
+      <p class="mt-1 text-sm text-slate-500">กรุณาเพิ่ม Event ในระบบ Admin ก่อน</p>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 safe-bottom">
+    <div class="max-w-4xl mx-auto grid grid-cols-3 text-xs font-semibold text-slate-500">
+      <a href="index.html" class="py-3 text-center text-slate-900 active:scale-95">🏠<br>หน้าแรก</a>
+      <a href="cart.html" class="py-3 text-center active:scale-95">🛒<br>ตะกร้า</a>
+      <a href="order.html" class="py-3 text-center active:scale-95">🧾<br>ออเดอร์</a>
+    </div>
+  </nav>
+
+  <script>
+    let profile = null;
+    let allEvents = [];
+    let filteredEvents = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        showProfile();
+        await saveUser();
+        await loadEvents();
+      } catch (err) {
+        console.error(err);
+        document.getElementById("loadingBox").classList.add("hidden");
+        Swal.fire("เกิดข้อผิดพลาด", err.message || "เปิดหน้าแรกไม่สำเร็จ", "error");
+      }
+    });
+
+    function showProfile() {
+      document.getElementById("profileBox").classList.remove("hidden");
+      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
+      document.getElementById("linePicture").src = profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+    }
+
+    async function saveUser() {
+      const { error } = await sb.from("users").upsert({
+        line_user_id: profile.userId,
+        line_display_name: profile.displayName || null,
+        line_picture: profile.pictureUrl || null,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: "line_user_id"
+      });
+
+      if (error) {
+        console.warn("users upsert error:", error.message);
+      }
+    }
+
+    async function loadEvents() {
+      const { data, error } = await sb
+        .from("events")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      allEvents = data || [];
+      filteredEvents = [...allEvents];
+
+      document.getElementById("loadingBox").classList.add("hidden");
+      renderEvents();
+    }
+
+    function renderEvents() {
+      const grid = document.getElementById("eventGrid");
+      const empty = document.getElementById("emptyBox");
+
+      grid.innerHTML = "";
+
+      if (!filteredEvents.length) {
+        grid.classList.add("hidden");
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      grid.classList.remove("hidden");
+
+      filteredEvents.forEach(event => {
+        const cover = getEventCover(event);
+        const title = event.name || event.title || "ไม่มีชื่องาน";
+        const desc = event.description || event.location || "เลือกดูภาพในงานนี้";
+        const dateText = formatDate(event.event_date || event.created_at);
+        const price = Number(event.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+
+        const card = document.createElement("article");
+        card.className = "overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-sm active:scale-[0.99]";
+        card.innerHTML = `
+          <button onclick="openEvent('${event.id}')" class="block w-full text-left">
+            <div class="aspect-[16/10] bg-slate-200 overflow-hidden">
+              <img src="${cover}" alt="${escapeHtml(title)}" class="w-full h-full object-cover" loading="lazy" />
+            </div>
+
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h2 class="font-bold text-lg text-slate-900 line-clamp-1">${escapeHtml(title)}</h2>
+                  <p class="mt-1 text-sm text-slate-500 line-clamp-2">${escapeHtml(desc)}</p>
+                </div>
+                <span class="shrink-0 rounded-full bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1">฿${formatMoney(price)}</span>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between text-sm">
+                <span class="text-slate-500">${dateText}</span>
+                <span class="font-bold text-slate-900">ดูภาพ →</span>
+              </div>
+            </div>
+          </button>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function searchEvents() {
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      if (!keyword) {
+        filteredEvents = [...allEvents];
+      } else {
+        filteredEvents = allEvents.filter(event => {
+          const text = [
+            event.name,
+            event.title,
+            event.description,
+            event.location,
+            event.id
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          return text.includes(keyword);
+        });
+      }
+
+      renderEvents();
+    }
+
+    function openEvent(eventId) {
+      window.location.href = `event.html?event=${encodeURIComponent(eventId)}`;
+    }
+
+    function goOrder() {
+      window.location.href = "order.html";
+    }
+
+    function getEventCover(event) {
+      return (
+        event.cover_url ||
+        event.thumbnail_url ||
+        event.image_url ||
+        event.banner_url ||
+        "https://placehold.co/1200x750?text=PHOTO+EVENT"
+      );
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "";
+      return new Date(dateString).toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
