@@ -23,10 +23,6 @@ window.AppLIFF = {
     return profile;
   },
 
-  getProfile() {
-    return this.profile;
-  },
-
   getLineUserId() {
     return localStorage.getItem("line_user_id");
   },
