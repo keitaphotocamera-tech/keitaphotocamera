@@ -90,20 +90,19 @@
       const { data, error } = await db
         .from("orders")
         .select(`
-          *,
-          order_items (
-            id,
-            photo_id,
-            price,
-            photos (
-            id,
-            filename,
-            preview_url,
-            watermark_url,
-            full_url
-            )
-          )
-        `)
+  *,
+  order_items (
+    id,
+    photo_id,
+    price,
+    photos (
+      id,
+      filename,
+      preview_url,
+      watermark_url
+    )
+  )
+`)
         .eq("line_user_id", profile.userId)
         .order("created_at", { ascending: false });
 
@@ -179,7 +178,6 @@
         const img =
         photo.watermark_url ||
         photo.preview_url ||
-        photo.full_url ||
         "https://placehold.co/300x400?text=Photo";
 
         return `
