@@ -22,7 +22,7 @@
         <div>
           <p class="text-xs text-slate-500">LINE Mini App</p>
           <h1 class="text-xl font-bold">ชำระเงิน</h1>
-          <p class="text-sm text-slate-500">ตรวจสอบรายการก่อนชำระเงิน</p>
+          <p class="text-sm text-slate-500">ตรวจสอบรายการและแนบสลิป</p>
         </div>
 
         <button onclick="goCart()" class="bg-white border border-slate-200 rounded-full px-4 py-2 font-bold">
@@ -47,33 +47,22 @@
       <h2 class="font-bold text-lg mb-4">ชำระเงินผ่าน PromptPay</h2>
 
       <div class="flex flex-col items-center">
+        <img id="qrImage" class="w-72 max-w-full rounded-2xl border border-slate-200 bg-white" />
 
-        <img
-          id="qrImage"
-          class="w-72 max-w-full rounded-2xl border border-slate-200"
-        />
+        <p class="mt-4 text-sm text-slate-500">PromptPay</p>
+        <p id="promptpayNumber" class="font-bold text-xl">-</p>
 
-        <p class="mt-4 text-sm text-slate-500">
-          PromptPay
+        <p class="mt-2 text-sm text-slate-500">ยอดชำระ</p>
+        <p id="totalAmountText" class="text-4xl font-bold text-emerald-600">฿0.00</p>
+
+        <p class="mt-3 text-xs text-slate-400 text-center">
+          หลังชำระเงิน กรุณาแนบสลิปเพื่อให้แอดมินตรวจสอบ
         </p>
-
-        <p id="promptpayNumber" class="font-bold text-xl">
-          -
-        </p>
-
-        <p class="mt-2 text-sm text-slate-500">
-          ยอดชำระ
-        </p>
-
-        <p id="totalAmountText" class="text-4xl font-bold text-emerald-600">
-          ฿0.00
-        </p>
-
       </div>
     </section>
 
     <section class="bg-white rounded-3xl p-5 shadow-sm mt-4">
-      <h2 class="font-bold text-lg mb-4">แนบสลิป</h2>
+      <h2 class="font-bold text-lg mb-4">แนบสลิปชำระเงิน</h2>
 
       <input
         id="slipInput"
@@ -103,9 +92,9 @@
         <button
           id="submitBtn"
           onclick="submitOrder()"
-          class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold"
+          class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
         >
-          ยืนยันการชำระเงิน
+          ยืนยันส่งสลิป
         </button>
       </div>
     </div>
@@ -118,9 +107,11 @@
     let cartKey = null;
     let cart = [];
     let eventId = null;
+    let isSubmitting = false;
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
+        if (!db) throw new Error("ไม่พบ Supabase client");
 
         profile = await AppLIFF.init();
         if (!profile) return;
@@ -128,7 +119,6 @@
         cartKey = AppLIFF.getCartKey();
 
         showProfile();
-
         loadCart();
 
         if (!cart.length) {
@@ -140,16 +130,13 @@
           }).then(() => {
             window.location.href = "index.html";
           });
-
           return;
         }
 
         renderCart();
         generateQR();
 
-        document
-          .getElementById("slipInput")
-          .addEventListener("change", previewSlip);
+        document.getElementById("slipInput").addEventListener("change", previewSlip);
 
       } catch (err) {
         console.error(err);
@@ -166,39 +153,38 @@
 
     function loadCart() {
       cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      cart = cart.filter(item => item && item.photo_id);
 
       if (cart.length > 0) {
-        eventId = cart[0].event_id;
+        eventId = cart[0].event_id || getEventIdFromUrl();
       }
+    }
+
+    function getEventIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("event") || params.get("event_id") || params.get("id") || null;
     }
 
     function renderCart() {
       const list = document.getElementById("cartList");
-
       list.innerHTML = "";
 
       cart.forEach(item => {
+        const img =
+          item.preview_url ||
+          item.watermark_url ||
+          item.watermarked_url ||
+          "https://placehold.co/300x400?text=Photo";
 
         const card = document.createElement("article");
-
-        card.className =
-          "bg-white rounded-3xl p-3 shadow-sm flex gap-3";
+        card.className = "bg-white rounded-3xl p-3 shadow-sm flex gap-3";
 
         card.innerHTML = `
-          <img
-            src="${item.preview_url}"
-            class="w-24 h-28 rounded-2xl object-cover bg-slate-200"
-          />
+          <img src="${img}" class="w-24 h-28 rounded-2xl object-cover bg-slate-200" />
 
           <div class="flex-1 min-w-0">
-            <p class="font-bold truncate">
-              ${escapeHtml(item.file_name || item.photo_id)}
-            </p>
-
-            <p class="text-xs text-slate-500 truncate">
-              ${escapeHtml(item.event_name || "Photo Event")}
-            </p>
-
+            <p class="font-bold truncate">${escapeHtml(item.file_name || item.filename || item.photo_id)}</p>
+            <p class="text-xs text-slate-500 truncate">${escapeHtml(item.event_name || "Photo Event")}</p>
             <p class="mt-2 text-lg font-bold text-emerald-600">
               ฿${formatMoney(item.price || 0)}
             </p>
@@ -212,50 +198,39 @@
     }
 
     function updateSummary() {
-
       const totalItems = cart.length;
-
-      const totalAmount = cart.reduce((sum, item) => {
-        return sum + Number(item.price || 0);
-      }, 0);
+      const totalAmount = getTotalAmount();
 
       document.getElementById("totalItems").textContent = totalItems;
+      document.getElementById("totalAmount").textContent = formatMoney(totalAmount);
+      document.getElementById("totalAmountText").textContent = `฿${formatMoney(totalAmount)}`;
+    }
 
-      document.getElementById("totalAmount").textContent =
-        formatMoney(totalAmount);
-
-      document.getElementById("totalAmountText").textContent =
-        `฿${formatMoney(totalAmount)}`;
+    function getTotalAmount() {
+      return cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
     }
 
     function generateQR() {
-
-      const totalAmount = cart.reduce((sum, item) => {
-        return sum + Number(item.price || 0);
-      }, 0);
-
-      const number = CONFIG.PAYMENT?.PROMPTPAY_NUMBER || "0936494961";
+      const totalAmount = getTotalAmount();
+      const number =
+        CONFIG.PAYMENT?.PROMPTPAY_NUMBER ||
+        CONFIG.PROMPTPAY_NUMBER ||
+        "0936494961";
 
       document.getElementById("promptpayNumber").textContent = number;
-
       document.getElementById("qrImage").src =
         `https://promptpay.io/${number}/${totalAmount}.png`;
     }
 
     function previewSlip(event) {
-
       const file = event.target.files[0];
-
       if (!file) return;
 
       const reader = new FileReader();
 
       reader.onload = e => {
-
         const img = document.getElementById("slipPreview");
-
         img.src = e.target.result;
-
         img.classList.remove("hidden");
       };
 
@@ -263,68 +238,67 @@
     }
 
     async function submitOrder() {
+      if (isSubmitting) return;
 
       try {
-
-        const slipFile =
-          document.getElementById("slipInput").files[0];
+        const slipFile = document.getElementById("slipInput").files[0];
 
         if (!slipFile) {
           Swal.fire("กรุณาแนบสลิป", "", "warning");
           return;
         }
 
-        const totalAmount = cart.reduce((sum, item) => {
-          return sum + Number(item.price || 0);
-        }, 0);
+        if (!cart.length) {
+          Swal.fire("ตะกร้าว่าง", "กรุณาเลือกภาพก่อน", "warning");
+          return;
+        }
+
+        isSubmitting = true;
+        document.getElementById("submitBtn").disabled = true;
+
+        const totalAmount = getTotalAmount();
 
         Swal.fire({
-          title: "กำลังอัปโหลด...",
+          title: "กำลังส่งสลิป...",
+          text: "กำลังสร้าง Order และแจ้งแอดมินผ่าน Telegram",
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
 
-        const ext =
-          slipFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const ext = slipFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const filePath = `slips/${profile.userId}/${Date.now()}.${ext}`;
+        const slipBucket = CONFIG.STORAGE_BUCKETS?.SLIPS || "slips";
 
-        const filePath =
-          `slips/${profile.userId}/${Date.now()}.${ext}`;
-
-        const { error: uploadError } =
-          await db.storage
-            .from(CONFIG.STORAGE_BUCKETS.SLIPS)
-            .upload(filePath, slipFile, {
-              cacheControl: "3600",
-              upsert: true
-            });
+        const { error: uploadError } = await db.storage
+          .from(slipBucket)
+          .upload(filePath, slipFile, {
+            cacheControl: "3600",
+            upsert: true
+          });
 
         if (uploadError) throw uploadError;
 
-        const { data: publicData } =
-          db.storage
-            .from(CONFIG.STORAGE_BUCKETS.SLIPS)
-            .getPublicUrl(filePath);
+        const { data: publicData } = db.storage
+          .from(slipBucket)
+          .getPublicUrl(filePath);
 
         const slipUrl = publicData.publicUrl;
+        const orderNo = "ORD-" + Date.now();
 
-        const orderNo =
-          "ORD-" + Date.now();
-
-        const { data: orderData, error: orderError } =
-          await db
-            .from("orders")
-            .insert({
-              order_no: orderNo,
-              line_user_id: profile.userId,
-              line_display_name: profile.displayName,
-              line_picture: profile.pictureUrl,
-              event_id: eventId,
-              total_amount: totalAmount,
-              status: "waiting_approve",
-              slip_url: slipUrl
-            })
-            .select()
-            .single();
+        const { data: orderData, error: orderError } = await db
+          .from("orders")
+          .insert({
+            order_no: orderNo,
+            line_user_id: profile.userId,
+            line_display_name: profile.displayName || null,
+            line_picture: profile.pictureUrl || null,
+            event_id: eventId,
+            total_amount: totalAmount,
+            status: "waiting_approve",
+            slip_url: slipUrl
+          })
+          .select()
+          .single();
 
         if (orderError) throw orderError;
 
@@ -333,38 +307,39 @@
         const orderItems = cart.map(item => ({
           order_id: orderId,
           photo_id: item.photo_id,
-          price: item.price
+          price: Number(item.price || 0)
         }));
 
-        const { error: itemError } =
-          await db
-            .from("order_items")
-            .insert(orderItems);
+        const { error: itemError } = await db
+          .from("order_items")
+          .insert(orderItems);
 
         if (itemError) throw itemError;
 
-        const { error: paymentError } =
-          await db
-            .from("payments")
-            .insert({
-              order_id: orderId,
-              line_user_id: profile.userId,
-              amount: totalAmount,
-              slip_url: slipUrl,
-              status: "waiting_approve"
-            });
+        const { error: paymentError } = await db
+          .from("payments")
+          .insert({
+            order_id: orderId,
+            line_user_id: profile.userId,
+            amount: totalAmount,
+            slip_url: slipUrl,
+            status: "waiting_approve"
+          });
 
         if (paymentError) throw paymentError;
+
+        await notifyTelegram(orderId);
 
         localStorage.removeItem(cartKey);
 
         Swal.fire({
           icon: "success",
-          title: "สั่งซื้อสำเร็จ",
+          title: "ส่งสลิปสำเร็จ",
           html: `
-            <div class="text-left">
-              <p><b>Order No:</b> ${orderNo}</p>
+            <div style="text-align:left">
+              <p><b>Order:</b> ${orderNo}</p>
               <p><b>ยอดชำระ:</b> ฿${formatMoney(totalAmount)}</p>
+              <p style="margin-top:8px;color:#64748b">ระบบแจ้งแอดมินผ่าน Telegram แล้ว กรุณารอการอนุมัติ</p>
             </div>
           `,
           confirmButtonText: "ดูออเดอร์"
@@ -374,12 +349,39 @@
 
       } catch (err) {
         console.error(err);
-
         Swal.fire(
           "เกิดข้อผิดพลาด",
-          err.message || "ไม่สามารถสร้าง Order ได้",
+          err.message || "ไม่สามารถส่งสลิปได้",
           "error"
         );
+      } finally {
+        isSubmitting = false;
+        document.getElementById("submitBtn").disabled = false;
+      }
+    }
+
+    async function notifyTelegram(orderId) {
+      try {
+        const res = await fetch(
+          `${CONFIG.SUPABASE_URL}/functions/v1/send-slip-telegram`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              order_id: orderId
+            })
+          }
+        );
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || data.success === false) {
+          console.warn("Telegram notify failed:", data);
+        }
+      } catch (err) {
+        console.warn("Telegram notify error:", err.message);
       }
     }
 
@@ -399,7 +401,7 @@
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
   </script>
