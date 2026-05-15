@@ -96,12 +96,12 @@
             photo_id,
             price,
             photos (
-              id,
-              filename,
-              preview_url,
-              watermarked_url,
-              thumbnail_url,
-              full_url
+            id,
+            filename,
+            preview_url,
+            watermark_url,
+            thumbnail_url,
+            full_url
             )
           )
         `)
@@ -178,11 +178,11 @@
       return items.slice(0, 4).map(item => {
         const photo = item.photos || {};
         const img =
-          photo.watermarked_url ||
-          photo.preview_url ||
-          photo.thumbnail_url ||
-          photo.full_url ||
-          "https://placehold.co/300x400?text=Photo";
+        photo.watermark_url ||
+        photo.preview_url ||
+        photo.thumbnail_url ||
+        photo.full_url ||
+        "https://placehold.co/300x400?text=Photo";
 
         return `
           <img
