@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ออเดอร์ของฉัน</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/liff-helper.js"></script>
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+  <main class="max-w-4xl mx-auto p-4 pb-24">
+
+    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+      <div class="flex justify-between gap-3">
+        <div>
+          <p class="text-xs text-slate-500">LINE Mini App</p>
+          <h1 class="text-xl font-bold">ออเดอร์ของฉัน</h1>
+          <p class="text-sm text-slate-500">รายการสั่งซื้อภาพของคุณ</p>
+        </div>
+
+        <button onclick="goHome()" class="bg-slate-900 text-white rounded-full px-4 py-2 font-bold">
+          หน้าแรก
+        </button>
+      </div>
+
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 rounded-2xl p-3">
+        <div class="flex items-center gap-3">
+          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" />
+          <div>
+            <p id="lineName" class="font-bold">-</p>
+            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="loadingBox" class="text-center py-10 text-slate-500">
+      กำลังโหลดออเดอร์...
+    </section>
+
+    <section id="orderList" class="space-y-4 hidden"></section>
+
+    <section id="emptyBox" class="hidden text-center py-16">
+      <p class="text-5xl">🧾</p>
+      <h2 class="mt-3 text-lg font-bold">ยังไม่มีออเดอร์</h2>
+      <p class="text-sm text-slate-500 mt-1">เมื่อสั่งซื้อแล้ว รายการจะแสดงที่นี่</p>
+      <button onclick="goHome()" class="mt-5 bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold">
+        เลือก Event
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    const db = window.sb || window.supabaseClient;
+
+    let profile = null;
+    let orders = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        showProfile();
+        await loadOrders();
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("เกิดข้อผิดพลาด", err.message || "โหลดออเดอร์ไม่สำเร็จ", "error");
+      }
+    });
+
+    function showProfile() {
+      document.getElementById("profileBox").classList.remove("hidden");
+      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
+      document.getElementById("linePicture").src =
+        profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+    }
+
+    async function loadOrders() {
+      const { data, error } = await db
+        .from("orders")
+        .select(`
+          *,
+          order_items (
+            id,
+            photo_id,
+            price,
+            photos (
+              id,
+              file_name,
+              preview_url,
+              watermarked_url,
+              thumbnail_url,
+              full_url
+            )
+          )
+        `)
+        .eq("line_user_id", profile.userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      orders = data || [];
+
+      document.getElementById("loadingBox").classList.add("hidden");
+      renderOrders();
+    }
+
+    function renderOrders() {
+      const list = document.getElementById("orderList");
+      const empty = document.getElementById("emptyBox");
+
+      list.innerHTML = "";
+
+      if (!orders.length) {
+        list.classList.add("hidden");
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      list.classList.remove("hidden");
+
+      orders.forEach(order => {
+        const items = order.order_items || [];
+        const total = Number(order.total_amount || 0);
+
+        const card = document.createElement("article");
+        card.className = "bg-white rounded-3xl p-4 shadow-sm";
+
+        card.innerHTML = `
+          <div class="flex justify-between gap-3">
+            <div>
+              <p class="font-bold">${escapeHtml(order.order_no || order.id)}</p>
+              <p class="text-xs text-slate-500">${formatDate(order.created_at)}</p>
+            </div>
+            ${statusBadge(order.status)}
+          </div>
+
+          <div class="mt-4 grid grid-cols-4 gap-2">
+            ${renderPhotos(items)}
+          </div>
+
+          <div class="mt-4 flex justify-between items-center">
+            <div>
+              <p class="text-xs text-slate-500">จำนวน</p>
+              <p class="font-bold">${items.length} ภาพ</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">ยอดรวม</p>
+              <p class="font-bold text-emerald-600">฿${formatMoney(total)}</p>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            ${actionButton(order)}
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    }
+
+    function renderPhotos(items) {
+      if (!items.length) {
+        return `<div class="col-span-4 text-center text-sm text-slate-400 py-6">ไม่มีภาพ</div>`;
+      }
+
+      return items.slice(0, 4).map(item => {
+        const photo = item.photos || {};
+        const img =
+          photo.watermarked_url ||
+          photo.preview_url ||
+          photo.thumbnail_url ||
+          photo.full_url ||
+          "https://placehold.co/300x400?text=Photo";
+
+        return `<img src="${img}" class="w-full h-20 object-cover rounded-2xl bg-slate-200" />`;
+      }).join("");
+    }
+
+    function actionButton(order) {
+      if (order.status === "paid") {
+        return `
+          <button onclick="downloadOrder('${order.id}')" class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold">
+            ดาวน์โหลดภาพ
+          </button>
+        `;
+      }
+
+      if (order.status === "waiting_approve") {
+        return `
+          <button disabled class="w-full bg-orange-100 text-orange-700 rounded-2xl py-3 font-bold">
+            รอตรวจสอบสลิป
+          </button>
+        `;
+      }
+
+      if (order.status === "rejected") {
+        return `
+          <button disabled class="w-full bg-red-100 text-red-700 rounded-2xl py-3 font-bold">
+            สลิปไม่ผ่าน
+          </button>
+        `;
+      }
+
+      return `
+        <button disabled class="w-full bg-slate-100 text-slate-500 rounded-2xl py-3 font-bold">
+          ${escapeHtml(order.status || "รอดำเนินการ")}
+        </button>
+      `;
+    }
+
+    function statusBadge(status) {
+      const map = {
+        waiting_approve: ["รอตรวจสอบ", "bg-orange-100 text-orange-700"],
+        paid: ["ชำระเงินแล้ว", "bg-emerald-100 text-emerald-700"],
+        rejected: ["ไม่ผ่าน", "bg-red-100 text-red-700"],
+        pending_payment: ["รอชำระเงิน", "bg-yellow-100 text-yellow-700"]
+      };
+
+      const item = map[status] || [status || "รอดำเนินการ", "bg-slate-100 text-slate-600"];
+
+      return `<span class="rounded-full px-3 py-1 text-xs font-bold ${item[1]}">${item[0]}</span>`;
+    }
+
+    function downloadOrder(orderId) {
+      window.location.href = `download.html?order_id=${encodeURIComponent(orderId)}`;
+    }
+
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "-";
+      return new Date(dateString).toLocaleString("th-TH");
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
