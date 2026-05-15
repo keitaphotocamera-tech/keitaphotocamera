@@ -209,19 +209,27 @@
             ${renderPhotos(items)}
           </div>
 
-          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2">
-            <button onclick="approveOrder('${order.id}')" class="bg-emerald-600 text-white rounded-2xl py-3 font-bold">
-              อนุมัติ
-            </button>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-${order.status === 'waiting_approve' ? '3' : '1'} gap-2">
 
-            <button onclick="rejectOrder('${order.id}')" class="bg-red-600 text-white rounded-2xl py-3 font-bold">
-              ปฏิเสธ
-            </button>
+  ${
+    order.status === "waiting_approve"
+      ? `
+        <button onclick="approveOrder('${order.id}')" class="bg-emerald-600 text-white rounded-2xl py-3 font-bold">
+          อนุมัติ
+        </button>
 
-            <button onclick="viewDetail('${order.id}')" class="bg-slate-900 text-white rounded-2xl py-3 font-bold">
-              รายละเอียด
-            </button>
-          </div>
+        <button onclick="rejectOrder('${order.id}')" class="bg-red-600 text-white rounded-2xl py-3 font-bold">
+          ปฏิเสธ
+        </button>
+      `
+      : ""
+  }
+
+  <button onclick="viewDetail('${order.id}')" class="bg-slate-900 text-white rounded-2xl py-3 font-bold">
+    รายละเอียด
+  </button>
+
+</div>
         `;
 
         list.appendChild(card);
