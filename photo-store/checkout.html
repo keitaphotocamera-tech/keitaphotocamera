@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ชำระเงิน</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/liff-helper.js"></script>
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+  <main class="max-w-4xl mx-auto p-4 pb-40">
+
+    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+      <div class="flex justify-between gap-3">
+        <div>
+          <p class="text-xs text-slate-500">LINE Mini App</p>
+          <h1 class="text-xl font-bold">ชำระเงิน</h1>
+          <p class="text-sm text-slate-500">ตรวจสอบรายการก่อนชำระเงิน</p>
+        </div>
+
+        <button onclick="goCart()" class="bg-white border border-slate-200 rounded-full px-4 py-2 font-bold">
+          กลับ
+        </button>
+      </div>
+
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 rounded-2xl p-3">
+        <div class="flex items-center gap-3">
+          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" />
+          <div>
+            <p id="lineName" class="font-bold">-</p>
+            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="cartList" class="space-y-3"></section>
+
+    <section class="bg-white rounded-3xl p-5 shadow-sm mt-4">
+      <h2 class="font-bold text-lg mb-4">ชำระเงินผ่าน PromptPay</h2>
+
+      <div class="flex flex-col items-center">
+
+        <img
+          id="qrImage"
+          class="w-72 max-w-full rounded-2xl border border-slate-200"
+        />
+
+        <p class="mt-4 text-sm text-slate-500">
+          PromptPay
+        </p>
+
+        <p id="promptpayNumber" class="font-bold text-xl">
+          -
+        </p>
+
+        <p class="mt-2 text-sm text-slate-500">
+          ยอดชำระ
+        </p>
+
+        <p id="totalAmountText" class="text-4xl font-bold text-emerald-600">
+          ฿0.00
+        </p>
+
+      </div>
+    </section>
+
+    <section class="bg-white rounded-3xl p-5 shadow-sm mt-4">
+      <h2 class="font-bold text-lg mb-4">แนบสลิป</h2>
+
+      <input
+        id="slipInput"
+        type="file"
+        accept="image/*"
+        class="w-full bg-slate-50 rounded-2xl p-4"
+      />
+
+      <img
+        id="slipPreview"
+        class="hidden mt-4 rounded-2xl w-full object-cover border border-slate-200"
+      />
+    </section>
+
+  </main>
+
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+    <div class="max-w-4xl mx-auto p-4">
+      <div class="flex justify-between items-center gap-3">
+        <div>
+          <p class="text-xs text-slate-500">รวมทั้งหมด</p>
+          <p class="text-xl font-bold">
+            <span id="totalItems">0</span> ภาพ · ฿<span id="totalAmount">0.00</span>
+          </p>
+        </div>
+
+        <button
+          id="submitBtn"
+          onclick="submitOrder()"
+          class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold"
+        >
+          ยืนยันการชำระเงิน
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const db = window.sb || window.supabaseClient;
+
+    let profile = null;
+    let cartKey = null;
+    let cart = [];
+    let eventId = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        cartKey = AppLIFF.getCartKey();
+
+        showProfile();
+
+        loadCart();
+
+        if (!cart.length) {
+          Swal.fire({
+            icon: "warning",
+            title: "ตะกร้าว่าง",
+            text: "กรุณาเลือกภาพก่อน",
+            confirmButtonText: "กลับหน้าแรก"
+          }).then(() => {
+            window.location.href = "index.html";
+          });
+
+          return;
+        }
+
+        renderCart();
+        generateQR();
+
+        document
+          .getElementById("slipInput")
+          .addEventListener("change", previewSlip);
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("เกิดข้อผิดพลาด", err.message || "โหลดหน้าไม่สำเร็จ", "error");
+      }
+    });
+
+    function showProfile() {
+      document.getElementById("profileBox").classList.remove("hidden");
+      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
+      document.getElementById("linePicture").src =
+        profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+    }
+
+    function loadCart() {
+      cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+
+      if (cart.length > 0) {
+        eventId = cart[0].event_id;
+      }
+    }
+
+    function renderCart() {
+      const list = document.getElementById("cartList");
+
+      list.innerHTML = "";
+
+      cart.forEach(item => {
+
+        const card = document.createElement("article");
+
+        card.className =
+          "bg-white rounded-3xl p-3 shadow-sm flex gap-3";
+
+        card.innerHTML = `
+          <img
+            src="${item.preview_url}"
+            class="w-24 h-28 rounded-2xl object-cover bg-slate-200"
+          />
+
+          <div class="flex-1 min-w-0">
+            <p class="font-bold truncate">
+              ${escapeHtml(item.file_name || item.photo_id)}
+            </p>
+
+            <p class="text-xs text-slate-500 truncate">
+              ${escapeHtml(item.event_name || "Photo Event")}
+            </p>
+
+            <p class="mt-2 text-lg font-bold text-emerald-600">
+              ฿${formatMoney(item.price || 0)}
+            </p>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+
+      const totalItems = cart.length;
+
+      const totalAmount = cart.reduce((sum, item) => {
+        return sum + Number(item.price || 0);
+      }, 0);
+
+      document.getElementById("totalItems").textContent = totalItems;
+
+      document.getElementById("totalAmount").textContent =
+        formatMoney(totalAmount);
+
+      document.getElementById("totalAmountText").textContent =
+        `฿${formatMoney(totalAmount)}`;
+    }
+
+    function generateQR() {
+
+      const totalAmount = cart.reduce((sum, item) => {
+        return sum + Number(item.price || 0);
+      }, 0);
+
+      const number = CONFIG.PAYMENT?.PROMPTPAY_NUMBER || "0936494961";
+
+      document.getElementById("promptpayNumber").textContent = number;
+
+      document.getElementById("qrImage").src =
+        `https://promptpay.io/${number}/${totalAmount}.png`;
+    }
+
+    function previewSlip(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = e => {
+
+        const img = document.getElementById("slipPreview");
+
+        img.src = e.target.result;
+
+        img.classList.remove("hidden");
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    async function submitOrder() {
+
+      try {
+
+        const slipFile =
+          document.getElementById("slipInput").files[0];
+
+        if (!slipFile) {
+          Swal.fire("กรุณาแนบสลิป", "", "warning");
+          return;
+        }
+
+        const totalAmount = cart.reduce((sum, item) => {
+          return sum + Number(item.price || 0);
+        }, 0);
+
+        Swal.fire({
+          title: "กำลังอัปโหลด...",
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        const ext =
+          slipFile.name.split(".").pop()?.toLowerCase() || "jpg";
+
+        const filePath =
+          `slips/${profile.userId}/${Date.now()}.${ext}`;
+
+        const { error: uploadError } =
+          await db.storage
+            .from(CONFIG.STORAGE_BUCKETS.SLIPS)
+            .upload(filePath, slipFile, {
+              cacheControl: "3600",
+              upsert: true
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicData } =
+          db.storage
+            .from(CONFIG.STORAGE_BUCKETS.SLIPS)
+            .getPublicUrl(filePath);
+
+        const slipUrl = publicData.publicUrl;
+
+        const orderNo =
+          "ORD-" + Date.now();
+
+        const { data: orderData, error: orderError } =
+          await db
+            .from("orders")
+            .insert({
+              order_no: orderNo,
+              line_user_id: profile.userId,
+              line_display_name: profile.displayName,
+              line_picture: profile.pictureUrl,
+              event_id: eventId,
+              total_amount: totalAmount,
+              status: "waiting_approve",
+              slip_url: slipUrl
+            })
+            .select()
+            .single();
+
+        if (orderError) throw orderError;
+
+        const orderId = orderData.id;
+
+        const orderItems = cart.map(item => ({
+          order_id: orderId,
+          photo_id: item.photo_id,
+          price: item.price
+        }));
+
+        const { error: itemError } =
+          await db
+            .from("order_items")
+            .insert(orderItems);
+
+        if (itemError) throw itemError;
+
+        const { error: paymentError } =
+          await db
+            .from("payments")
+            .insert({
+              order_id: orderId,
+              line_user_id: profile.userId,
+              amount: totalAmount,
+              slip_url: slipUrl,
+              status: "waiting_approve"
+            });
+
+        if (paymentError) throw paymentError;
+
+        localStorage.removeItem(cartKey);
+
+        Swal.fire({
+          icon: "success",
+          title: "สั่งซื้อสำเร็จ",
+          html: `
+            <div class="text-left">
+              <p><b>Order No:</b> ${orderNo}</p>
+              <p><b>ยอดชำระ:</b> ฿${formatMoney(totalAmount)}</p>
+            </div>
+          `,
+          confirmButtonText: "ดูออเดอร์"
+        }).then(() => {
+          window.location.href = "order.html";
+        });
+
+      } catch (err) {
+        console.error(err);
+
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.message || "ไม่สามารถสร้าง Order ได้",
+          "error"
+        );
+      }
+    }
+
+    function goCart() {
+      window.location.href = "cart.html";
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
