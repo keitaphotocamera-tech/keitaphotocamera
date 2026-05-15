@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>เลือกภาพถ่าย</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,142 +10,101 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- ใช้ config เดิมของโปรเจกต์ -->
   <script src="js/config.js"></script>
-
-  <style>
-    body {
-      min-height: 100vh;
-      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-    }
-
-    .safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .photo-card input:checked + div {
-      border-color: #0f172a;
-      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.12);
-    }
-
-    .line-clamp-1 {
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
-    }
-
-    .skeleton {
-      background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
-      background-size: 400% 100%;
-      animation: shimmer 1.3s ease infinite;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
-    }
-  </style>
+  <script src="js/liff-helper.js"></script>
 </head>
-<body class="text-slate-800 safe-bottom">
-  <main class="max-w-5xl mx-auto px-4 pb-32">
-    <header class="sticky top-0 z-40 -mx-4 px-4 pt-4 pb-3 bg-white/90 backdrop-blur border-b border-slate-100">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
+
+<body class="bg-slate-100 text-slate-800">
+  <main class="max-w-5xl mx-auto p-4 pb-28">
+
+    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+      <div class="flex justify-between gap-3">
+        <div>
           <p class="text-xs text-slate-500">LINE Mini App</p>
-          <h1 id="eventTitle" class="text-xl font-bold text-slate-900 line-clamp-1">เลือกภาพถ่าย</h1>
-          <p id="eventSubtitle" class="text-sm text-slate-500 line-clamp-1">กำลังโหลดข้อมูลงาน...</p>
+          <h1 id="eventTitle" class="text-xl font-bold">เลือกภาพถ่าย</h1>
+          <p id="eventDesc" class="text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
         </div>
 
-        <button onclick="goCart()" class="relative shrink-0 rounded-full bg-slate-900 text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95">
+        <button onclick="goCart()" class="relative bg-slate-900 text-white rounded-full px-4 py-2 font-bold">
           🛒 ตะกร้า
-          <span id="cartCount" class="hidden absolute -top-2 -right-2 min-w-6 h-6 px-1 rounded-full bg-red-500 text-white text-xs items-center justify-center">0</span>
+          <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center">0</span>
         </button>
       </div>
 
-      <section id="profileBox" class="mt-4 hidden rounded-2xl bg-slate-50 border border-slate-100 p-3">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" alt="LINE Profile" />
-            <div class="min-w-0">
-              <p id="lineName" class="font-semibold line-clamp-1">-</p>
-              <p class="text-xs text-slate-500">เชื่อมต่อ LINE แล้ว พร้อมสั่งซื้อภาพ</p>
-            </div>
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 rounded-2xl p-3">
+        <div class="flex items-center gap-3">
+          <img id="linePicture" class="w-11 h-11 rounded-full object-cover" />
+          <div>
+            <p id="lineName" class="font-bold">-</p>
+            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
           </div>
-          <span class="shrink-0 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1">Online</span>
         </div>
-      </section>
+      </div>
     </header>
 
-    <section class="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-      <div class="relative">
-        <input id="searchInput" oninput="handleSearch()" type="search" placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 outline-none focus:ring-4 focus:ring-slate-900/10" />
-        <span class="absolute right-4 top-3.5 text-slate-400">🔍</span>
-      </div>
+    <section class="mb-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+      <input
+        id="searchInput"
+        oninput="searchPhotos()"
+        class="bg-white rounded-2xl px-4 py-3 outline-none shadow-sm"
+        placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
+      />
 
-      <button onclick="openFaceSearch()" class="rounded-2xl bg-white border border-slate-200 px-4 py-3 font-bold text-slate-800 shadow-sm active:scale-95">
+      <button onclick="openFaceSearch()" class="bg-white rounded-2xl px-4 py-3 font-bold shadow-sm">
         🙂 ค้นหาด้วยใบหน้า
       </button>
     </section>
 
-    <section id="eventInfoBox" class="hidden mt-4 rounded-3xl bg-white border border-slate-100 p-4 shadow-sm">
-      <div class="grid grid-cols-3 gap-3 text-center">
-        <div>
-          <p class="text-xs text-slate-500">ภาพทั้งหมด</p>
-          <p id="photoTotal" class="text-2xl font-bold">0</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">เลือกแล้ว</p>
-          <p id="selectedTotal" class="text-2xl font-bold text-slate-900">0</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">รวมเงิน</p>
-          <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
-        </div>
+    <section class="bg-white rounded-3xl p-4 shadow-sm mb-4 grid grid-cols-3 text-center">
+      <div>
+        <p class="text-xs text-slate-500">ภาพทั้งหมด</p>
+        <p id="photoTotal" class="text-2xl font-bold">0</p>
+      </div>
+      <div>
+        <p class="text-xs text-slate-500">เลือกแล้ว</p>
+        <p id="selectedTotal" class="text-2xl font-bold">0</p>
+      </div>
+      <div>
+        <p class="text-xs text-slate-500">รวมเงิน</p>
+        <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
       </div>
     </section>
 
-    <section id="loadingBox" class="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      <div class="skeleton h-56 rounded-3xl"></div>
-      <div class="skeleton h-56 rounded-3xl"></div>
-      <div class="skeleton h-56 rounded-3xl"></div>
-      <div class="skeleton h-56 rounded-3xl"></div>
+    <section id="loadingBox" class="text-center py-10 text-slate-500">
+      กำลังโหลดภาพ...
     </section>
 
-    <section id="photoGrid" class="hidden mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></section>
+    <section id="photoGrid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></section>
 
-    <section id="emptyBox" class="hidden mt-12 text-center">
-      <div class="mx-auto w-20 h-20 rounded-full bg-white border border-slate-100 flex items-center justify-center text-4xl shadow-sm">🖼️</div>
-      <h2 class="mt-4 text-lg font-bold">ไม่พบภาพในงานนี้</h2>
-      <p class="mt-1 text-sm text-slate-500">ลองตรวจสอบลิงก์ Event หรือคำค้นหาอีกครั้ง</p>
+    <section id="emptyBox" class="hidden text-center py-10">
+      <p class="text-4xl">🖼️</p>
+      <p class="mt-2 font-bold">ไม่พบภาพในงานนี้</p>
     </section>
+
   </main>
 
-  <section class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-slate-200 safe-bottom">
-    <div class="max-w-5xl mx-auto px-4 py-3">
-      <div class="grid grid-cols-[1fr_auto] gap-3 items-center">
-        <div>
-          <p class="text-xs text-slate-500">เลือกแล้ว</p>
-          <p class="font-bold"><span id="bottomSelected">0</span> ภาพ · ฿<span id="bottomAmount">0.00</span></p>
-        </div>
-        <button onclick="addSelectedToCart()" id="addCartBtn" class="rounded-2xl bg-slate-900 text-white px-5 py-3 font-bold shadow-sm active:scale-95 disabled:opacity-40 disabled:active:scale-100" disabled>
-          เพิ่มลงตะกร้า
-        </button>
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+    <div class="max-w-5xl mx-auto p-4 flex justify-between items-center">
+      <div>
+        <p class="text-xs text-slate-500">เลือกแล้ว</p>
+        <p class="font-bold">
+          <span id="bottomSelected">0</span> ภาพ · ฿<span id="bottomAmount">0.00</span>
+        </p>
       </div>
+
+      <button
+        id="addCartBtn"
+        onclick="addSelectedToCart()"
+        disabled
+        class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
+      >
+        เพิ่มลงตะกร้า
+      </button>
     </div>
-  </section>
+  </footer>
 
   <script>
-    /************************************************************
-     * ใช้ config เดิมของโปรเจกต์
-     * ต้องมี window.CONFIG จาก js/config.js
-     ************************************************************/
-    const sb = window.supabase.createClient(
-      CONFIG.SUPABASE_URL,
-      CONFIG.SUPABASE_ANON_KEY
-    );
-
-    let lineProfile = null;
+    let profile = null;
     let eventId = null;
     let eventData = null;
     let allPhotos = [];
@@ -155,72 +114,49 @@
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         eventId = getEventId();
+
         if (!eventId) {
-          throw new Error("ไม่พบรหัส Event ใน URL เช่น event.html?event=xxxx");
+          throw new Error("ไม่พบ event id เช่น event.html?event=xxxx");
         }
 
-        await initLineMiniApp();
-        await saveLineUser();
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        showProfile();
+        await saveUser();
         await loadEvent();
         await loadPhotos();
-        loadCartCount();
-      } catch (error) {
-        console.error(error);
-        hideLoading();
-        Swal.fire({
-          icon: "error",
-          title: "เปิด Event ไม่สำเร็จ",
-          text: error.message || "กรุณาลองใหม่อีกครั้ง",
-          confirmButtonText: "ตกลง"
-        });
+        updateCartCount();
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("เกิดข้อผิดพลาด", err.message, "error");
       }
     });
 
-    /************************************************************
-     * LINE LIFF
-     ************************************************************/
-    async function initLineMiniApp() {
-      await liff.init({ liffId: CONFIG.LIFF_ID });
+    function getEventId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("event") || params.get("event_id") || params.get("id");
+    }
 
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href });
-        return;
-      }
-
-      lineProfile = await liff.getProfile();
-
-      localStorage.setItem("line_user_id", lineProfile.userId);
-      localStorage.setItem("line_display_name", lineProfile.displayName || "");
-      localStorage.setItem("line_picture", lineProfile.pictureUrl || "");
-
+    function showProfile() {
       document.getElementById("profileBox").classList.remove("hidden");
-      document.getElementById("lineName").textContent = lineProfile.displayName || "LINE User";
-      document.getElementById("linePicture").src = lineProfile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
+      document.getElementById("linePicture").src =
+        profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
     }
 
-    async function saveLineUser() {
-      if (!lineProfile?.userId) return;
-
-      const payload = {
-        line_user_id: lineProfile.userId,
-        line_display_name: lineProfile.displayName || null,
-        line_picture: lineProfile.pictureUrl || null,
+    async function saveUser() {
+      await sb.from("users").upsert({
+        line_user_id: profile.userId,
+        line_display_name: profile.displayName || null,
+        line_picture: profile.pictureUrl || null,
         updated_at: new Date().toISOString()
-      };
-
-      const { error } = await sb
-        .from("users")
-        .upsert(payload, { onConflict: "line_user_id" });
-
-      if (error) {
-        console.warn("users upsert error:", error.message);
-        // ไม่ block การเลือกภาพ เพราะบางโปรเจกต์อาจยังไม่ได้เปิด policy users
-      }
+      }, {
+        onConflict: "line_user_id"
+      });
     }
 
-    /************************************************************
-     * Event / Photos
-     ************************************************************/
     async function loadEvent() {
       const { data, error } = await sb
         .from("events")
@@ -229,12 +165,14 @@
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error("ไม่พบข้อมูลงานนี้");
 
       eventData = data;
 
-      document.getElementById("eventTitle").textContent = data.name || data.title || "เลือกภาพถ่าย";
-      document.getElementById("eventSubtitle").textContent = data.description || data.location || "เลือกรูปที่ต้องการ แล้วเพิ่มลงตะกร้า";
+      document.getElementById("eventTitle").textContent =
+        data.name || data.title || "เลือกภาพถ่าย";
+
+      document.getElementById("eventDesc").textContent =
+        data.description || "เลือกรูปที่ต้องการ แล้วเพิ่มลงตะกร้า";
     }
 
     async function loadPhotos() {
@@ -247,12 +185,11 @@
       if (error) throw error;
 
       allPhotos = data || [];
-      filteredPhotos = [...allPhotos];
+      filteredPhotos = allPhotos;
 
-      document.getElementById("eventInfoBox").classList.remove("hidden");
       document.getElementById("photoTotal").textContent = allPhotos.length;
+      document.getElementById("loadingBox").classList.add("hidden");
 
-      hideLoading();
       renderPhotos();
     }
 
@@ -273,34 +210,36 @@
 
       filteredPhotos.forEach(photo => {
         const price = getPhotoPrice(photo);
-        const previewUrl = getPreviewUrl(photo);
+        const img = getPhotoUrl(photo);
         const checked = selectedPhotos.has(photo.id) ? "checked" : "";
 
-        const label = document.createElement("label");
-        label.className = "photo-card block cursor-pointer active:scale-[0.99]";
-        label.innerHTML = `
-          <input type="checkbox" class="hidden" ${checked} onchange="togglePhoto('${photo.id}')" />
-          <div class="overflow-hidden rounded-3xl bg-white border-2 border-transparent shadow-sm">
-            <div class="relative aspect-[3/4] bg-slate-100">
-              <img src="${previewUrl}" alt="${escapeHtml(photo.file_name || photo.name || 'photo')}" class="w-full h-full object-cover" loading="lazy" />
-              <div class="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-slate-900">
-                ฿${formatMoney(price)}
-              </div>
-              <div class="absolute left-2 bottom-2 right-2 rounded-2xl bg-black/45 backdrop-blur px-3 py-2 text-white">
-                <p class="text-xs font-semibold line-clamp-1">${escapeHtml(photo.file_name || photo.name || photo.id)}</p>
-              </div>
+        const el = document.createElement("label");
+        el.className = "bg-white rounded-3xl overflow-hidden shadow-sm cursor-pointer block";
+
+        el.innerHTML = `
+          <input type="checkbox" class="hidden" ${checked} onchange="togglePhoto('${photo.id}')">
+
+          <div class="relative aspect-[3/4] bg-slate-200">
+            <img src="${img}" class="w-full h-full object-cover">
+
+            <div class="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-1 text-xs font-bold">
+              ฿${formatMoney(price)}
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs">
+              ${escapeHtml(photo.file_name || photo.name || photo.id)}
             </div>
           </div>
         `;
 
-        grid.appendChild(label);
+        grid.appendChild(el);
       });
 
       updateSelectedSummary();
     }
 
     function togglePhoto(photoId) {
-      const photo = allPhotos.find(item => String(item.id) === String(photoId));
+      const photo = allPhotos.find(p => String(p.id) === String(photoId));
       if (!photo) return;
 
       if (selectedPhotos.has(photo.id)) {
@@ -314,55 +253,48 @@
 
     function updateSelectedSummary() {
       const count = selectedPhotos.size;
-      const amount = [...selectedPhotos.values()].reduce((sum, photo) => sum + getPhotoPrice(photo), 0);
+      const amount = [...selectedPhotos.values()]
+        .reduce((sum, photo) => sum + getPhotoPrice(photo), 0);
 
       document.getElementById("selectedTotal").textContent = count;
       document.getElementById("selectedAmount").textContent = formatMoney(amount);
       document.getElementById("bottomSelected").textContent = count;
       document.getElementById("bottomAmount").textContent = formatMoney(amount);
 
-      const btn = document.getElementById("addCartBtn");
-      btn.disabled = count <= 0;
+      document.getElementById("addCartBtn").disabled = count === 0;
     }
 
-    /************************************************************
-     * Cart
-     ************************************************************/
     function addSelectedToCart() {
-      if (!lineProfile?.userId) {
-        Swal.fire("กรุณาเข้าสู่ระบบ LINE", "ต้องเชื่อมต่อ LINE ก่อนสั่งซื้อ", "warning");
+      if (!profile?.userId) {
+        Swal.fire("กรุณาเข้าสู่ระบบ LINE", "", "warning");
         return;
       }
 
-      if (selectedPhotos.size === 0) return;
-
-      const cartKey = getCartKey();
+      const cartKey = AppLIFF.getCartKey();
       const oldCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
-      const oldMap = new Map(oldCart.map(item => [String(item.photo_id), item]));
+      const map = new Map(oldCart.map(item => [String(item.photo_id), item]));
 
-      [...selectedPhotos.values()].forEach(photo => {
-        oldMap.set(String(photo.id), {
+      selectedPhotos.forEach(photo => {
+        map.set(String(photo.id), {
           event_id: eventId,
           event_name: eventData?.name || eventData?.title || "",
           photo_id: photo.id,
           file_name: photo.file_name || photo.name || "",
-          preview_url: getPreviewUrl(photo),
+          preview_url: getPhotoUrl(photo),
           price: getPhotoPrice(photo),
-          line_user_id: lineProfile.userId
+          line_user_id: profile.userId
         });
       });
 
-      const newCart = [...oldMap.values()];
-      localStorage.setItem(cartKey, JSON.stringify(newCart));
+      localStorage.setItem(cartKey, JSON.stringify([...map.values()]));
 
       selectedPhotos.clear();
       renderPhotos();
-      loadCartCount();
+      updateCartCount();
 
       Swal.fire({
         icon: "success",
         title: "เพิ่มลงตะกร้าแล้ว",
-        text: "สามารถไปชำระเงินได้ที่หน้าตะกร้า",
         showCancelButton: true,
         confirmButtonText: "ไปตะกร้า",
         cancelButtonText: "เลือกต่อ"
@@ -371,9 +303,10 @@
       });
     }
 
-    function loadCartCount() {
-      const cart = JSON.parse(localStorage.getItem(getCartKey()) || "[]");
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem(AppLIFF.getCartKey()) || "[]");
       const badge = document.getElementById("cartCount");
+
       badge.textContent = cart.length;
 
       if (cart.length > 0) {
@@ -385,26 +318,18 @@
       }
     }
 
-    function goCart() {
-      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
-    }
-
-    /************************************************************
-     * Search
-     ************************************************************/
-    function handleSearch() {
+    function searchPhotos() {
       const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
 
       if (!keyword) {
-        filteredPhotos = [...allPhotos];
+        filteredPhotos = allPhotos;
       } else {
         filteredPhotos = allPhotos.filter(photo => {
           const text = [
             photo.file_name,
             photo.name,
             photo.id,
-            photo.description,
-            photo.tags
+            photo.description
           ].filter(Boolean).join(" ").toLowerCase();
 
           return text.includes(keyword);
@@ -414,34 +339,33 @@
       renderPhotos();
     }
 
+    function goCart() {
+      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
+    }
+
     function openFaceSearch() {
-      if (!eventId) return;
       window.location.href = `face-search.html?event=${encodeURIComponent(eventId)}`;
     }
 
-    /************************************************************
-     * Helpers
-     ************************************************************/
-    function getEventId() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("event") || params.get("event_id") || params.get("id");
-    }
-
-    function getCartKey() {
-      const uid = lineProfile?.userId || localStorage.getItem("line_user_id") || "guest";
-      return `photo_cart_${uid}`;
-    }
-
     function getPhotoPrice(photo) {
-      return Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+      return Number(
+        photo.price ||
+        eventData?.photo_price ||
+        CONFIG.DEFAULT_PHOTO_PRICE ||
+        0
+      );
     }
 
-    function getPreviewUrl(photo) {
-      return photo.watermarked_url || photo.preview_url || photo.thumbnail_url || photo.public_url || photo.url || photo.full_url || "https://placehold.co/600x800?text=Photo";
-    }
-
-    function hideLoading() {
-      document.getElementById("loadingBox").classList.add("hidden");
+    function getPhotoUrl(photo) {
+      return (
+        photo.watermarked_url ||
+        photo.preview_url ||
+        photo.thumbnail_url ||
+        photo.public_url ||
+        photo.url ||
+        photo.full_url ||
+        "https://placehold.co/600x800?text=Photo"
+      );
     }
 
     function formatMoney(value) {
