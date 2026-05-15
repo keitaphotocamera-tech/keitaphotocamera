@@ -2,589 +2,463 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KEITA PHOTO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>เลือกภาพถ่าย</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- ใช้ config เดิมของโปรเจกต์ -->
+  <script src="js/config.js"></script>
+
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .photo-card input:checked + div {
+      border-color: #0f172a;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.12);
+    }
+
+    .line-clamp-1 {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+      background-size: 400% 100%;
+      animation: shimmer 1.3s ease infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+  </style>
 </head>
+<body class="text-slate-800 safe-bottom">
+  <main class="max-w-5xl mx-auto px-4 pb-32">
+    <header class="sticky top-0 z-40 -mx-4 px-4 pt-4 pb-3 bg-white/90 backdrop-blur border-b border-slate-100">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-xs text-slate-500">LINE Mini App</p>
+          <h1 id="eventTitle" class="text-xl font-bold text-slate-900 line-clamp-1">เลือกภาพถ่าย</h1>
+          <p id="eventSubtitle" class="text-sm text-slate-500 line-clamp-1">กำลังโหลดข้อมูลงาน...</p>
+        </div>
 
-<body class="bg-slate-100 min-h-screen pb-32">
-
-<header class="bg-black text-white p-5 sticky top-0 z-40">
-  <a href="index.html" class="text-sm text-gray-300">
-    ← กลับหน้า Event
-  </a>
-
-  <div class="flex justify-between items-center mt-2 gap-3">
-    <h1 id="eventTitle" class="text-2xl font-bold">
-      กำลังโหลด...
-    </h1>
-
-    <a
-      id="faceSearchBtn"
-      href="#"
-      class="bg-white text-black px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap"
-    >
-      ค้นหาใบหน้า
-    </a>
-  </div>
-</header>
-
-<main class="max-w-7xl mx-auto p-4">
-
-  <div class="mb-5">
-    <h2 class="text-xl font-bold text-slate-800">
-      เลือกรูปภาพ
-    </h2>
-
-    <p id="photoCount" class="text-sm text-slate-500">
-      กำลังโหลด...
-    </p>
-  </div>
-
-  <div
-    id="loading"
-    class="text-center py-10 text-slate-500"
-  >
-    กำลังโหลดรูปภาพ...
-  </div>
-
-  <div
-    id="photoGrid"
-    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
-  ></div>
-
-</main>
-
-<!-- CART -->
-<div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-2xl z-50">
-  <div class="max-w-7xl mx-auto p-4">
-
-    <div class="flex items-center justify-between gap-3">
-
-      <div>
-        <p class="font-bold text-slate-800">
-          ตะกร้า:
-          <span id="cartCount">0</span>
-          รูป
-        </p>
-
-        <p class="text-sm text-slate-500">
-          รวม
-          <span id="cartTotal">฿0</span>
-        </p>
-      </div>
-
-      <button
-        onclick="openCheckout()"
-        class="bg-black text-white px-5 py-3 rounded-xl font-semibold"
-      >
-        ชำระเงิน
-      </button>
-
-    </div>
-
-  </div>
-</div>
-
-<!-- MODAL -->
-<div
-  id="checkoutModal"
-  class="hidden fixed inset-0 bg-black/60 z-[100] overflow-y-auto"
->
-
-  <div class="max-w-2xl mx-auto p-4">
-
-    <div class="bg-white rounded-2xl shadow p-5 mt-8 mb-8">
-
-      <div class="flex justify-between items-center mb-4">
-
-        <h2 class="text-xl font-bold">
-          ชำระเงิน
-        </h2>
-
-        <button
-          onclick="closeCheckout()"
-          class="text-slate-500 text-xl"
-        >
-          ✕
+        <button onclick="goCart()" class="relative shrink-0 rounded-full bg-slate-900 text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95">
+          🛒 ตะกร้า
+          <span id="cartCount" class="hidden absolute -top-2 -right-2 min-w-6 h-6 px-1 rounded-full bg-red-500 text-white text-xs items-center justify-center">0</span>
         </button>
-
       </div>
 
-      <div
-        id="checkoutList"
-        class="space-y-3 mb-4"
-      ></div>
+      <section id="profileBox" class="mt-4 hidden rounded-2xl bg-slate-50 border border-slate-100 p-3">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" alt="LINE Profile" />
+            <div class="min-w-0">
+              <p id="lineName" class="font-semibold line-clamp-1">-</p>
+              <p class="text-xs text-slate-500">เชื่อมต่อ LINE แล้ว พร้อมสั่งซื้อภาพ</p>
+            </div>
+          </div>
+          <span class="shrink-0 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1">Online</span>
+        </div>
+      </section>
+    </header>
 
-      <div class="border-t pt-4 flex justify-between text-xl font-bold mb-5">
-        <span>ยอดชำระ</span>
-        <span id="checkoutTotal">฿0</span>
+    <section class="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+      <div class="relative">
+        <input id="searchInput" oninput="handleSearch()" type="search" placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 outline-none focus:ring-4 focus:ring-slate-900/10" />
+        <span class="absolute right-4 top-3.5 text-slate-400">🔍</span>
       </div>
 
-      <!-- QR -->
-      <div class="bg-slate-100 rounded-2xl p-4 text-center mb-4">
-
-        <p class="font-bold text-lg">
-          สแกนชำระเงิน
-        </p>
-
-        <img
-          id="qrImage"
-          src=""
-          class="mx-auto my-3 bg-white p-2 rounded-xl w-[240px] h-[240px]"
-          alt="PromptPay QR"
-        />
-
-        <p class="text-sm text-slate-600">
-          PromptPay:
-          <span id="promptpayText">-</span>
-        </p>
-
-        <p class="text-sm font-bold text-slate-800 mt-1">
-          ยอดชำระ:
-          <span id="qrAmount">฿0</span>
-        </p>
-
-      </div>
-
-      <!-- FORM -->
-      <input
-        id="customerName"
-        type="text"
-        placeholder="ชื่อผู้ซื้อ"
-        class="w-full border rounded-xl p-3 mb-3"
-      />
-
-      <input
-        id="customerPhone"
-        type="tel"
-        placeholder="เบอร์โทร"
-        class="w-full border rounded-xl p-3 mb-3"
-      />
-
-      <input
-        id="slipInput"
-        type="file"
-        accept="image/*"
-        class="w-full border rounded-xl p-3 mb-3"
-      />
-
-      <button
-        id="submitBtn"
-        onclick="submitOrder()"
-        class="w-full bg-black text-white py-3 rounded-xl font-semibold"
-      >
-        แจ้งชำระเงิน
+      <button onclick="openFaceSearch()" class="rounded-2xl bg-white border border-slate-200 px-4 py-3 font-bold text-slate-800 shadow-sm active:scale-95">
+        🙂 ค้นหาด้วยใบหน้า
       </button>
+    </section>
 
-      <div id="statusBox" class="mt-4 text-sm"></div>
+    <section id="eventInfoBox" class="hidden mt-4 rounded-3xl bg-white border border-slate-100 p-4 shadow-sm">
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div>
+          <p class="text-xs text-slate-500">ภาพทั้งหมด</p>
+          <p id="photoTotal" class="text-2xl font-bold">0</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">เลือกแล้ว</p>
+          <p id="selectedTotal" class="text-2xl font-bold text-slate-900">0</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">รวมเงิน</p>
+          <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
+        </div>
+      </div>
+    </section>
 
+    <section id="loadingBox" class="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div class="skeleton h-56 rounded-3xl"></div>
+      <div class="skeleton h-56 rounded-3xl"></div>
+      <div class="skeleton h-56 rounded-3xl"></div>
+      <div class="skeleton h-56 rounded-3xl"></div>
+    </section>
+
+    <section id="photoGrid" class="hidden mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></section>
+
+    <section id="emptyBox" class="hidden mt-12 text-center">
+      <div class="mx-auto w-20 h-20 rounded-full bg-white border border-slate-100 flex items-center justify-center text-4xl shadow-sm">🖼️</div>
+      <h2 class="mt-4 text-lg font-bold">ไม่พบภาพในงานนี้</h2>
+      <p class="mt-1 text-sm text-slate-500">ลองตรวจสอบลิงก์ Event หรือคำค้นหาอีกครั้ง</p>
+    </section>
+  </main>
+
+  <section class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-slate-200 safe-bottom">
+    <div class="max-w-5xl mx-auto px-4 py-3">
+      <div class="grid grid-cols-[1fr_auto] gap-3 items-center">
+        <div>
+          <p class="text-xs text-slate-500">เลือกแล้ว</p>
+          <p class="font-bold"><span id="bottomSelected">0</span> ภาพ · ฿<span id="bottomAmount">0.00</span></p>
+        </div>
+        <button onclick="addSelectedToCart()" id="addCartBtn" class="rounded-2xl bg-slate-900 text-white px-5 py-3 font-bold shadow-sm active:scale-95 disabled:opacity-40 disabled:active:scale-100" disabled>
+          เพิ่มลงตะกร้า
+        </button>
+      </div>
     </div>
-
-  </div>
-
-</div>
-
-<script src="js/config.js"></script>
-
-<script>
-
-const PROMPTPAY_ID = "0936494961";
-
-const params = new URLSearchParams(window.location.search);
-const eventId = params.get("event");
-
-const eventTitle = document.getElementById("eventTitle");
-const photoGrid = document.getElementById("photoGrid");
-const loading = document.getElementById("loading");
-const photoCount = document.getElementById("photoCount");
-
-const cartCount = document.getElementById("cartCount");
-const cartTotal = document.getElementById("cartTotal");
-
-const checkoutModal = document.getElementById("checkoutModal");
-const checkoutList = document.getElementById("checkoutList");
-const checkoutTotal = document.getElementById("checkoutTotal");
-
-const statusBox = document.getElementById("statusBox");
-const submitBtn = document.getElementById("submitBtn");
-
-let allPhotos = [];
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-async function loadEvent() {
-
-  if (!eventId) {
-    eventTitle.innerText = "ไม่พบ Event";
-    return;
-  }
-
-  const { data: eventData } = await supabaseClient
-    .from("events")
-    .select("*")
-    .eq("id", eventId)
-    .single();
-
-  if (eventData) {
-    eventTitle.innerText = eventData.title;
-  }
-
-  const { data: photos, error } = await supabaseClient
-    .from("photos")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-
-  loading.style.display = "none";
-
-  if (error) {
-
-    photoGrid.innerHTML = `
-      <div class="col-span-full bg-red-100 text-red-700 p-4 rounded-xl">
-        โหลดรูปไม่สำเร็จ
-      </div>
-    `;
-
-    return;
-  }
-
-  allPhotos = photos || [];
-
-  photoCount.innerText = `${allPhotos.length} รูป`;
-
-  renderPhotos();
-  updateCartBar();
-}
-
-function renderPhotos() {
-
-  if (allPhotos.length === 0) {
-
-    photoGrid.innerHTML = `
-      <div class="col-span-full bg-white p-6 rounded-xl text-center text-slate-500">
-        ยังไม่มีรูปภาพ
-      </div>
-    `;
-
-    return;
-  }
-
-  photoGrid.innerHTML = allPhotos.map(photo => {
-
-    const selected = cart.includes(photo.id);
-
-    return `
-      <div class="bg-white rounded-2xl overflow-hidden shadow">
-
-        <div class="aspect-square bg-slate-200">
-
-          <img
-            src="${photo.preview_url || photo.watermark_url}"
-            class="w-full h-full object-cover"
-            loading="lazy"
-          />
-
-        </div>
-
-        <div class="p-3">
-
-          <p class="font-bold text-slate-800">
-            ฿${photo.price || 0}
-          </p>
-
-          <p class="text-xs text-slate-400 truncate mb-2">
-            ${photo.filename || ""}
-          </p>
-
-          <button
-            onclick="toggleCart('${photo.id}')"
-            class="w-full ${selected ? 'bg-green-600' : 'bg-black'} text-white px-3 py-2 rounded-xl text-sm"
-          >
-            ${selected ? 'เลือกแล้ว' : 'เพิ่มลงตะกร้า'}
-          </button>
-
-        </div>
-
-      </div>
-    `;
-  }).join("");
-}
-
-function toggleCart(photoId) {
-
-  if (cart.includes(photoId)) {
-
-    cart = cart.filter(id => id !== photoId);
-
-  } else {
-
-    cart.push(photoId);
-  }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-
-  renderPhotos();
-  updateCartBar();
-}
-
-function getCartPhotos() {
-  return allPhotos.filter(photo => cart.includes(photo.id));
-}
-
-function updateCartBar() {
-
-  const cartPhotos = getCartPhotos();
-
-  const total = cartPhotos.reduce((sum, item) => {
-    return sum + Number(item.price || 0);
-  }, 0);
-
-  cartCount.innerText = cartPhotos.length;
-  cartTotal.innerText = `฿${total}`;
-  checkoutTotal.innerText = `฿${total}`;
-}
-
-function generatePromptPayQR(amount) {
-
-  const qrImage = document.getElementById("qrImage");
-  const promptpayText = document.getElementById("promptpayText");
-  const qrAmount = document.getElementById("qrAmount");
-
-  promptpayText.innerText = PROMPTPAY_ID;
-  qrAmount.innerText = `฿${amount}`;
-
-  qrImage.src = `https://promptpay.io/${PROMPTPAY_ID}/${amount}.png`;
-}
-
-function openCheckout() {
-
-  const cartPhotos = getCartPhotos();
-
-  if (cartPhotos.length === 0) {
-    alert("กรุณาเลือกรูปก่อน");
-    return;
-  }
-
-  checkoutList.innerHTML = cartPhotos.map(photo => {
-
-    return `
-      <div class="flex gap-3 items-center bg-slate-50 rounded-xl p-2">
-
-        <img
-          src="${photo.preview_url || photo.watermark_url}"
-          class="w-16 h-16 object-cover rounded-xl"
-        />
-
-        <div class="flex-1">
-
-          <p class="font-semibold text-sm">
-            ${photo.filename || "Photo"}
-          </p>
-
-          <p class="text-slate-500 text-sm">
-            ฿${photo.price || 0}
-          </p>
-
-        </div>
-
-      </div>
-    `;
-  }).join("");
-
-  const total = cartPhotos.reduce((sum, item) => {
-    return sum + Number(item.price || 0);
-  }, 0);
-
-  generatePromptPayQR(total);
-
-  checkoutModal.classList.remove("hidden");
-}
-
-function closeCheckout() {
-  checkoutModal.classList.add("hidden");
-}
-
-async function submitOrder() {
-
-  const cartPhotos = getCartPhotos();
-
-  const total = cartPhotos.reduce((sum, item) => {
-    return sum + Number(item.price || 0);
-  }, 0);
-
-  const customerName =
-    document.getElementById("customerName").value.trim();
-
-  const customerPhone =
-    document.getElementById("customerPhone").value.trim();
-
-  const slipFile =
-    document.getElementById("slipInput").files[0];
-
-  if (cartPhotos.length === 0) {
-    alert("กรุณาเลือกรูปก่อน");
-    return;
-  }
-
-  if (!customerName || !customerPhone) {
-    alert("กรุณากรอกชื่อและเบอร์โทร");
-    return;
-  }
-
-  if (!slipFile) {
-    alert("กรุณาแนบสลิป");
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.innerText = "กำลังบันทึก...";
-
-  const slipName =
-    `slip-${Date.now()}-${slipFile.name}`;
-
-  // upload slip
-  const { error: uploadError } =
-    await supabaseClient.storage
-      .from("slips")
-      .upload(slipName, slipFile);
-
-  if (uploadError) {
-    return showError(uploadError.message);
-  }
-
-  const { data: slipUrlData } =
-    supabaseClient.storage
-      .from("slips")
-      .getPublicUrl(slipName);
-
-  // create user
-  const { data: userData, error: userError } =
-    await supabaseClient
-      .from("users")
-      .insert({
-        display_name: customerName,
-        phone: customerPhone,
-        role: "customer"
-      })
-      .select()
-      .single();
-
-  if (userError) {
-    return showError(userError.message);
-  }
-
-  // create order
-  const { data: orderData, error: orderError } =
-    await supabaseClient
-      .from("orders")
-      .insert({
-        user_id: userData.id,
-        event_id: eventId,
-        total_amount: total,
-        status: "paid",
-        payment_method: "promptpay"
-      })
-      .select("id, order_no")
-      .single();
-
-  if (orderError) {
-    return showError(orderError.message);
-  }
-
-  // order items
-  const orderItems = cartPhotos.map(photo => ({
-    order_id: orderData.id,
-    photo_id: photo.id,
-    price: photo.price || 0
-  }));
-
-  const { error: itemError } =
-    await supabaseClient
-      .from("order_items")
-      .insert(orderItems);
-
-  if (itemError) {
-    return showError(itemError.message);
-  }
-
-  // payment
-  const { error: paymentError } =
-    await supabaseClient
-      .from("payments")
-      .insert({
-        order_id: orderData.id,
-        amount: total,
-        slip_path: slipName,
-        slip_url: slipUrlData.publicUrl,
-        status: "uploaded"
+  </section>
+
+  <script>
+    /************************************************************
+     * ใช้ config เดิมของโปรเจกต์
+     * ต้องมี window.CONFIG จาก js/config.js
+     ************************************************************/
+    const sb = window.supabase.createClient(
+      CONFIG.SUPABASE_URL,
+      CONFIG.SUPABASE_ANON_KEY
+    );
+
+    let lineProfile = null;
+    let eventId = null;
+    let eventData = null;
+    let allPhotos = [];
+    let filteredPhotos = [];
+    let selectedPhotos = new Map();
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        eventId = getEventId();
+        if (!eventId) {
+          throw new Error("ไม่พบรหัส Event ใน URL เช่น event.html?event=xxxx");
+        }
+
+        await initLineMiniApp();
+        await saveLineUser();
+        await loadEvent();
+        await loadPhotos();
+        loadCartCount();
+      } catch (error) {
+        console.error(error);
+        hideLoading();
+        Swal.fire({
+          icon: "error",
+          title: "เปิด Event ไม่สำเร็จ",
+          text: error.message || "กรุณาลองใหม่อีกครั้ง",
+          confirmButtonText: "ตกลง"
+        });
+      }
+    });
+
+    /************************************************************
+     * LINE LIFF
+     ************************************************************/
+    async function initLineMiniApp() {
+      await liff.init({ liffId: CONFIG.LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+
+      lineProfile = await liff.getProfile();
+
+      localStorage.setItem("line_user_id", lineProfile.userId);
+      localStorage.setItem("line_display_name", lineProfile.displayName || "");
+      localStorage.setItem("line_picture", lineProfile.pictureUrl || "");
+
+      document.getElementById("profileBox").classList.remove("hidden");
+      document.getElementById("lineName").textContent = lineProfile.displayName || "LINE User";
+      document.getElementById("linePicture").src = lineProfile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+    }
+
+    async function saveLineUser() {
+      if (!lineProfile?.userId) return;
+
+      const payload = {
+        line_user_id: lineProfile.userId,
+        line_display_name: lineProfile.displayName || null,
+        line_picture: lineProfile.pictureUrl || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await sb
+        .from("users")
+        .upsert(payload, { onConflict: "line_user_id" });
+
+      if (error) {
+        console.warn("users upsert error:", error.message);
+        // ไม่ block การเลือกภาพ เพราะบางโปรเจกต์อาจยังไม่ได้เปิด policy users
+      }
+    }
+
+    /************************************************************
+     * Event / Photos
+     ************************************************************/
+    async function loadEvent() {
+      const { data, error } = await sb
+        .from("events")
+        .select("*")
+        .eq("id", eventId)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error("ไม่พบข้อมูลงานนี้");
+
+      eventData = data;
+
+      document.getElementById("eventTitle").textContent = data.name || data.title || "เลือกภาพถ่าย";
+      document.getElementById("eventSubtitle").textContent = data.description || data.location || "เลือกรูปที่ต้องการ แล้วเพิ่มลงตะกร้า";
+    }
+
+    async function loadPhotos() {
+      const { data, error } = await sb
+        .from("photos")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      allPhotos = data || [];
+      filteredPhotos = [...allPhotos];
+
+      document.getElementById("eventInfoBox").classList.remove("hidden");
+      document.getElementById("photoTotal").textContent = allPhotos.length;
+
+      hideLoading();
+      renderPhotos();
+    }
+
+    function renderPhotos() {
+      const grid = document.getElementById("photoGrid");
+      const empty = document.getElementById("emptyBox");
+
+      grid.innerHTML = "";
+
+      if (!filteredPhotos.length) {
+        grid.classList.add("hidden");
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      grid.classList.remove("hidden");
+
+      filteredPhotos.forEach(photo => {
+        const price = getPhotoPrice(photo);
+        const previewUrl = getPreviewUrl(photo);
+        const checked = selectedPhotos.has(photo.id) ? "checked" : "";
+
+        const label = document.createElement("label");
+        label.className = "photo-card block cursor-pointer active:scale-[0.99]";
+        label.innerHTML = `
+          <input type="checkbox" class="hidden" ${checked} onchange="togglePhoto('${photo.id}')" />
+          <div class="overflow-hidden rounded-3xl bg-white border-2 border-transparent shadow-sm">
+            <div class="relative aspect-[3/4] bg-slate-100">
+              <img src="${previewUrl}" alt="${escapeHtml(photo.file_name || photo.name || 'photo')}" class="w-full h-full object-cover" loading="lazy" />
+              <div class="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-slate-900">
+                ฿${formatMoney(price)}
+              </div>
+              <div class="absolute left-2 bottom-2 right-2 rounded-2xl bg-black/45 backdrop-blur px-3 py-2 text-white">
+                <p class="text-xs font-semibold line-clamp-1">${escapeHtml(photo.file_name || photo.name || photo.id)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(label);
       });
 
-  if (paymentError) {
-    return showError(paymentError.message);
-  }
+      updateSelectedSummary();
+    }
 
-  cart = [];
+    function togglePhoto(photoId) {
+      const photo = allPhotos.find(item => String(item.id) === String(photoId));
+      if (!photo) return;
 
-  localStorage.removeItem("cart");
+      if (selectedPhotos.has(photo.id)) {
+        selectedPhotos.delete(photo.id);
+      } else {
+        selectedPhotos.set(photo.id, photo);
+      }
 
-  renderPhotos();
-  updateCartBar();
+      updateSelectedSummary();
+    }
 
-  statusBox.innerHTML = `
-    <div class="bg-green-100 text-green-700 p-4 rounded-xl text-center">
+    function updateSelectedSummary() {
+      const count = selectedPhotos.size;
+      const amount = [...selectedPhotos.values()].reduce((sum, photo) => sum + getPhotoPrice(photo), 0);
 
-      ✅ แจ้งชำระเงินสำเร็จ
+      document.getElementById("selectedTotal").textContent = count;
+      document.getElementById("selectedAmount").textContent = formatMoney(amount);
+      document.getElementById("bottomSelected").textContent = count;
+      document.getElementById("bottomAmount").textContent = formatMoney(amount);
 
-      <div class="text-sm mt-2">
-        เลขคำสั่งซื้อของคุณคือ
-      </div>
+      const btn = document.getElementById("addCartBtn");
+      btn.disabled = count <= 0;
+    }
 
-      <div class="text-2xl font-bold my-2">
-        ${orderData.order_no}
-      </div>
+    /************************************************************
+     * Cart
+     ************************************************************/
+    function addSelectedToCart() {
+      if (!lineProfile?.userId) {
+        Swal.fire("กรุณาเข้าสู่ระบบ LINE", "ต้องเชื่อมต่อ LINE ก่อนสั่งซื้อ", "warning");
+        return;
+      }
 
-      <button
-        onclick="copyOrderNo('${orderData.order_no}')"
-        class="bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
-      >
-        คัดลอกเลข Order
-      </button>
+      if (selectedPhotos.size === 0) return;
 
-      <p class="text-xs mt-3">
-        กรุณาบันทึกเลขนี้ไว้ ใช้สำหรับดาวน์โหลดรูปหลังแอดมินอนุมัติ
-      </p>
+      const cartKey = getCartKey();
+      const oldCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      const oldMap = new Map(oldCart.map(item => [String(item.photo_id), item]));
 
-    </div>
-  `;
+      [...selectedPhotos.values()].forEach(photo => {
+        oldMap.set(String(photo.id), {
+          event_id: eventId,
+          event_name: eventData?.name || eventData?.title || "",
+          photo_id: photo.id,
+          file_name: photo.file_name || photo.name || "",
+          preview_url: getPreviewUrl(photo),
+          price: getPhotoPrice(photo),
+          line_user_id: lineProfile.userId
+        });
+      });
 
-  submitBtn.innerText = "บันทึกสำเร็จ";
-}
+      const newCart = [...oldMap.values()];
+      localStorage.setItem(cartKey, JSON.stringify(newCart));
 
-function showError(message) {
+      selectedPhotos.clear();
+      renderPhotos();
+      loadCartCount();
 
-  statusBox.innerHTML = `
-    <div class="bg-red-100 text-red-700 p-4 rounded-xl">
-      ❌ ${message}
-    </div>
-  `;
+      Swal.fire({
+        icon: "success",
+        title: "เพิ่มลงตะกร้าแล้ว",
+        text: "สามารถไปชำระเงินได้ที่หน้าตะกร้า",
+        showCancelButton: true,
+        confirmButtonText: "ไปตะกร้า",
+        cancelButtonText: "เลือกต่อ"
+      }).then(result => {
+        if (result.isConfirmed) goCart();
+      });
+    }
 
-  submitBtn.disabled = false;
-  submitBtn.innerText = "แจ้งชำระเงิน";
-}
+    function loadCartCount() {
+      const cart = JSON.parse(localStorage.getItem(getCartKey()) || "[]");
+      const badge = document.getElementById("cartCount");
+      badge.textContent = cart.length;
 
-function copyOrderNo(orderNo) {
+      if (cart.length > 0) {
+        badge.classList.remove("hidden");
+        badge.classList.add("inline-flex");
+      } else {
+        badge.classList.add("hidden");
+        badge.classList.remove("inline-flex");
+      }
+    }
 
-  navigator.clipboard.writeText(orderNo);
+    function goCart() {
+      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
+    }
 
-  alert("คัดลอกเลข Order แล้ว");
-}
+    /************************************************************
+     * Search
+     ************************************************************/
+    function handleSearch() {
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
 
-loadEvent();
+      if (!keyword) {
+        filteredPhotos = [...allPhotos];
+      } else {
+        filteredPhotos = allPhotos.filter(photo => {
+          const text = [
+            photo.file_name,
+            photo.name,
+            photo.id,
+            photo.description,
+            photo.tags
+          ].filter(Boolean).join(" ").toLowerCase();
 
-</script>
+          return text.includes(keyword);
+        });
+      }
 
+      renderPhotos();
+    }
+
+    function openFaceSearch() {
+      if (!eventId) return;
+      window.location.href = `face-search.html?event=${encodeURIComponent(eventId)}`;
+    }
+
+    /************************************************************
+     * Helpers
+     ************************************************************/
+    function getEventId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("event") || params.get("event_id") || params.get("id");
+    }
+
+    function getCartKey() {
+      const uid = lineProfile?.userId || localStorage.getItem("line_user_id") || "guest";
+      return `photo_cart_${uid}`;
+    }
+
+    function getPhotoPrice(photo) {
+      return Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+    }
+
+    function getPreviewUrl(photo) {
+      return photo.watermarked_url || photo.preview_url || photo.thumbnail_url || photo.public_url || photo.url || photo.full_url || "https://placehold.co/600x800?text=Photo";
+    }
+
+    function hideLoading() {
+      document.getElementById("loadingBox").classList.add("hidden");
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
