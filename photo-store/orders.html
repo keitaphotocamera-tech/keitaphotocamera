@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Orders - KEITA PHOTO</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen">
+
+<header class="bg-black text-white p-5">
+  <h1 class="text-2xl font-bold">Admin Orders</h1>
+  <p class="text-sm text-gray-300">ตรวจสอบสลิปและอนุมัติคำสั่งซื้อ</p>
+</header>
+
+<main class="max-w-6xl mx-auto p-4">
+
+  <div class="mb-4 flex gap-2">
+    <button onclick="loadOrders('paid')" class="bg-black text-white px-4 py-2 rounded-xl">
+      รอตรวจสอบ
+    </button>
+    <button onclick="loadOrders('approved')" class="bg-green-600 text-white px-4 py-2 rounded-xl">
+      อนุมัติแล้ว
+    </button>
+    <button onclick="loadOrders('rejected')" class="bg-red-600 text-white px-4 py-2 rounded-xl">
+      ปฏิเสธ
+    </button>
+  </div>
+
+  <div id="orderList" class="space-y-4">
+    <div class="text-center text-slate-500 py-10">กำลังโหลด...</div>
+  </div>
+
+</main>
+
+<script src="../js/config.js"></script>
+
+<script>
+  const orderList = document.getElementById("orderList");
+
+  async function loadOrders(status = "paid") {
+    orderList.innerHTML = `<div class="text-center text-slate-500 py-10">กำลังโหลด...</div>`;
+
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select(`
+        *,
+        users (
+          display_name,
+          phone
+        ),
+        payments (
+          id,
+          amount,
+          slip_url,
+          status,
+          created_at
+        ),
+        order_items (
+          id,
+          price,
+          photos (
+            id,
+            filename,
+            preview_url,
+            watermark_url
+          )
+        )
+      `)
+      .eq("status", status)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      orderList.innerHTML = `
+        <div class="bg-red-100 text-red-700 p-4 rounded-xl">
+          โหลดข้อมูลไม่สำเร็จ: ${error.message}
+        </div>
+      `;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      orderList.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 text-center text-slate-500">
+          ไม่มีรายการ
+        </div>
+      `;
+      return;
+    }
+
+    orderList.innerHTML = data.map(order => {
+      const payment = order.payments?.[0];
+
+      return `
+        <div class="bg-white rounded-2xl shadow p-5">
+          <div class="flex flex-col md:flex-row md:justify-between gap-4">
+            
+            <div>
+              <h2 class="text-xl font-bold">${order.order_no || order.id}</h2>
+              <p class="text-slate-500 text-sm">
+                ลูกค้า: ${order.users?.display_name || "-"} / ${order.users?.phone || "-"}
+              </p>
+              <p class="text-slate-500 text-sm">
+                วันที่: ${new Date(order.created_at).toLocaleString("th-TH")}
+              </p>
+              <p class="font-bold mt-2">ยอดชำระ: ฿${order.total_amount}</p>
+              <p class="text-sm mt-1">
+                สถานะ: <span class="font-bold">${order.status}</span>
+              </p>
+            </div>
+
+            <div class="flex gap-2">
+              ${
+                payment?.slip_url
+                  ? `<a href="${payment.slip_url}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-xl h-fit">ดูสลิป</a>`
+                  : ""
+              }
+
+              ${
+                order.status === "paid"
+                  ? `
+                    <button onclick="approveOrder('${order.id}', '${payment?.id || ""}')" class="bg-green-600 text-white px-4 py-2 rounded-xl h-fit">
+                      อนุมัติ
+                    </button>
+                    <button onclick="rejectOrder('${order.id}', '${payment?.id || ""}')" class="bg-red-600 text-white px-4 py-2 rounded-xl h-fit">
+                      ปฏิเสธ
+                    </button>
+                  `
+                  : ""
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-4">
+            ${(order.order_items || []).map(item => `
+              <div class="bg-slate-100 rounded-xl overflow-hidden">
+                <img
+                  src="${item.photos?.preview_url || item.photos?.watermark_url || ""}"
+                  class="w-full aspect-square object-cover"
+                />
+                <div class="p-2">
+                  <p class="text-xs truncate">${item.photos?.filename || ""}</p>
+                  <p class="text-xs font-bold">฿${item.price}</p>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function approveOrder(orderId, paymentId) {
+    if (!confirm("ยืนยันอนุมัติคำสั่งซื้อนี้?")) return;
+
+    const { error: orderError } = await supabaseClient
+      .from("orders")
+      .update({ status: "approved" })
+      .eq("id", orderId);
+
+    if (orderError) {
+      alert(orderError.message);
+      return;
+    }
+
+    if (paymentId) {
+      const { error: paymentError } = await supabaseClient
+        .from("payments")
+        .update({
+          status: "approved",
+          approved_at: new Date().toISOString()
+        })
+        .eq("id", paymentId);
+
+      if (paymentError) {
+        alert(paymentError.message);
+        return;
+      }
+    }
+
+    alert("อนุมัติสำเร็จ");
+    loadOrders("paid");
+  }
+
+  async function rejectOrder(orderId, paymentId) {
+    if (!confirm("ยืนยันปฏิเสธคำสั่งซื้อนี้?")) return;
+
+    const { error: orderError } = await supabaseClient
+      .from("orders")
+      .update({ status: "rejected" })
+      .eq("id", orderId);
+
+    if (orderError) {
+      alert(orderError.message);
+      return;
+    }
+
+    if (paymentId) {
+      const { error: paymentError } = await supabaseClient
+        .from("payments")
+        .update({ status: "rejected" })
+        .eq("id", paymentId);
+
+      if (paymentError) {
+        alert(paymentError.message);
+        return;
+      }
+    }
+
+    alert("ปฏิเสธสำเร็จ");
+    loadOrders("paid");
+  }
+
+  loadOrders("paid");
+</script>
+
+</body>
+</html>
