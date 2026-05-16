@@ -209,5 +209,62 @@
         .replace(/'/g, "&#039;");
     }
   </script>
+
+  <!-- ห้ามคลิกขวา -->
+<script>
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+</script>
+
+<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
+<style>
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+</style>
+
+<!-- ปิดการลากรูป -->
+<script>
+document.addEventListener('dragstart', function(e) {
+  e.preventDefault();
+});
+</script>
+
+<!-- ปิดปุ่มลัดบางอย่าง -->
+<script>
+document.addEventListener('keydown', function(e) {
+
+  // F12
+  if (e.key === "F12") {
+    e.preventDefault();
+  }
+
+  // Ctrl+S / Cmd+S
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+  }
+
+  // Ctrl+U
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+    e.preventDefault();
+  }
+
+  // Ctrl+Shift+I
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+    e.preventDefault();
+  }
+
+});
+</script>
 </body>
 </html>
