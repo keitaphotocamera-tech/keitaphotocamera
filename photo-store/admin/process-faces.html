@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Process Faces</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+  <script src="../js/config.js"></script>
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+  <main class="max-w-6xl mx-auto p-4">
+
+    <header class="bg-white rounded-3xl p-5 shadow-sm mb-4">
+      <p class="text-xs text-slate-500">Admin Tool</p>
+      <h1 class="text-2xl font-bold">ประมวลผลใบหน้า</h1>
+      <p class="text-sm text-slate-500">
+        ใช้สำหรับสร้าง Face Descriptor ลงตาราง faces
+      </p>
+    </header>
+
+    <section class="bg-white rounded-3xl p-5 shadow-sm mb-4">
+      <label class="font-bold">เลือก Event</label>
+
+      <select id="eventSelect" class="mt-3 w-full bg-slate-50 rounded-2xl p-4">
+        <option value="">กำลังโหลด Event...</option>
+      </select>
+
+      <button
+        onclick="startProcess()"
+        id="processBtn"
+        class="mt-4 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold"
+      >
+        เริ่มประมวลผลใบหน้า
+      </button>
+    </section>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div class="bg-white rounded-3xl p-4 shadow-sm">
+        <p class="text-xs text-slate-500">รูปทั้งหมด</p>
+        <p id="totalPhotos" class="text-2xl font-bold">0</p>
+      </div>
+
+      <div class="bg-white rounded-3xl p-4 shadow-sm">
+        <p class="text-xs text-slate-500">ประมวลผลแล้ว</p>
+        <p id="donePhotos" class="text-2xl font-bold text-emerald-600">0</p>
+      </div>
+
+      <div class="bg-white rounded-3xl p-4 shadow-sm">
+        <p class="text-xs text-slate-500">พบใบหน้า</p>
+        <p id="faceCount" class="text-2xl font-bold text-blue-600">0</p>
+      </div>
+
+      <div class="bg-white rounded-3xl p-4 shadow-sm">
+        <p class="text-xs text-slate-500">ไม่พบใบหน้า</p>
+        <p id="noFaceCount" class="text-2xl font-bold text-red-600">0</p>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-3xl p-5 shadow-sm">
+      <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden">
+        <div id="progressBar" class="bg-emerald-600 h-4 w-0"></div>
+      </div>
+
+      <p id="statusText" class="mt-4 text-sm text-slate-500">
+        พร้อมทำงาน
+      </p>
+
+      <div id="logBox" class="mt-4 space-y-2 text-sm"></div>
+    </section>
+
+  </main>
+
+  <script>
+    const db = window.sb || window.supabaseClient;
+
+    let events = [];
+    let photos = [];
+    let total = 0;
+    let done = 0;
+    let foundFaces = 0;
+    let noFaces = 0;
+    let processing = false;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        if (!db) throw new Error("ไม่พบ Supabase client");
+
+        await loadModels();
+        await loadEvents();
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("เกิดข้อผิดพลาด", err.message || "เปิดหน้าไม่สำเร็จ", "error");
+      }
+    });
+
+    async function loadModels() {
+      Swal.fire({
+        title: "กำลังโหลด Face Model...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const MODEL_URL =
+        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+      Swal.close();
+    }
+
+    async function loadEvents() {
+      const { data, error } = await db
+        .from("events")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      events = data || [];
+
+      const select = document.getElementById("eventSelect");
+
+      if (!events.length) {
+        select.innerHTML = `<option value="">ยังไม่มี Event</option>`;
+        return;
+      }
+
+      select.innerHTML = `
+        <option value="">-- เลือก Event --</option>
+        ${events.map(e => `
+          <option value="${e.id}">
+            ${escapeHtml(e.name || e.title || e.id)}
+          </option>
+        `).join("")}
+      `;
+    }
+
+    async function startProcess() {
+      if (processing) return;
+
+      const eventId = document.getElementById("eventSelect").value;
+
+      if (!eventId) {
+        Swal.fire("กรุณาเลือก Event", "", "warning");
+        return;
+      }
+
+      const confirm = await Swal.fire({
+        icon: "question",
+        title: "เริ่มประมวลผล?",
+        text: "ระบบจะอ่านใบหน้าจากรูปทั้งหมดใน Event นี้",
+        showCancelButton: true,
+        confirmButtonText: "เริ่ม",
+        cancelButtonText: "ยกเลิก"
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      processing = true;
+      resetStats();
+
+      try {
+        await loadPhotos(eventId);
+
+        if (!photos.length) {
+          Swal.fire("ไม่พบรูปภาพ", "Event นี้ยังไม่มีรูปภาพ", "warning");
+          processing = false;
+          return;
+        }
+
+        total = photos.length;
+        updateStats();
+
+        for (const photo of photos) {
+          await processPhoto(eventId, photo);
+          done++;
+          updateStats();
+          await sleep(150);
+        }
+
+        Swal.fire("เสร็จสิ้น", `ประมวลผล ${done} รูป พบใบหน้า ${foundFaces} รายการ`, "success");
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("เกิดข้อผิดพลาด", err.message || "ประมวลผลไม่สำเร็จ", "error");
+      } finally {
+        processing = false;
+      }
+    }
+
+    async function loadPhotos(eventId) {
+      const { data, error } = await db
+        .from("photos")
+        .select(`
+          id,
+          event_id,
+          filename,
+          preview_url,
+          watermark_url
+        `)
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      photos = data || [];
+    }
+
+    async function processPhoto(eventId, photo) {
+      const imageUrl =
+        photo.watermark_url ||
+        photo.preview_url;
+
+      if (!imageUrl) {
+        noFaces++;
+        addLog(`❌ ${photo.filename || photo.id} ไม่มี URL รูป`, "text-red-600");
+        return;
+      }
+
+      try {
+        document.getElementById("statusText").textContent =
+          `กำลังประมวลผล: ${photo.filename || photo.id}`;
+
+        const img = await loadImage(imageUrl);
+
+        const detections = await faceapi
+          .detectAllFaces(img)
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+
+        if (!detections.length) {
+          noFaces++;
+          addLog(`⚠️ ไม่พบใบหน้า: ${photo.filename || photo.id}`, "text-orange-600");
+          return;
+        }
+
+        await deleteOldFaces(photo.id);
+
+        const rows = detections.map(d => ({
+          event_id: eventId,
+          photo_id: photo.id,
+          descriptor: Array.from(d.descriptor)
+        }));
+
+        const { error } = await db
+          .from("faces")
+          .insert(rows);
+
+        if (error) throw error;
+
+        foundFaces += detections.length;
+
+        addLog(
+          `✅ ${photo.filename || photo.id} พบ ${detections.length} ใบหน้า`,
+          "text-emerald-600"
+        );
+
+      } catch (err) {
+        noFaces++;
+        console.warn(err);
+        addLog(`❌ ${photo.filename || photo.id}: ${err.message}`, "text-red-600");
+      }
+    }
+
+    async function deleteOldFaces(photoId) {
+      await db
+        .from("faces")
+        .delete()
+        .eq("photo_id", photoId);
+    }
+
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("โหลดรูปไม่ได้ อาจติด CORS"));
+
+        img.src = url;
+      });
+    }
+
+    function resetStats() {
+      total = 0;
+      done = 0;
+      foundFaces = 0;
+      noFaces = 0;
+      photos = [];
+      document.getElementById("logBox").innerHTML = "";
+      document.getElementById("progressBar").style.width = "0%";
+      document.getElementById("statusText").textContent = "กำลังเริ่มต้น...";
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById("totalPhotos").textContent = total;
+      document.getElementById("donePhotos").textContent = done;
+      document.getElementById("faceCount").textContent = foundFaces;
+      document.getElementById("noFaceCount").textContent = noFaces;
+
+      const percent = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
+
+    function addLog(text, colorClass = "text-slate-600") {
+      const box = document.getElementById("logBox");
+      const p = document.createElement("p");
+      p.className = colorClass;
+      p.textContent = text;
+      box.prepend(p);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
