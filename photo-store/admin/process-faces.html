@@ -350,7 +350,7 @@
       }
     }
 
-    async function detectWithTiny(input, inputSize = 768, scoreThreshold = 0.15) {
+    async function detectWithTiny(input, inputSize = 768, scoreThreshold = 0.10) {
       const options = new faceapi.TinyFaceDetectorOptions({
         inputSize,
         scoreThreshold
@@ -362,7 +362,7 @@
         .withFaceDescriptors();
     }
 
-    async function detectWithSSD(input, minConfidence = 0.2) {
+    async function detectWithSSD(input, minConfidence = 0.12) {
       const options = new faceapi.SsdMobilenetv1Options({
         minConfidence
       });
