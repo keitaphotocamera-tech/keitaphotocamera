@@ -14,13 +14,13 @@
 </head>
 
 <body class="bg-slate-100 text-slate-800">
-  <main class="max-w-6xl mx-auto p-4">
+  <main class="max-w-7xl mx-auto p-4">
 
     <header class="bg-white rounded-3xl p-5 shadow-sm mb-4">
       <p class="text-xs text-slate-500">Admin Tool</p>
-      <h1 class="text-2xl font-bold">ประมวลผลใบหน้า</h1>
+      <h1 class="text-2xl font-bold">ประมวลผลใบหน้าแบบละเอียด</h1>
       <p class="text-sm text-slate-500">
-        ใช้สำหรับสร้าง Face Descriptor ลงตาราง faces
+        ตรวจจับหลายใบหน้า / ใบหน้าเล็ก / สแกนทั้งภาพ แล้วบันทึกลงตาราง faces
       </p>
     </header>
 
@@ -31,16 +31,39 @@
         <option value="">กำลังโหลด Event...</option>
       </select>
 
-      <button
-        onclick="startProcess()"
-        id="processBtn"
-        class="mt-4 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold"
-      >
-        เริ่มประมวลผลใบหน้า
-      </button>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <button
+          onclick="startProcess()"
+          id="processBtn"
+          class="bg-slate-900 text-white rounded-2xl py-3 font-bold"
+        >
+          เริ่มประมวลผลทั้งหมด
+        </button>
+
+        <button
+          onclick="stopProcess()"
+          id="stopBtn"
+          class="bg-red-600 text-white rounded-2xl py-3 font-bold"
+        >
+          หยุด
+        </button>
+
+        <button
+          onclick="clearFacesByEvent()"
+          class="bg-orange-600 text-white rounded-2xl py-3 font-bold"
+        >
+          ล้าง Faces ของ Event นี้
+        </button>
+      </div>
+
+      <div class="mt-4 bg-slate-50 rounded-2xl p-4 text-sm text-slate-600">
+        <p><b>โหมดตรวจจับ:</b> TinyFaceDetector + SSD MobileNet</p>
+        <p><b>เหมาะสำหรับ:</b> ภาพงานวิ่ง, หลายคนในภาพ, ใบหน้าเล็ก, ภาพแนวนอน/แนวตั้ง</p>
+        <p><b>แนะนำ:</b> ใช้รูปต้นฉบับหรือ preview ที่คมชัดที่สุด หลีกเลี่ยง watermark ทับหน้า</p>
+      </div>
     </section>
 
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm">
         <p class="text-xs text-slate-500">รูปทั้งหมด</p>
         <p id="totalPhotos" class="text-2xl font-bold">0</p>
@@ -60,9 +83,14 @@
         <p class="text-xs text-slate-500">ไม่พบใบหน้า</p>
         <p id="noFaceCount" class="text-2xl font-bold text-red-600">0</p>
       </div>
+
+      <div class="bg-white rounded-3xl p-4 shadow-sm">
+        <p class="text-xs text-slate-500">ผิดพลาด</p>
+        <p id="errorCount" class="text-2xl font-bold text-orange-600">0</p>
+      </div>
     </section>
 
-    <section class="bg-white rounded-3xl p-5 shadow-sm">
+    <section class="bg-white rounded-3xl p-5 shadow-sm mb-4">
       <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden">
         <div id="progressBar" class="bg-emerald-600 h-4 w-0"></div>
       </div>
@@ -70,8 +98,21 @@
       <p id="statusText" class="mt-4 text-sm text-slate-500">
         พร้อมทำงาน
       </p>
+    </section>
 
-      <div id="logBox" class="mt-4 space-y-2 text-sm"></div>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <section class="bg-white rounded-3xl p-5 shadow-sm">
+        <h2 class="font-bold mb-3">ภาพที่กำลังประมวลผล</h2>
+        <img
+          id="currentImage"
+          class="hidden w-full max-h-[520px] object-contain bg-slate-100 rounded-2xl"
+        />
+      </section>
+
+      <section class="bg-white rounded-3xl p-5 shadow-sm">
+        <h2 class="font-bold mb-3">Log</h2>
+        <div id="logBox" class="space-y-2 text-sm max-h-[520px] overflow-auto"></div>
+      </section>
     </section>
 
   </main>
@@ -81,11 +122,15 @@
 
     let events = [];
     let photos = [];
+
     let total = 0;
     let done = 0;
     let foundFaces = 0;
     let noFaces = 0;
+    let errors = 0;
+
     let processing = false;
+    let shouldStop = false;
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -103,18 +148,20 @@
     async function loadModels() {
       Swal.fire({
         title: "กำลังโหลด Face Model...",
+        text: "โหลดครั้งแรกอาจใช้เวลาสักครู่",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
 
-      const MODEL_URL =
-        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+      const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
 
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
       await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
       Swal.close();
+      addLog("✅ โหลด Face Model สำเร็จ", "text-emerald-600");
     }
 
     async function loadEvents() {
@@ -156,8 +203,14 @@
 
       const confirm = await Swal.fire({
         icon: "question",
-        title: "เริ่มประมวลผล?",
-        text: "ระบบจะอ่านใบหน้าจากรูปทั้งหมดใน Event นี้",
+        title: "เริ่มประมวลผลใบหน้า?",
+        html: `
+          <div style="text-align:left">
+            <p>ระบบจะสแกนรูปทั้งหมดใน Event นี้</p>
+            <p>ตรวจจับหลายใบหน้า และใบหน้าเล็กแบบละเอียด</p>
+            <p style="color:#dc2626;margin-top:8px">รูปจำนวนมากอาจใช้เวลานาน</p>
+          </div>
+        `,
         showCancelButton: true,
         confirmButtonText: "เริ่ม",
         cancelButtonText: "ยกเลิก"
@@ -166,6 +219,7 @@
       if (!confirm.isConfirmed) return;
 
       processing = true;
+      shouldStop = false;
       resetStats();
 
       try {
@@ -181,13 +235,23 @@
         updateStats();
 
         for (const photo of photos) {
+          if (shouldStop) {
+            addLog("⛔ ผู้ใช้หยุดการทำงาน", "text-red-600");
+            break;
+          }
+
           await processPhoto(eventId, photo);
           done++;
           updateStats();
-          await sleep(150);
+
+          await sleep(120);
         }
 
-        Swal.fire("เสร็จสิ้น", `ประมวลผล ${done} รูป พบใบหน้า ${foundFaces} รายการ`, "success");
+        Swal.fire(
+          "เสร็จสิ้น",
+          `ประมวลผล ${done}/${total} รูป พบใบหน้า ${foundFaces} รายการ`,
+          "success"
+        );
 
       } catch (err) {
         console.error(err);
@@ -197,16 +261,15 @@
       }
     }
 
+    function stopProcess() {
+      shouldStop = true;
+      addLog("⏳ กำลังหยุดหลังจบรูปปัจจุบัน...", "text-orange-600");
+    }
+
     async function loadPhotos(eventId) {
       const { data, error } = await db
         .from("photos")
-        .select(`
-          id,
-          event_id,
-          filename,
-          preview_url,
-          watermark_url
-        `)
+        .select("*")
         .eq("event_id", eventId)
         .order("created_at", { ascending: false });
 
@@ -216,9 +279,7 @@
     }
 
     async function processPhoto(eventId, photo) {
-      const imageUrl =
-        photo.watermark_url ||
-        photo.preview_url;
+      const imageUrl = getBestImageUrl(photo);
 
       if (!imageUrl) {
         noFaces++;
@@ -230,12 +291,30 @@
         document.getElementById("statusText").textContent =
           `กำลังประมวลผล: ${photo.filename || photo.id}`;
 
+        document.getElementById("currentImage").src = imageUrl;
+        document.getElementById("currentImage").classList.remove("hidden");
+
         const img = await loadImage(imageUrl);
 
-        const detections = await faceapi
-          .detectAllFaces(img)
-          .withFaceLandmarks()
-          .withFaceDescriptors();
+        const canvasHigh = resizeImageToCanvas(img, 1800);
+        const canvasMedium = resizeImageToCanvas(img, 1200);
+        const canvasOriginal = img;
+
+        let detections = [];
+
+        const tinyHigh = await detectWithTiny(canvasHigh, 1024, 0.12);
+        detections = mergeDetections(detections, tinyHigh);
+
+        const tinyMedium = await detectWithTiny(canvasMedium, 768, 0.15);
+        detections = mergeDetections(detections, tinyMedium);
+
+        const ssdMedium = await detectWithSSD(canvasMedium, 0.20);
+        detections = mergeDetections(detections, ssdMedium);
+
+        if (!detections.length) {
+          const ssdOriginal = await detectWithSSD(canvasOriginal, 0.15);
+          detections = mergeDetections(detections, ssdOriginal);
+        }
 
         if (!detections.length) {
           noFaces++;
@@ -265,10 +344,106 @@
         );
 
       } catch (err) {
-        noFaces++;
+        errors++;
         console.warn(err);
         addLog(`❌ ${photo.filename || photo.id}: ${err.message}`, "text-red-600");
       }
+    }
+
+    async function detectWithTiny(input, inputSize = 768, scoreThreshold = 0.15) {
+      const options = new faceapi.TinyFaceDetectorOptions({
+        inputSize,
+        scoreThreshold
+      });
+
+      return await faceapi
+        .detectAllFaces(input, options)
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+    }
+
+    async function detectWithSSD(input, minConfidence = 0.2) {
+      const options = new faceapi.SsdMobilenetv1Options({
+        minConfidence
+      });
+
+      return await faceapi
+        .detectAllFaces(input, options)
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+    }
+
+    function mergeDetections(existing, incoming) {
+      const merged = [...existing];
+
+      incoming.forEach(newFace => {
+        const newBox = newFace.detection.box;
+
+        const duplicate = merged.some(oldFace => {
+          const oldBox = oldFace.detection.box;
+          return boxIoU(newBox, oldBox) > 0.35;
+        });
+
+        if (!duplicate) {
+          merged.push(newFace);
+        }
+      });
+
+      return merged;
+    }
+
+    function boxIoU(a, b) {
+      const xA = Math.max(a.x, b.x);
+      const yA = Math.max(a.y, b.y);
+      const xB = Math.min(a.x + a.width, b.x + b.width);
+      const yB = Math.min(a.y + a.height, b.y + b.height);
+
+      const interW = Math.max(0, xB - xA);
+      const interH = Math.max(0, yB - yA);
+      const interArea = interW * interH;
+
+      const areaA = a.width * a.height;
+      const areaB = b.width * b.height;
+
+      return interArea / (areaA + areaB - interArea);
+    }
+
+    function resizeImageToCanvas(img, maxSide = 1600) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
+
+      const scale = maxSide / Math.max(width, height);
+
+      if (scale < 1) {
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      } else if (scale > 1 && Math.max(width, height) < 900) {
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, width, height);
+
+      return canvas;
+    }
+
+    function getBestImageUrl(photo) {
+      return (
+        photo.original_url ||
+        photo.download_url ||
+        photo.public_url ||
+        photo.url ||
+        photo.preview_url ||
+        photo.watermark_url
+      );
     }
 
     async function deleteOldFaces(photoId) {
@@ -278,13 +453,49 @@
         .eq("photo_id", photoId);
     }
 
+    async function clearFacesByEvent() {
+      const eventId = document.getElementById("eventSelect").value;
+
+      if (!eventId) {
+        Swal.fire("กรุณาเลือก Event", "", "warning");
+        return;
+      }
+
+      const confirm = await Swal.fire({
+        icon: "warning",
+        title: "ล้าง Faces ของ Event นี้?",
+        text: "ข้อมูล face descriptor เดิมจะถูกลบทั้งหมด",
+        showCancelButton: true,
+        confirmButtonText: "ล้างข้อมูล",
+        cancelButtonText: "ยกเลิก"
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      const { error } = await db
+        .from("faces")
+        .delete()
+        .eq("event_id", eventId);
+
+      if (error) {
+        Swal.fire("ผิดพลาด", error.message, "error");
+        return;
+      }
+
+      Swal.fire("สำเร็จ", "ล้าง Faces แล้ว", "success");
+    }
+
     function loadImage(url) {
       return new Promise((resolve, reject) => {
         const img = new Image();
+
         img.crossOrigin = "anonymous";
 
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("โหลดรูปไม่ได้ อาจติด CORS"));
+
+        img.onerror = () => {
+          reject(new Error("โหลดรูปไม่ได้ อาจติด CORS หรือ URL รูปไม่ถูกต้อง"));
+        };
 
         img.src = url;
       });
@@ -295,10 +506,14 @@
       done = 0;
       foundFaces = 0;
       noFaces = 0;
+      errors = 0;
       photos = [];
+
       document.getElementById("logBox").innerHTML = "";
       document.getElementById("progressBar").style.width = "0%";
       document.getElementById("statusText").textContent = "กำลังเริ่มต้น...";
+      document.getElementById("currentImage").classList.add("hidden");
+
       updateStats();
     }
 
@@ -307,6 +522,7 @@
       document.getElementById("donePhotos").textContent = done;
       document.getElementById("faceCount").textContent = foundFaces;
       document.getElementById("noFaceCount").textContent = noFaces;
+      document.getElementById("errorCount").textContent = errors;
 
       const percent = total ? Math.round((done / total) * 100) : 0;
       document.getElementById("progressBar").style.width = percent + "%";
