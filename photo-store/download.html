@@ -173,20 +173,75 @@
       grid.classList.remove("hidden");
     }
 
-    function downloadFile(url, filename) {
-      if (!url) {
-        Swal.fire("ไม่พบไฟล์", "ยังไม่มี URL สำหรับดาวน์โหลด", "warning");
-        return;
-      }
+    // function downloadFile(url, filename) {
+    //   if (!url) {
+    //     Swal.fire("ไม่พบไฟล์", "ยังไม่มี URL สำหรับดาวน์โหลด", "warning");
+    //     return;
+    //   }
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.download = filename || "photo";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+    //   const a = document.createElement("a");
+    //   a.href = url;
+    //   a.target = "_blank";
+    //   a.download = filename || "photo";
+    //   document.body.appendChild(a);
+    //   a.click();
+    //   a.remove();
+    // }
+    async function downloadFile(url, filename) {
+  if (!url) {
+    Swal.fire("ไม่พบไฟล์", "ยังไม่มี URL สำหรับดาวน์โหลด", "warning");
+    return;
+  }
+
+  try {
+    Swal.fire({
+      title: "กำลังเตรียมดาวน์โหลด...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("โหลดไฟล์ไม่สำเร็จ");
     }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const safeName = filename || `photo-${Date.now()}.jpg`;
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = safeName;
+    a.style.display = "none";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(blobUrl);
+
+    Swal.close();
+
+  } catch (err) {
+    console.error(err);
+
+    Swal.fire({
+      icon: "info",
+      title: "เปิดภาพเพื่อบันทึก",
+      html: `
+        <p style="margin-bottom:10px">
+          หากเปิดผ่าน LINE หรือ iPhone ให้กดค้างที่ภาพแล้วเลือกบันทึกภาพ
+        </p>
+        <a href="${url}" target="_blank" style="color:#2563eb;font-weight:bold">
+          เปิดภาพต้นฉบับ
+        </a>
+      `,
+      confirmButtonText: "ตกลง"
+    });
+  }
+}
 
     function goOrder() {
       window.location.href = "order.html";
