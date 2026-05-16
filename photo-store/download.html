@@ -187,27 +187,13 @@
     //   a.click();
     //   a.remove();
     // }
-    function downloadFile(url, filename) {
+   function downloadFile(url, filename) {
   if (!url) {
     Swal.fire("ไม่พบไฟล์", "ยังไม่มี URL สำหรับดาวน์โหลด", "warning");
     return;
   }
 
-  Swal.fire({
-    icon: "info",
-    title: "กำลังเปิดไฟล์ภาพ",
-    html: `
-      <p style="margin-bottom:10px">
-        หากเปิดผ่าน LINE ให้กด ⋮ หรือ กดค้างที่ภาพ แล้วเลือกบันทึกภาพ
-      </p>
-      <a href="${url}" target="_blank" style="color:#2563eb;font-weight:bold">
-        เปิดภาพ
-      </a>
-    `,
-    confirmButtonText: "เปิดภาพ"
-  }).then(() => {
-    window.open(url, "_blank");
-  });
+  window.location.href = url;
 }
 
     function goOrder() {
