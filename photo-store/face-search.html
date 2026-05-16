@@ -9,6 +9,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
   <script src="js/config.js"></script>
@@ -16,26 +17,41 @@
 </head>
 
 <body class="bg-slate-100 text-slate-800">
+
   <main class="max-w-5xl mx-auto p-4 pb-28">
 
     <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
-      <div class="flex justify-between gap-3">
+      <div class="flex justify-between items-start gap-3">
+
         <div>
           <p class="text-xs text-slate-500">LINE Mini App</p>
-          <h1 class="text-xl font-bold">ค้นหาภาพด้วยใบหน้า</h1>
-          <p id="eventText" class="text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
+          <h1 class="text-2xl font-bold">
+            ค้นหาภาพด้วยใบหน้า
+          </h1>
+
+          <p id="eventText" class="text-sm text-slate-500 mt-1">
+            กำลังโหลดข้อมูล...
+          </p>
         </div>
 
-        <button onclick="goEvent()" class="bg-slate-900 text-white rounded-full px-4 py-2 font-bold">
+        <button
+          onclick="goEvent()"
+          class="bg-slate-900 text-white rounded-full px-4 py-2 font-bold"
+        >
           กลับ
         </button>
+
       </div>
     </header>
 
     <section class="bg-white rounded-3xl p-5 shadow-sm mb-4">
-      <h2 class="font-bold text-lg">อัปโหลดรูปใบหน้า</h2>
+
+      <h2 class="font-bold text-lg">
+        อัปโหลดรูปใบหน้า
+      </h2>
+
       <p class="text-sm text-slate-500 mt-1">
-        เลือกรูปที่เห็นใบหน้าชัดเจน 1 คน เพื่อค้นหาภาพใน Event นี้
+        กรุณาใช้รูปที่เห็นใบหน้าชัดเจน
       </p>
 
       <input
@@ -51,40 +67,65 @@
       />
 
       <button
-        onclick="searchByFace()"
         id="searchBtn"
-        class="mt-4 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
+        onclick="searchByFace()"
         disabled
+        class="mt-4 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
       >
         ค้นหาภาพของฉัน
       </button>
+
     </section>
 
     <section class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+
       <div class="flex justify-between items-center">
+
         <div>
           <p class="text-xs text-slate-500">ผลการค้นหา</p>
-          <p class="font-bold"><span id="resultCount">0</span> ภาพ</p>
+          <p class="font-bold">
+            <span id="resultCount">0</span> ภาพ
+          </p>
         </div>
 
-        <button onclick="goCart()" class="bg-emerald-600 text-white rounded-2xl px-4 py-3 font-bold">
+        <button
+          onclick="goCart()"
+          class="bg-emerald-600 text-white rounded-2xl px-4 py-3 font-bold"
+        >
           ไปตะกร้า
         </button>
+
       </div>
+
     </section>
 
-    <section id="resultGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></section>
+    <section
+      id="resultGrid"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+    ></section>
 
-    <section id="emptyBox" class="hidden text-center py-16">
+    <section
+      id="emptyBox"
+      class="hidden text-center py-16"
+    >
       <p class="text-5xl">🙂</p>
-      <h2 class="mt-3 text-lg font-bold">ยังไม่พบภาพ</h2>
-      <p class="text-sm text-slate-500 mt-1">ลองใช้รูปหน้าที่ชัดขึ้น หรือมีแสงสว่างมากขึ้น</p>
+
+      <h2 class="mt-3 text-lg font-bold">
+        ยังไม่พบภาพ
+      </h2>
+
+      <p class="text-sm text-slate-500 mt-1">
+        ลองใช้รูปหน้าที่ชัดขึ้น
+      </p>
     </section>
 
   </main>
 
   <script>
-    const db = window.sb || window.supabaseClient;
+
+    const db =
+      window.sb ||
+      window.supabaseClient;
 
     let profile = null;
     let eventId = null;
@@ -92,78 +133,127 @@
     let selectedFile = null;
     let results = [];
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        if (!db) throw new Error("ไม่พบ Supabase client");
+    document.addEventListener(
+      "DOMContentLoaded",
+      async () => {
 
-        eventId = getEventId();
-        if (!eventId) throw new Error("ไม่พบ event id");
+        try {
 
-        profile = await AppLIFF.init();
-        if (!profile) return;
+          if (!db) {
+            throw new Error("ไม่พบ Supabase client");
+          }
 
-        await loadModels();
-        await loadEvent();
+          eventId = getEventId();
 
-        document.getElementById("faceInput").addEventListener("change", handleFile);
+          if (!eventId) {
+            throw new Error("ไม่พบ event id");
+          }
 
-      } catch (err) {
-        console.error(err);
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "เปิดหน้าค้นหาใบหน้าไม่สำเร็จ", "error");
+          profile = await AppLIFF.init();
+
+          if (!profile) return;
+
+          await loadModels();
+          await loadEvent();
+
+          document
+            .getElementById("faceInput")
+            .addEventListener("change", handleFile);
+
+        } catch (err) {
+
+          console.error(err);
+
+          Swal.fire(
+            "เกิดข้อผิดพลาด",
+            err.message || "เปิดหน้าไม่สำเร็จ",
+            "error"
+          );
+        }
       }
-    });
+    );
 
     function getEventId() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("event") || params.get("event_id") || params.get("id");
+
+      const params =
+        new URLSearchParams(window.location.search);
+
+      return (
+        params.get("event") ||
+        params.get("event_id") ||
+        params.get("id")
+      );
     }
 
     async function loadModels() {
+
       Swal.fire({
         title: "กำลังโหลดระบบค้นหาใบหน้า...",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
 
-      await faceapi.nets.ssdMobilenetv1.loadFromUri("models");
-      await faceapi.nets.faceLandmark68Net.loadFromUri("models");
-      await faceapi.nets.faceRecognitionNet.loadFromUri("models");
+      const MODEL_URL =
+        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
       Swal.close();
     }
 
     async function loadEvent() {
-      const { data, error } = await db
-        .from("events")
-        .select("*")
-        .eq("id", eventId)
-        .single();
+
+      const { data, error } =
+        await db
+          .from("events")
+          .select("*")
+          .eq("id", eventId)
+          .single();
 
       if (error) throw error;
 
       eventData = data;
 
       document.getElementById("eventText").textContent =
-        data.name || data.title || "Face Search";
+        data.name ||
+        data.title ||
+        "Face Search";
     }
 
     function handleFile(e) {
+
       const file = e.target.files[0];
+
       if (!file) return;
 
       selectedFile = file;
 
-      const img = document.getElementById("previewImage");
+      const img =
+        document.getElementById("previewImage");
+
       img.src = URL.createObjectURL(file);
+
       img.classList.remove("hidden");
 
       document.getElementById("searchBtn").disabled = false;
     }
 
     async function searchByFace() {
+
       try {
+
         if (!selectedFile) {
-          Swal.fire("กรุณาเลือกรูปก่อน", "", "warning");
+
+          Swal.fire(
+            "กรุณาเลือกรูปก่อน",
+            "",
+            "warning"
+          );
+
           return;
         }
 
@@ -173,88 +263,141 @@
           didOpen: () => Swal.showLoading()
         });
 
-        const img = await faceapi.bufferToImage(selectedFile);
+        const img =
+          await faceapi.bufferToImage(selectedFile);
 
-        const detection = await faceapi
-          .detectSingleFace(img)
-          .withFaceLandmarks()
-          .withFaceDescriptor();
+        const detection =
+          await faceapi
+            .detectSingleFace(img)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
 
         if (!detection) {
-          Swal.fire("ไม่พบใบหน้า", "กรุณาเลือกรูปที่เห็นใบหน้าชัดเจน", "warning");
+
+          Swal.fire(
+            "ไม่พบใบหน้า",
+            "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+            "warning"
+          );
+
           return;
         }
 
-        const descriptor = Array.from(detection.descriptor);
+        const descriptor =
+          Array.from(detection.descriptor);
 
         Swal.update({
-          title: "กำลังค้นหารูปที่ใกล้เคียง..."
+          title: "กำลังค้นหารูป..."
         });
 
-        const res = await fetch(
-          `${CONFIG.SUPABASE_URL}/functions/v1/search-face`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              event_id: eventId,
-              descriptor,
-              threshold: 0.55
-            })
-          }
-        );
+        const res =
+          await fetch(
+            `${CONFIG.SUPABASE_URL}/functions/v1/search-face`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                event_id: eventId,
+                descriptor,
+                threshold: 0.55
+              })
+            }
+          );
 
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          throw new Error(data.error || "ค้นหาไม่สำเร็จ");
+
+          throw new Error(
+            data.error || "ค้นหาไม่สำเร็จ"
+          );
         }
 
         results = data.results || [];
+
         Swal.close();
+
         renderResults();
 
       } catch (err) {
+
         console.error(err);
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "ค้นหาใบหน้าไม่สำเร็จ", "error");
+
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.message || "ค้นหาไม่สำเร็จ",
+          "error"
+        );
       }
     }
 
     function renderResults() {
-      const grid = document.getElementById("resultGrid");
-      const empty = document.getElementById("emptyBox");
+
+      const grid =
+        document.getElementById("resultGrid");
+
+      const empty =
+        document.getElementById("emptyBox");
 
       grid.innerHTML = "";
-      document.getElementById("resultCount").textContent = results.length;
+
+      document.getElementById("resultCount").textContent =
+        results.length;
 
       if (!results.length) {
+
         empty.classList.remove("hidden");
+
         return;
       }
 
       empty.classList.add("hidden");
 
       results.forEach(item => {
+
         const photo = item.photo || {};
+
         const img =
           photo.watermark_url ||
           photo.preview_url ||
           "https://placehold.co/600x800?text=Photo";
 
-        const price = Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+        const price =
+          Number(
+            photo.price ||
+            eventData?.photo_price ||
+            CONFIG.DEFAULT_PHOTO_PRICE ||
+            0
+          );
 
-        const card = document.createElement("article");
-        card.className = "bg-white rounded-3xl overflow-hidden shadow-sm";
+        const card =
+          document.createElement("article");
+
+        card.className =
+          "bg-white rounded-3xl overflow-hidden shadow-sm";
 
         card.innerHTML = `
-          <img src="${img}" class="w-full aspect-[3/4] object-cover bg-slate-200">
+          <img
+            src="${img}"
+            class="w-full aspect-[3/4] object-cover bg-slate-200"
+          >
 
           <div class="p-3">
-            <p class="font-bold truncate text-sm">${escapeHtml(photo.filename || photo.id)}</p>
-            <p class="text-xs text-slate-500">ความใกล้เคียง: ${formatScore(item.score)}</p>
-            <p class="mt-1 font-bold text-emerald-600">฿${formatMoney(price)}</p>
+
+            <p class="font-bold truncate text-sm">
+              ${escapeHtml(photo.filename || photo.id)}
+            </p>
+
+            <p class="text-xs text-slate-500">
+              ความใกล้เคียง:
+              ${formatScore(item.score)}
+            </p>
+
+            <p class="mt-1 font-bold text-emerald-600">
+              ฿${formatMoney(price)}
+            </p>
 
             <button
               onclick="addToCart('${photo.id}')"
@@ -262,6 +405,7 @@
             >
               เพิ่มลงตะกร้า
             </button>
+
           </div>
         `;
 
@@ -270,28 +414,70 @@
     }
 
     function addToCart(photoId) {
-      const item = results.find(r => String(r.photo?.id) === String(photoId));
+
+      const item =
+        results.find(
+          r => String(r.photo?.id) === String(photoId)
+        );
+
       if (!item) return;
 
       const photo = item.photo;
-      const price = Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
 
-      const cartKey = AppLIFF.getCartKey();
-      const oldCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
-      const map = new Map(oldCart.map(i => [String(i.photo_id), i]));
+      const price =
+        Number(
+          photo.price ||
+          eventData?.photo_price ||
+          CONFIG.DEFAULT_PHOTO_PRICE ||
+          0
+        );
 
-      map.set(String(photo.id), {
-        event_id: eventId,
-        event_name: eventData?.name || eventData?.title || "",
-        photo_id: photo.id,
-        filename: photo.filename || "",
-        file_name: photo.filename || "",
-        preview_url: photo.watermark_url || photo.preview_url || "",
-        price,
-        line_user_id: profile.userId
-      });
+      const cartKey =
+        AppLIFF.getCartKey();
 
-      localStorage.setItem(cartKey, JSON.stringify([...map.values()]));
+      const oldCart =
+        JSON.parse(
+          localStorage.getItem(cartKey) || "[]"
+        );
+
+      const map =
+        new Map(
+          oldCart.map(i => [String(i.photo_id), i])
+        );
+
+      map.set(
+        String(photo.id),
+        {
+          event_id: eventId,
+          event_name:
+            eventData?.name ||
+            eventData?.title ||
+            "",
+
+          photo_id: photo.id,
+
+          filename:
+            photo.filename || "",
+
+          file_name:
+            photo.filename || "",
+
+          preview_url:
+            photo.watermark_url ||
+            photo.preview_url ||
+            "",
+
+          price,
+
+          line_user_id:
+            profile.userId
+        }
+      );
+
+      localStorage.setItem(
+        cartKey,
+        JSON.stringify([...map.values()])
+      );
 
       Swal.fire({
         icon: "success",
@@ -300,31 +486,51 @@
         confirmButtonText: "ไปตะกร้า",
         cancelButtonText: "เลือกต่อ"
       }).then(result => {
-        if (result.isConfirmed) goCart();
+
+        if (result.isConfirmed) {
+          goCart();
+        }
       });
     }
 
     function goEvent() {
-      window.location.href = `event.html?event=${encodeURIComponent(eventId)}`;
+
+      window.location.href =
+        `event.html?event=${encodeURIComponent(eventId)}`;
     }
 
     function goCart() {
-      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
+
+      window.location.href =
+        `cart.html?event=${encodeURIComponent(eventId)}`;
     }
 
     function formatScore(score) {
-      if (score === undefined || score === null) return "-";
+
+      if (
+        score === undefined ||
+        score === null
+      ) {
+        return "-";
+      }
+
       return `${Math.round(Number(score) * 100)}%`;
     }
 
     function formatMoney(value) {
-      return Number(value || 0).toLocaleString("th-TH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
+
+      return Number(value || 0)
+        .toLocaleString(
+          "th-TH",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        );
     }
 
     function escapeHtml(text) {
+
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -332,6 +538,8 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
   </script>
+
 </body>
 </html>
