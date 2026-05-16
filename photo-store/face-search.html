@@ -266,11 +266,15 @@
         const img =
           await faceapi.bufferToImage(selectedFile);
 
+        const options = new faceapi.SsdMobilenetv1Options({
+        minConfidence: 0.2
+        });
+
         const detection =
-          await faceapi
-            .detectSingleFace(img)
-            .withFaceLandmarks()
-            .withFaceDescriptor();
+         await faceapi
+          .detectSingleFace(img, options)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
 
         if (!detection) {
 
@@ -517,17 +521,17 @@ function formatConfidence(confidence, distance) {
         `cart.html?event=${encodeURIComponent(eventId)}`;
     }
 
-    function formatScore(score) {
+    // function formatScore(score) {
 
-      if (
-        score === undefined ||
-        score === null
-      ) {
-        return "-";
-      }
+    //   if (
+    //     score === undefined ||
+    //     score === null
+    //   ) {
+    //     return "-";
+    //   }
 
-      return `${Math.round(Number(score) * 100)}%`;
-    }
+    //   return `${Math.round(Number(score) * 100)}%`;
+    // }
 
     function formatMoney(value) {
 
