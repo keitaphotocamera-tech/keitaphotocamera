@@ -299,10 +299,12 @@
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                event_id: eventId,
-                descriptor,
-                threshold: 0.50
-              })
+              event_id: eventId,
+              descriptor,
+              threshold: 0.45,
+              max_results: 8,
+              gap_limit: 0.12
+            })
             }
           );
 
@@ -392,7 +394,7 @@
 
             <p class="text-xs text-slate-500">
               ความใกล้เคียง:
-              ${formatScore(item.score)}
+             ${formatConfidence(item.confidence, item.distance)}
             </p>
 
             <p class="mt-1 font-bold text-emerald-600">
@@ -412,7 +414,17 @@
         grid.appendChild(card);
       });
     }
+function formatConfidence(confidence, distance) {
+  if (confidence !== undefined && confidence !== null) {
+    return `${Math.round(Number(confidence))}%`;
+  }
 
+  if (distance !== undefined && distance !== null) {
+    return `ระยะ ${Number(distance).toFixed(3)}`;
+  }
+
+  return "-";
+}
     function addToCart(photoId) {
 
       const item =
