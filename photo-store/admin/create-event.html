@@ -2,134 +2,87 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>สร้าง Event</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- IMPORTANT -->
   <script src="../js/config.js"></script>
 </head>
 
 <body class="bg-slate-100 text-slate-800">
-
   <main class="max-w-5xl mx-auto p-4 pb-20">
 
-    <!-- HEADER -->
     <header class="bg-white rounded-3xl p-5 shadow-sm mb-4">
-
-      <p class="text-xs text-slate-500">
-        ADMIN PANEL
-      </p>
-
-      <h1 class="text-3xl font-bold mt-1">
-        สร้าง Event
-      </h1>
-
+      <p class="text-xs text-slate-500">ADMIN PANEL</p>
+      <h1 class="text-3xl font-bold mt-1">สร้าง Event</h1>
       <p class="text-sm text-slate-500 mt-2">
         ระบบขายภาพผ่าน LINE LIFF + Supabase
       </p>
-
     </header>
 
-    <!-- FORM -->
     <section class="bg-white rounded-3xl p-5 shadow-sm">
-
       <div class="space-y-5">
 
-        <!-- TITLE -->
         <div>
-
-          <label class="font-bold block mb-2">
-            ชื่อ Event
-          </label>
-
+          <label class="font-bold block mb-2">ชื่อ Event</label>
           <input
             id="eventTitle"
             type="text"
             placeholder="เช่น Bangwad Charity Run 2026"
             class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
           />
-
         </div>
 
-        <!-- DESCRIPTION -->
         <div>
-
-          <label class="font-bold block mb-2">
-            รายละเอียด
-          </label>
-
+          <label class="font-bold block mb-2">รายละเอียด</label>
           <textarea
             id="eventDescription"
             rows="4"
             placeholder="รายละเอียดงาน"
             class="w-full bg-slate-50 rounded-2xl p-4 outline-none resize-none"
           ></textarea>
-
         </div>
 
-        <!-- DATE + PRICE -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
           <div>
-
-            <label class="font-bold block mb-2">
-              วันที่จัดงาน
-            </label>
-
+            <label class="font-bold block mb-2">วันที่จัดงาน</label>
             <input
               id="eventDate"
               type="date"
               class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
             />
-
           </div>
 
           <div>
-
-            <label class="font-bold block mb-2">
-              ราคาภาพ
-            </label>
-
+            <label class="font-bold block mb-2">ราคาภาพ</label>
             <input
               id="photoPrice"
               type="number"
               value="50"
               class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
             />
-
           </div>
-
         </div>
 
-        <!-- STATUS -->
         <div>
-
-          <label class="font-bold block mb-2">
-            สถานะ
-          </label>
-
+          <label class="font-bold block mb-2">สถานะ</label>
           <select
             id="eventStatus"
-            class="w-full bg-slate-50 rounded-2xl p-4 outline-none">
-           <option value="published">Published</option>
-           <option value="draft">Draft</option>
-           <option value="archived">Archived</option>
+            class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
+          >
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="closed">Closed</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
           </select>
-
         </div>
 
-        <!-- COVER -->
         <div>
-
-          <label class="font-bold block mb-2">
-            รูป Cover Event
-          </label>
-
+          <label class="font-bold block mb-2">รูป Cover Event</label>
           <input
             id="coverInput"
             type="file"
@@ -141,10 +94,8 @@
             id="coverPreview"
             class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-cover"
           />
-
         </div>
 
-        <!-- BUTTON -->
         <button
           onclick="createNewEvent()"
           id="createBtn"
@@ -154,24 +105,13 @@
         </button>
 
       </div>
-
     </section>
 
-    <!-- EVENT LIST -->
     <section class="mt-6 bg-white rounded-3xl p-5 shadow-sm">
-
       <div class="flex items-center justify-between mb-4">
-
         <div>
-
-          <p class="text-xs text-slate-500">
-            EVENTS
-          </p>
-
-          <h2 class="text-2xl font-bold">
-            รายการ Event
-          </h2>
-
+          <p class="text-xs text-slate-500">EVENTS</p>
+          <h2 class="text-2xl font-bold">รายการ Event</h2>
         </div>
 
         <button
@@ -180,21 +120,14 @@
         >
           Refresh
         </button>
-
       </div>
 
       <div id="eventList" class="space-y-4"></div>
-
     </section>
 
   </main>
 
   <script>
-
-    /****************************************
-     * SUPABASE
-     ****************************************/
-
     const db = window.sb || window.supabase.createClient(
       CONFIG.SUPABASE_URL,
       CONFIG.SUPABASE_ANON_KEY
@@ -203,51 +136,29 @@
     const BUCKET_NAME = "event-covers";
 
     let selectedCover = null;
-
-    /****************************************
-     * INIT
-     ****************************************/
+    let allEvents = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
-
       setupPreview();
-
       await loadEvents();
-
     });
 
-    /****************************************
-     * IMAGE PREVIEW
-     ****************************************/
-
     function setupPreview() {
-
       const input = document.getElementById("coverInput");
 
       input.addEventListener("change", (e) => {
-
         const file = e.target.files[0];
-
         if (!file) return;
 
         selectedCover = file;
 
         const img = document.getElementById("coverPreview");
-
         img.src = URL.createObjectURL(file);
-
         img.classList.remove("hidden");
-
       });
-
     }
 
-    /****************************************
-     * GENERATE SLUG
-     ****************************************/
-
     function generateSlug(text) {
-
       const base = String(text || "")
         .trim()
         .toLowerCase()
@@ -259,18 +170,11 @@
       return base || `event-${Date.now()}`;
     }
 
-    /****************************************
-     * UPLOAD COVER
-     ****************************************/
-
     async function uploadCover(file) {
-
       if (!file) return null;
 
       const ext = file.name.split(".").pop();
-
       const filename = `${crypto.randomUUID()}.${ext}`;
-
       const path = `covers/${filename}`;
 
       const { error: uploadError } = await db
@@ -288,34 +192,17 @@
       return data.publicUrl;
     }
 
-    /****************************************
-     * CREATE EVENT
-     ****************************************/
-
     async function createNewEvent() {
-
       try {
-
         const btn = document.getElementById("createBtn");
-
         btn.disabled = true;
-
         btn.textContent = "กำลังสร้าง...";
 
-        const title =
-          document.getElementById("eventTitle").value.trim();
-
-        const description =
-          document.getElementById("eventDescription").value.trim();
-
-        const eventDate =
-          document.getElementById("eventDate").value;
-
-        const photoPrice =
-          Number(document.getElementById("photoPrice").value || 50);
-
-        const status =
-          document.getElementById("eventStatus").value;
+        const title = document.getElementById("eventTitle").value.trim();
+        const description = document.getElementById("eventDescription").value.trim();
+        const eventDate = document.getElementById("eventDate").value;
+        const photoPrice = Number(document.getElementById("photoPrice").value || 50);
+        const status = document.getElementById("eventStatus").value;
 
         if (!title) {
           throw new Error("กรุณากรอกชื่อ Event");
@@ -324,7 +211,6 @@
         let coverUrl = null;
 
         if (selectedCover) {
-
           Swal.fire({
             title: "กำลังอัปโหลด Cover...",
             allowOutsideClick: false,
@@ -335,21 +221,13 @@
         }
 
         const payload = {
-
           title,
-
           slug: `${generateSlug(title)}-${Date.now()}`,
-
           description,
-
           event_date: eventDate || null,
-
           cover_url: coverUrl,
-
           photo_price: photoPrice,
-
           status
-
         };
 
         const { data, error } = await db
@@ -365,31 +243,23 @@
           title: "สร้าง Event สำเร็จ",
           html: `
             <div style="text-align:left">
-
               <p><b>Event ID:</b></p>
-
-              <p style="word-break:break-all">
-                ${data.id}
-              </p>
+              <p style="word-break:break-all">${data.id}</p>
 
               <hr style="margin:12px 0">
 
               <p><b>URL Event:</b></p>
-
               <p style="word-break:break-all">
                 ../event.html?event=${data.id}
               </p>
-
             </div>
           `
         });
 
         clearForm();
-
         await loadEvents();
 
       } catch (err) {
-
         console.error(err);
 
         Swal.fire(
@@ -399,21 +269,13 @@
         );
 
       } finally {
-
         const btn = document.getElementById("createBtn");
-
         btn.disabled = false;
-
         btn.textContent = "สร้าง Event";
       }
     }
 
-    /****************************************
-     * LOAD EVENTS
-     ****************************************/
-
     async function loadEvents() {
-
       const box = document.getElementById("eventList");
 
       box.innerHTML = `
@@ -425,12 +287,9 @@
       const { data, error } = await db
         .from("events")
         .select("*")
-        .order("created_at", {
-          ascending: false
-        });
+        .order("created_at", { ascending: false });
 
       if (error) {
-
         console.error(error);
 
         box.innerHTML = `
@@ -438,105 +297,70 @@
             โหลด Event ไม่สำเร็จ
           </div>
         `;
-
         return;
       }
 
-      if (!data?.length) {
+      allEvents = data || [];
 
+      if (!allEvents.length) {
         box.innerHTML = `
           <div class="text-center py-10 text-slate-400">
             ยังไม่มี Event
           </div>
         `;
-
         return;
       }
 
       box.innerHTML = "";
 
-      data.forEach(event => {
-
+      allEvents.forEach(event => {
         const card = document.createElement("div");
-
-        card.className =
-          "border border-slate-200 rounded-3xl overflow-hidden bg-white";
+        card.className = "border border-slate-200 rounded-3xl overflow-hidden bg-white";
 
         card.innerHTML = `
-
           <div class="grid md:grid-cols-[260px_1fr]">
-
             <img
               src="${event.cover_url || 'https://placehold.co/800x600?text=EVENT'}"
               class="w-full h-full object-cover aspect-video bg-slate-200"
             >
 
             <div class="p-4">
-
               <div class="flex justify-between gap-3">
-
                 <div>
-
                   <h3 class="text-2xl font-bold">
-                    ${escapeHtml(event.title || '-')}
+                    ${escapeHtml(event.title || "-")}
                   </h3>
 
                   <p class="text-sm text-slate-500 mt-2">
-                    ${escapeHtml(event.description || '-')}
+                    ${escapeHtml(event.description || "-")}
                   </p>
-
                 </div>
 
                 <span class="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold h-fit">
-                  ${event.status || '-'}
+                  ${escapeHtml(event.status || "-")}
                 </span>
-
               </div>
 
               <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-sm">
-
                 <div>
-
-                  <p class="text-slate-400">
-                    วันที่
-                  </p>
-
-                  <p class="font-bold">
-                    ${event.event_date || '-'}
-                  </p>
-
+                  <p class="text-slate-400">วันที่</p>
+                  <p class="font-bold">${event.event_date || "-"}</p>
                 </div>
 
                 <div>
-
-                  <p class="text-slate-400">
-                    ราคาภาพ
-                  </p>
-
+                  <p class="text-slate-400">ราคาภาพ</p>
                   <p class="font-bold">
                     ฿${Number(event.photo_price || 0).toLocaleString()}
                   </p>
-
                 </div>
 
                 <div>
-
-                  <p class="text-slate-400">
-                    Event ID
-                  </p>
-
-                  <p class="font-bold text-xs break-all">
-                    ${event.id}
-                  </p>
-
+                  <p class="text-slate-400">Event ID</p>
+                  <p class="font-bold text-xs break-all">${event.id}</p>
                 </div>
 
                 <div>
-
-                  <p class="text-slate-400">
-                    เปิด Event
-                  </p>
-
+                  <p class="text-slate-400">เปิด Event</p>
                   <a
                     href="../event.html?event=${event.id}"
                     target="_blank"
@@ -544,56 +368,131 @@
                   >
                     เปิดหน้า Event
                   </a>
-
                 </div>
-
               </div>
 
+              <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-2">
+                <a
+                  href="../event.html?event=${event.id}"
+                  target="_blank"
+                  class="text-center bg-slate-900 text-white rounded-2xl py-3 font-bold"
+                >
+                  ดูภาพ
+                </a>
+
+                <a
+                  href="process-faces.html"
+                  target="_blank"
+                  class="text-center bg-blue-600 text-white rounded-2xl py-3 font-bold"
+                >
+                  Process Faces
+                </a>
+
+                <button
+                  onclick="deleteEventDeep('${event.id}')"
+                  class="bg-red-600 text-white rounded-2xl py-3 font-bold"
+                >
+                  ลบ Event
+                </button>
+              </div>
             </div>
-
           </div>
-
         `;
 
         box.appendChild(card);
-
       });
-
     }
 
-    /****************************************
-     * CLEAR FORM
-     ****************************************/
+    async function deleteEventDeep(eventId) {
+      const event = allEvents.find(e => String(e.id) === String(eventId));
+      const eventTitle = event?.title || eventId;
+
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "ลบ Event นี้?",
+        html: `
+          <div style="text-align:left">
+            <p><b>${escapeHtml(eventTitle)}</b></p>
+
+            <p style="color:#dc2626;margin-top:8px">
+              ระบบจะลบ Event, รูปทั้งหมด, faces และไฟล์ใน Bucket
+            </p>
+
+            <p style="margin-top:8px">
+              การลบนี้ไม่สามารถย้อนกลับได้
+            </p>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "ลบถาวร",
+        cancelButtonText: "ยกเลิก",
+        confirmButtonColor: "#dc2626"
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        Swal.fire({
+          title: "กำลังลบ Event...",
+          text: "กรุณารอสักครู่",
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        const res = await fetch(
+          `${CONFIG.SUPABASE_URL}/functions/v1/delete-event-deep`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              event_id: eventId
+            })
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "ลบ Event ไม่สำเร็จ");
+        }
+
+        Swal.fire(
+          "ลบสำเร็จ",
+          `ลบรูป ${data.deleted_photos || 0} รายการ และไฟล์ ${data.deleted_files || 0} ไฟล์แล้ว`,
+          "success"
+        );
+
+        await loadEvents();
+
+      } catch (err) {
+        console.error(err);
+
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.message || "ไม่สามารถลบ Event ได้",
+          "error"
+        );
+      }
+    }
 
     function clearForm() {
-
       document.getElementById("eventTitle").value = "";
-
       document.getElementById("eventDescription").value = "";
-
       document.getElementById("eventDate").value = "";
-
       document.getElementById("photoPrice").value = "50";
-
       document.getElementById("eventStatus").value = "draft";
-
       document.getElementById("coverInput").value = "";
 
       const img = document.getElementById("coverPreview");
-
       img.src = "";
-
       img.classList.add("hidden");
 
       selectedCover = null;
     }
 
-    /****************************************
-     * ESCAPE HTML
-     ****************************************/
-
     function escapeHtml(text) {
-
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -601,8 +500,6 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
-
   </script>
-
 </body>
 </html>
