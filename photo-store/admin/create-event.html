@@ -3,38 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>สร้าง Event</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="js/config.js"></script>
+  <!-- สำคัญ -->
+  <script src="../js/config.js"></script>
 </head>
 
 <body class="bg-slate-100 text-slate-800">
 
-  <main class="max-w-3xl mx-auto p-4 pb-20">
+  <main class="max-w-4xl mx-auto p-4 pb-20">
 
+    <!-- HEADER -->
     <header class="bg-white rounded-3xl p-5 shadow-sm mb-4">
-      <p class="text-xs text-slate-500">Admin Dashboard</p>
+
+      <p class="text-xs text-slate-500">
+        ADMIN PANEL
+      </p>
 
       <h1 class="text-3xl font-bold mt-1">
         สร้าง Event
       </h1>
 
       <p class="text-sm text-slate-500 mt-2">
-        สำหรับระบบขายภาพผ่าน LINE LIFF + Supabase
+        ระบบขายภาพผ่าน LINE LIFF + Supabase
       </p>
+
     </header>
 
+    <!-- FORM -->
     <section class="bg-white rounded-3xl p-5 shadow-sm">
 
       <div class="space-y-5">
 
+        <!-- EVENT NAME -->
         <div>
+
           <label class="font-bold block mb-2">
-            ชื่องาน Event
+            ชื่อ Event
           </label>
 
           <input
@@ -43,9 +53,12 @@
             placeholder="เช่น Bangwad Charity Run 2026"
             class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
           />
+
         </div>
 
+        <!-- DESCRIPTION -->
         <div>
+
           <label class="font-bold block mb-2">
             รายละเอียด
           </label>
@@ -56,11 +69,14 @@
             placeholder="รายละเอียดงาน"
             class="w-full bg-slate-50 rounded-2xl p-4 outline-none resize-none"
           ></textarea>
+
         </div>
 
+        <!-- DATE + PRICE -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div>
+
             <label class="font-bold block mb-2">
               วันที่จัดงาน
             </label>
@@ -70,11 +86,13 @@
               type="date"
               class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
             />
+
           </div>
 
           <div>
+
             <label class="font-bold block mb-2">
-              ราคาภาพเริ่มต้น
+              ราคาภาพ
             </label>
 
             <input
@@ -83,13 +101,34 @@
               value="50"
               class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
             />
+
           </div>
 
         </div>
 
+        <!-- STATUS -->
         <div>
+
           <label class="font-bold block mb-2">
-            Upload Cover Event
+            สถานะ
+          </label>
+
+          <select
+            id="eventStatus"
+            class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
+          >
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="closed">Closed</option>
+          </select>
+
+        </div>
+
+        <!-- COVER -->
+        <div>
+
+          <label class="font-bold block mb-2">
+            รูป Cover Event
           </label>
 
           <input
@@ -103,23 +142,10 @@
             id="coverPreview"
             class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-cover"
           />
+
         </div>
 
-        <div>
-          <label class="font-bold block mb-2">
-            สถานะ Event
-          </label>
-
-          <select
-            id="eventStatus"
-            class="w-full bg-slate-50 rounded-2xl p-4 outline-none"
-          >
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-
+        <!-- BUTTON -->
         <button
           onclick="createEvent()"
           id="createBtn"
@@ -132,13 +158,19 @@
 
     </section>
 
+    <!-- EVENT LIST -->
     <section class="mt-6 bg-white rounded-3xl p-5 shadow-sm">
 
       <div class="flex items-center justify-between mb-4">
 
         <div>
-          <p class="text-xs text-slate-500">รายการ Event</p>
-          <h2 class="text-xl font-bold">Events</h2>
+          <p class="text-xs text-slate-500">
+            EVENTS
+          </p>
+
+          <h2 class="text-2xl font-bold">
+            รายการ Event
+          </h2>
         </div>
 
         <button
@@ -158,6 +190,10 @@
 
   <script>
 
+    /****************************************
+     * SUPABASE
+     ****************************************/
+
     const db = window.sb || window.supabase.createClient(
       CONFIG.SUPABASE_URL,
       CONFIG.SUPABASE_ANON_KEY
@@ -167,15 +203,28 @@
 
     let selectedCover = null;
 
+    /****************************************
+     * INIT
+     ****************************************/
+
     document.addEventListener("DOMContentLoaded", async () => {
+
       setupPreview();
+
       await loadEvents();
+
     });
 
+    /****************************************
+     * PREVIEW IMAGE
+     ****************************************/
+
     function setupPreview() {
+
       const input = document.getElementById("coverInput");
 
       input.addEventListener("change", (e) => {
+
         const file = e.target.files[0];
 
         if (!file) return;
@@ -185,9 +234,16 @@
         const img = document.getElementById("coverPreview");
 
         img.src = URL.createObjectURL(file);
+
         img.classList.remove("hidden");
+
       });
+
     }
+
+    /****************************************
+     * UPLOAD COVER
+     ****************************************/
 
     async function uploadCover(file) {
 
@@ -202,9 +258,7 @@
       const { error: uploadError } = await db
         .storage
         .from(BUCKET_NAME)
-        .upload(path, file, {
-          upsert: false
-        });
+        .upload(path, file);
 
       if (uploadError) throw uploadError;
 
@@ -216,19 +270,33 @@
       return data.publicUrl;
     }
 
+    /****************************************
+     * CREATE EVENT
+     ****************************************/
+
     async function createEvent() {
 
       try {
 
         const btn = document.getElementById("createBtn");
+
         btn.disabled = true;
         btn.textContent = "กำลังสร้าง...";
 
-        const name = document.getElementById("eventName").value.trim();
-        const description = document.getElementById("eventDescription").value.trim();
-        const eventDate = document.getElementById("eventDate").value;
-        const photoPrice = Number(document.getElementById("photoPrice").value || 0);
-        const status = document.getElementById("eventStatus").value;
+        const name =
+          document.getElementById("eventName").value.trim();
+
+        const description =
+          document.getElementById("eventDescription").value.trim();
+
+        const eventDate =
+          document.getElementById("eventDate").value;
+
+        const photoPrice =
+          Number(document.getElementById("photoPrice").value || 50);
+
+        const status =
+          document.getElementById("eventStatus").value;
 
         if (!name) {
           throw new Error("กรุณากรอกชื่อ Event");
@@ -237,6 +305,7 @@
         let coverUrl = null;
 
         if (selectedCover) {
+
           Swal.fire({
             title: "กำลังอัปโหลด Cover...",
             allowOutsideClick: false,
@@ -245,12 +314,6 @@
 
           coverUrl = await uploadCover(selectedCover);
         }
-
-        Swal.fire({
-          title: "กำลังสร้าง Event...",
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
 
         const payload = {
           name,
@@ -274,20 +337,27 @@
           title: "สร้าง Event สำเร็จ",
           html: `
             <div style="text-align:left">
+
               <p><b>Event ID:</b></p>
-              <p style="word-break:break-all">${data.id}</p>
+
+              <p style="word-break:break-all">
+                ${data.id}
+              </p>
 
               <hr style="margin:12px 0">
 
               <p><b>URL Event:</b></p>
+
               <p style="word-break:break-all">
-                event.html?event=${data.id}
+                ../event.html?event=${data.id}
               </p>
+
             </div>
           `
         });
 
         clearForm();
+
         await loadEvents();
 
       } catch (err) {
@@ -303,10 +373,16 @@
       } finally {
 
         const btn = document.getElementById("createBtn");
+
         btn.disabled = false;
+
         btn.textContent = "สร้าง Event";
       }
     }
+
+    /****************************************
+     * LOAD EVENTS
+     ****************************************/
 
     async function loadEvents() {
 
@@ -321,23 +397,31 @@
       const { data, error } = await db
         .from("events")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false
+        });
 
       if (error) {
+
+        console.error(error);
+
         box.innerHTML = `
           <div class="text-red-500">
             โหลด Event ไม่สำเร็จ
           </div>
         `;
+
         return;
       }
 
       if (!data?.length) {
+
         box.innerHTML = `
           <div class="text-center py-10 text-slate-400">
             ยังไม่มี Event
           </div>
         `;
+
         return;
       }
 
@@ -347,10 +431,12 @@
 
         const card = document.createElement("div");
 
-        card.className = "border border-slate-200 rounded-3xl overflow-hidden";
+        card.className =
+          "border border-slate-200 rounded-3xl overflow-hidden";
 
         card.innerHTML = `
-          <div class="grid md:grid-cols-[220px_1fr]">
+
+          <div class="grid md:grid-cols-[240px_1fr]">
 
             <img
               src="${event.cover_url || 'https://placehold.co/800x600?text=EVENT'}"
@@ -359,43 +445,70 @@
 
             <div class="p-4">
 
-              <div class="flex justify-between items-start gap-3">
+              <div class="flex justify-between gap-3">
 
                 <div>
-                  <h3 class="text-xl font-bold">
+
+                  <h3 class="text-2xl font-bold">
                     ${escapeHtml(event.name || '-')}
                   </h3>
 
-                  <p class="text-sm text-slate-500 mt-1">
+                  <p class="text-sm text-slate-500 mt-2">
                     ${escapeHtml(event.description || '-')}
                   </p>
+
                 </div>
 
-                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100">
+                <span class="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold h-fit">
                   ${event.status || '-'}
                 </span>
 
               </div>
 
-              <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-sm">
 
                 <div>
-                  <p class="text-slate-400">วันที่</p>
-                  <p class="font-bold">${event.event_date || '-'}</p>
+
+                  <p class="text-slate-400">
+                    วันที่
+                  </p>
+
+                  <p class="font-bold">
+                    ${event.event_date || '-'}
+                  </p>
+
                 </div>
 
                 <div>
-                  <p class="text-slate-400">ราคาภาพ</p>
-                  <p class="font-bold">฿${Number(event.photo_price || 0).toLocaleString()}</p>
+
+                  <p class="text-slate-400">
+                    ราคาภาพ
+                  </p>
+
+                  <p class="font-bold">
+                    ฿${Number(event.photo_price || 0).toLocaleString()}
+                  </p>
+
                 </div>
 
                 <div>
-                  <p class="text-slate-400">Event ID</p>
-                  <p class="font-bold text-xs break-all">${event.id}</p>
+
+                  <p class="text-slate-400">
+                    Event ID
+                  </p>
+
+                  <p class="font-bold text-xs break-all">
+                    ${event.id}
+                  </p>
+
                 </div>
 
                 <div>
-                  <p class="text-slate-400">หน้า Event</p>
+
+                  <p class="text-slate-400">
+                    เปิด Event
+                  </p>
+
                   <a
                     href="../event.html?event=${event.id}"
                     target="_blank"
@@ -403,6 +516,7 @@
                   >
                     เปิดหน้า Event
                   </a>
+
                 </div>
 
               </div>
@@ -410,33 +524,53 @@
             </div>
 
           </div>
+
         `;
 
         box.appendChild(card);
+
       });
+
     }
 
+    /****************************************
+     * CLEAR FORM
+     ****************************************/
+
     function clearForm() {
+
       document.getElementById("eventName").value = "";
+
       document.getElementById("eventDescription").value = "";
+
       document.getElementById("eventDate").value = "";
+
       document.getElementById("photoPrice").value = "50";
+
       document.getElementById("eventStatus").value = "draft";
+
       document.getElementById("coverInput").value = "";
 
       const img = document.getElementById("coverPreview");
+
       img.src = "";
+
       img.classList.add("hidden");
 
       selectedCover = null;
     }
 
+    /****************************************
+     * ESCAPE HTML
+     ****************************************/
+
     function escapeHtml(text) {
+
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
 
