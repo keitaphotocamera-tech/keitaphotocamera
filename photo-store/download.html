@@ -344,74 +344,35 @@
       grid.classList.remove("hidden");
     }
 
-    async function downloadFile(url, filename) {
-      if (!url) {
-        Swal.fire(t().noFile, t().noFileDesc, "warning");
-        return;
-      }
+ async function downloadAllFiles() {
+  if (!order || order.status !== "paid") {
+    Swal.fire(t().blockedTitle, t().blockedDesc, "warning");
+    return;
+  }
 
-      try {
-        Swal.fire({
-          title: t().preparing,
-          text: t().downloadAllHint,
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
+  const files = (order.order_items || [])
+    .map(item => {
+      const photo = item.photos || {};
+      return photo.preview_url || photo.watermark_url || "";
+    })
+    .filter(Boolean);
 
-        const response = await fetch(url, { mode: "cors" });
+  if (!files.length) {
+    Swal.fire(t().noFile, t().noFileDesc, "warning");
+    return;
+  }
 
-        if (!response.ok) {
-          throw new Error("โหลดไฟล์ไม่สำเร็จ");
-        }
+  Swal.fire(
+    "เปิดรูปภาพ",
+    "ระบบจะเปิดรูปทีละภาพในเบราว์เซอร์นอก จากนั้นกดค้างที่รูปเพื่อบันทึก",
+    "info"
+  );
 
-        const blob = await response.blob();
-
-        const safeName =
-          filename && filename.includes(".")
-            ? filename
-            : `${filename || "photo"}.jpg`;
-
-        const file = new File([blob], safeName, {
-          type: blob.type || "image/jpeg"
-        });
-
-        Swal.close();
-
-        if (
-          navigator.canShare &&
-          navigator.canShare({ files: [file] })
-        ) {
-          await navigator.share({
-            files: [file],
-            title: safeName,
-            text: t().shareText
-          });
-          return;
-        }
-
-        const blobUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = safeName;
-        a.style.display = "none";
-
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-
-      } catch (err) {
-        console.warn("mobile download fallback:", err);
-
-        Swal.close();
-
-        openImageForSave(url);
-      }
-    }
+  for (const url of files) {
+    downloadFile(url);
+    await new Promise(resolve => setTimeout(resolve, 800));
+  }
+}
 
     function openImageForSave(url) {
       if (window.liff && liff.isInClient()) {
