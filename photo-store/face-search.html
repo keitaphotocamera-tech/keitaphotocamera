@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>ค้นหาภาพด้วยใบหน้า</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class"
+    };
+  </script>
+
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -16,41 +24,70 @@
   <script src="js/liff-helper.js"></script>
 </head>
 
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
 
   <main class="max-w-5xl mx-auto p-4 pb-28">
 
-    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+    <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
+
       <div class="flex justify-between items-start gap-3">
 
         <div>
-          <p class="text-xs text-slate-500">LINE Mini App</p>
-          <h1 class="text-2xl font-bold">
+
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
+            LINE Mini App
+          </p>
+
+          <h1 id="txtPageTitle" class="text-2xl font-bold">
             ค้นหาภาพด้วยใบหน้า
           </h1>
 
-          <p id="eventText" class="text-sm text-slate-500 mt-1">
+          <p id="eventText" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
             กำลังโหลดข้อมูล...
           </p>
+
         </div>
 
-        <button
-          onclick="goEvent()"
-          class="bg-slate-900 text-white rounded-full px-4 py-2 font-bold"
-        >
-          กลับ
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2">
+
+          <button
+            onclick="goEvent()"
+            class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold"
+          >
+            ← <span id="txtBack">กลับ</span>
+          </button>
+
+          <select
+            id="langSelect"
+            onchange="changeLanguage(this.value)"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
+          >
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
+
+          <button
+            onclick="toggleDarkMode()"
+            id="darkBtn"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+          >
+            🌙 Dark
+          </button>
+
+        </div>
 
       </div>
+
     </header>
 
-    <section class="bg-white rounded-3xl p-5 shadow-sm mb-4">
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm mb-4 transition">
 
-      <h2 class="font-bold text-lg">
+      <h2 id="txtUploadTitle" class="font-bold text-lg">
         อัปโหลดรูปใบหน้า
       </h2>
 
-      <p class="text-sm text-slate-500 mt-1">
+      <p id="txtUploadDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
         กรุณาใช้รูปที่เห็นใบหน้าชัดเจน
       </p>
 
@@ -58,41 +95,47 @@
         id="faceInput"
         type="file"
         accept="image/*"
-        class="mt-4 w-full bg-slate-50 rounded-2xl p-4"
+        class="mt-4 w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4"
       />
 
       <img
         id="previewImage"
-        class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100"
+        class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100 dark:bg-slate-800"
       />
 
       <button
         id="searchBtn"
         onclick="searchByFace()"
         disabled
-        class="mt-4 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
+        class="mt-4 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
       >
         ค้นหาภาพของฉัน
       </button>
 
     </section>
 
-    <section class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
 
       <div class="flex justify-between items-center">
 
         <div>
-          <p class="text-xs text-slate-500">ผลการค้นหา</p>
-          <p class="font-bold">
-            <span id="resultCount">0</span> ภาพ
+
+          <p id="txtSearchResult" class="text-xs text-slate-500 dark:text-slate-400">
+            ผลการค้นหา
           </p>
+
+          <p class="font-bold">
+            <span id="resultCount">0</span>
+            <span id="txtPhotoUnit">ภาพ</span>
+          </p>
+
         </div>
 
         <button
           onclick="goCart()"
           class="bg-emerald-600 text-white rounded-2xl px-4 py-3 font-bold"
         >
-          ไปตะกร้า
+          <span id="txtGoCart">ไปตะกร้า</span>
         </button>
 
       </div>
@@ -108,15 +151,17 @@
       id="emptyBox"
       class="hidden text-center py-16"
     >
+
       <p class="text-5xl">🙂</p>
 
-      <h2 class="mt-3 text-lg font-bold">
+      <h2 id="txtNoResult" class="mt-3 text-lg font-bold">
         ยังไม่พบภาพ
       </h2>
 
-      <p class="text-sm text-slate-500 mt-1">
+      <p id="txtNoResultDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
         ลองใช้รูปหน้าที่ชัดขึ้น
       </p>
+
     </section>
 
   </main>
@@ -133,11 +178,156 @@
     let selectedFile = null;
     let results = [];
 
+    /****************************************
+     * LANGUAGE
+     ****************************************/
+
+    const LANG = {
+
+      th: {
+        miniApp: "LINE Mini App",
+        pageTitle: "ค้นหาภาพด้วยใบหน้า",
+        back: "กลับ",
+        uploadTitle: "อัปโหลดรูปใบหน้า",
+        uploadDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+        searchBtn: "ค้นหาภาพของฉัน",
+        searchResult: "ผลการค้นหา",
+        photoUnit: "ภาพ",
+        goCart: "ไปตะกร้า",
+        noResult: "ยังไม่พบภาพ",
+        noResultDesc: "ลองใช้รูปหน้าที่ชัดขึ้น",
+        loadingFace: "กำลังวิเคราะห์ใบหน้า...",
+        loadingSearch: "กำลังค้นหารูป...",
+        loadingSystem: "กำลังโหลดระบบค้นหาใบหน้า...",
+        noFace: "ไม่พบใบหน้า",
+        noFaceDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+        addSuccess: "เพิ่มลงตะกร้าแล้ว",
+        goCartConfirm: "ไปตะกร้า",
+        continueSelect: "เลือกต่อ",
+        similarity: "ความใกล้เคียง"
+      },
+
+      en: {
+        miniApp: "LINE Mini App",
+        pageTitle: "Face Search",
+        back: "Back",
+        uploadTitle: "Upload Face Photo",
+        uploadDesc: "Please use a clear face photo",
+        searchBtn: "Search My Photos",
+        searchResult: "Search Results",
+        photoUnit: "photos",
+        goCart: "Go to Cart",
+        noResult: "No Photos Found",
+        noResultDesc: "Try using a clearer face image",
+        loadingFace: "Analyzing face...",
+        loadingSearch: "Searching photos...",
+        loadingSystem: "Loading face search system...",
+        noFace: "Face not found",
+        noFaceDesc: "Please use a clearer face photo",
+        addSuccess: "Added to cart",
+        goCartConfirm: "Go to Cart",
+        continueSelect: "Continue",
+        similarity: "Similarity"
+      },
+
+      ru: {
+        miniApp: "LINE Мини-приложение",
+        pageTitle: "Поиск по лицу",
+        back: "Назад",
+        uploadTitle: "Загрузить фото лица",
+        uploadDesc: "Пожалуйста, используйте чёткое фото лица",
+        searchBtn: "Найти мои фото",
+        searchResult: "Результаты поиска",
+        photoUnit: "фото",
+        goCart: "В корзину",
+        noResult: "Фото не найдены",
+        noResultDesc: "Попробуйте использовать более чёткое фото",
+        loadingFace: "Анализ лица...",
+        loadingSearch: "Поиск фотографий...",
+        loadingSystem: "Загрузка системы поиска...",
+        noFace: "Лицо не найдено",
+        noFaceDesc: "Пожалуйста, используйте более чёткое фото",
+        addSuccess: "Добавлено в корзину",
+        goCartConfirm: "В корзину",
+        continueSelect: "Продолжить",
+        similarity: "Схожесть"
+      }
+
+    };
+
+    let currentLang =
+      localStorage.getItem("lang") || "th";
+
+    function t() {
+      return LANG[currentLang];
+    }
+
+    function applyLanguage() {
+
+      const x = t();
+
+      document.documentElement.lang =
+        currentLang;
+
+      document.getElementById("txtMiniApp").textContent =
+        x.miniApp;
+
+      document.getElementById("txtPageTitle").textContent =
+        x.pageTitle;
+
+      document.getElementById("txtBack").textContent =
+        x.back;
+
+      document.getElementById("txtUploadTitle").textContent =
+        x.uploadTitle;
+
+      document.getElementById("txtUploadDesc").textContent =
+        x.uploadDesc;
+
+      document.getElementById("searchBtn").textContent =
+        x.searchBtn;
+
+      document.getElementById("txtSearchResult").textContent =
+        x.searchResult;
+
+      document.getElementById("txtPhotoUnit").textContent =
+        x.photoUnit;
+
+      document.getElementById("txtGoCart").textContent =
+        x.goCart;
+
+      document.getElementById("txtNoResult").textContent =
+        x.noResult;
+
+      document.getElementById("txtNoResultDesc").textContent =
+        x.noResultDesc;
+
+      document.getElementById("langSelect").value =
+        currentLang;
+    }
+
+    function changeLanguage(lang) {
+
+      currentLang = lang;
+
+      localStorage.setItem(
+        "lang",
+        lang
+      );
+
+      applyLanguage();
+
+      renderResults();
+    }
+
     document.addEventListener(
       "DOMContentLoaded",
       async () => {
 
         try {
+
+          initDarkMode();
+          applyLanguage();
 
           if (!db) {
             throw new Error("ไม่พบ Supabase client");
@@ -165,7 +355,7 @@
           console.error(err);
 
           Swal.fire(
-            "เกิดข้อผิดพลาด",
+            "Error",
             err.message || "เปิดหน้าไม่สำเร็จ",
             "error"
           );
@@ -188,7 +378,7 @@
     async function loadModels() {
 
       Swal.fire({
-        title: "กำลังโหลดระบบค้นหาใบหน้า...",
+        title: t().loadingSystem,
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
@@ -249,7 +439,7 @@
         if (!selectedFile) {
 
           Swal.fire(
-            "กรุณาเลือกรูปก่อน",
+            "Warning",
             "",
             "warning"
           );
@@ -258,7 +448,7 @@
         }
 
         Swal.fire({
-          title: "กำลังวิเคราะห์ใบหน้า...",
+          title: t().loadingFace,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
@@ -266,21 +456,22 @@
         const img =
           await faceapi.bufferToImage(selectedFile);
 
-        const options = new faceapi.SsdMobilenetv1Options({
-        minConfidence: 0.2
-        });
+        const options =
+          new faceapi.SsdMobilenetv1Options({
+            minConfidence: 0.2
+          });
 
         const detection =
-         await faceapi
-          .detectSingleFace(img, options)
-          .withFaceLandmarks()
-          .withFaceDescriptor();
+          await faceapi
+            .detectSingleFace(img, options)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
 
         if (!detection) {
 
           Swal.fire(
-            "ไม่พบใบหน้า",
-            "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+            t().noFace,
+            t().noFaceDesc,
             "warning"
           );
 
@@ -291,7 +482,7 @@
           Array.from(detection.descriptor);
 
         Swal.update({
-          title: "กำลังค้นหารูป..."
+          title: t().loadingSearch
         });
 
         const res =
@@ -303,16 +494,17 @@
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-              event_id: eventId,
-              descriptor,
-              threshold: 0.60,
-              max_results: 12,
-              gap_limit: 0.18
-            })
+                event_id: eventId,
+                descriptor,
+                threshold: 0.60,
+                max_results: 12,
+                gap_limit: 0.18
+              })
             }
           );
 
-        const data = await res.json();
+        const data =
+          await res.json();
 
         if (!res.ok || !data.success) {
 
@@ -332,7 +524,7 @@
         console.error(err);
 
         Swal.fire(
-          "เกิดข้อผิดพลาด",
+          "Error",
           err.message || "ค้นหาไม่สำเร็จ",
           "error"
         );
@@ -363,7 +555,8 @@
 
       results.forEach(item => {
 
-        const photo = item.photo || {};
+        const photo =
+          item.photo || {};
 
         const img =
           photo.watermark_url ||
@@ -382,12 +575,12 @@
           document.createElement("article");
 
         card.className =
-          "bg-white rounded-3xl overflow-hidden shadow-sm";
+          "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
 
         card.innerHTML = `
           <img
             src="${img}"
-            class="w-full aspect-[3/4] object-cover bg-slate-200"
+            class="w-full aspect-[3/4] object-cover bg-slate-200 dark:bg-slate-800"
           >
 
           <div class="p-3">
@@ -396,9 +589,9 @@
               ${escapeHtml(photo.filename || photo.id)}
             </p>
 
-            <p class="text-xs text-slate-500">
-              ความใกล้เคียง:
-             ${formatConfidence(item.confidence, item.distance)}
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              ${t().similarity} :
+              ${formatConfidence(item.confidence, item.distance)}
             </p>
 
             <p class="mt-1 font-bold text-emerald-600">
@@ -407,28 +600,38 @@
 
             <button
               onclick="addToCart('${photo.id}')"
-              class="mt-3 w-full bg-slate-900 text-white rounded-2xl py-3 font-bold text-sm"
+              class="mt-3 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold text-sm"
             >
-              เพิ่มลงตะกร้า
+              ${t().goCart}
             </button>
 
           </div>
         `;
 
         grid.appendChild(card);
+
       });
     }
-function formatConfidence(confidence, distance) {
-  if (confidence !== undefined && confidence !== null) {
-    return `${Math.round(Number(confidence))}%`;
-  }
 
-  if (distance !== undefined && distance !== null) {
-    return `ระยะ ${Number(distance).toFixed(3)}`;
-  }
+    function formatConfidence(confidence, distance) {
 
-  return "-";
-}
+      if (
+        confidence !== undefined &&
+        confidence !== null
+      ) {
+        return `${Math.round(Number(confidence))}%`;
+      }
+
+      if (
+        distance !== undefined &&
+        distance !== null
+      ) {
+        return `ระยะ ${Number(distance).toFixed(3)}`;
+      }
+
+      return "-";
+    }
+
     function addToCart(photoId) {
 
       const item =
@@ -497,10 +700,10 @@ function formatConfidence(confidence, distance) {
 
       Swal.fire({
         icon: "success",
-        title: "เพิ่มลงตะกร้าแล้ว",
+        title: t().addSuccess,
         showCancelButton: true,
-        confirmButtonText: "ไปตะกร้า",
-        cancelButtonText: "เลือกต่อ"
+        confirmButtonText: t().goCartConfirm,
+        cancelButtonText: t().continueSelect
       }).then(result => {
 
         if (result.isConfirmed) {
@@ -521,18 +724,6 @@ function formatConfidence(confidence, distance) {
         `cart.html?event=${encodeURIComponent(eventId)}`;
     }
 
-    // function formatScore(score) {
-
-    //   if (
-    //     score === undefined ||
-    //     score === null
-    //   ) {
-    //     return "-";
-    //   }
-
-    //   return `${Math.round(Number(score) * 100)}%`;
-    // }
-
     function formatMoney(value) {
 
       return Number(value || 0)
@@ -543,6 +734,56 @@ function formatConfidence(confidence, distance) {
             maximumFractionDigits: 2
           }
         );
+    }
+
+    function toggleDarkMode() {
+
+      const html =
+        document.documentElement;
+
+      html.classList.toggle("dark");
+
+      const isDark =
+        html.classList.contains("dark");
+
+      localStorage.setItem(
+        "darkMode",
+        isDark ? "1" : "0"
+      );
+
+      updateDarkButton();
+    }
+
+    function updateDarkButton() {
+
+      const btn =
+        document.getElementById("darkBtn");
+
+      if (!btn) return;
+
+      const isDark =
+        document.documentElement
+          .classList
+          .contains("dark");
+
+      btn.innerHTML =
+        isDark
+          ? "☀️ Light"
+          : "🌙 Dark";
+    }
+
+    function initDarkMode() {
+
+      const saved =
+        localStorage.getItem("darkMode");
+
+      if (saved === "1") {
+
+        document.documentElement
+          .classList.add("dark");
+      }
+
+      updateDarkButton();
     }
 
     function escapeHtml(text) {
@@ -558,60 +799,57 @@ function formatConfidence(confidence, distance) {
   </script>
 
   <!-- ห้ามคลิกขวา -->
-<script>
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-</script>
+  <script>
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-<style>
-img {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: none;
-}
+  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
+  <style>
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
 
-body {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-</style>
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
 
-<!-- ปิดการลากรูป -->
-<script>
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-});
-</script>
+  <!-- ปิดการลากรูป -->
+  <script>
+    document.addEventListener('dragstart', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ปิดปุ่มลัดบางอย่าง -->
-<script>
-document.addEventListener('keydown', function(e) {
+  <!-- ปิดปุ่มลัดบางอย่าง -->
+  <script>
+    document.addEventListener('keydown', function(e) {
 
-  // F12
-  if (e.key === "F12") {
-    e.preventDefault();
-  }
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
 
-  // Ctrl+S / Cmd+S
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+      }
 
-  // Ctrl+U
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+      }
 
-  // Ctrl+Shift+I
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+      }
 
-});
-</script>
+    });
+  </script>
+
 </body>
 </html>
