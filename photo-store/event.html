@@ -16,6 +16,177 @@
 
   <script src="js/config.js"></script>
   <script src="js/liff-helper.js"></script>
+
+  <style>
+    /* =========================
+       BASIC PROTECTION
+    ========================= */
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    /* =========================
+       PHOTO PREVIEW MODAL
+    ========================= */
+    .photo-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .94);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .photo-modal.show {
+      display: flex;
+      animation: modalFadeIn .18s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .photo-modal-box {
+      position: relative;
+      width: 100%;
+      max-width: 920px;
+      max-height: 90vh;
+      overflow: hidden;
+      border-radius: 26px;
+      background: #020617;
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
+    }
+
+    .photo-modal-img {
+      width: 100%;
+      height: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      display: block;
+      filter: contrast(.9) saturate(.86) blur(.35px);
+      transform: scale(.995);
+    }
+
+    .photo-close {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      right: 16px;
+      z-index: 100000;
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.16);
+      color: white;
+      font-size: 24px;
+      font-weight: 900;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .photo-modal-info {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,.55);
+      color: white;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 12px;
+    }
+
+    .watermark-layer {
+      position: absolute;
+      inset: -35%;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 42px;
+      transform: rotate(-30deg);
+      opacity: .34;
+      z-index: 3;
+    }
+
+    .watermark-layer span {
+      color: white;
+      font-size: clamp(24px, 4vw, 60px);
+      font-weight: 950;
+      white-space: nowrap;
+      letter-spacing: .08em;
+      text-shadow: 0 0 8px rgba(0,0,0,.75), 0 2px 12px rgba(0,0,0,.6);
+    }
+
+    .watermark-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 4;
+      transform: rotate(-22deg);
+    }
+
+    .watermark-center span {
+      color: rgba(255,255,255,.42);
+      font-size: clamp(32px, 7vw, 86px);
+      font-weight: 950;
+      letter-spacing: .08em;
+      white-space: nowrap;
+      text-shadow: 0 4px 18px rgba(0,0,0,.75);
+    }
+
+    .preview-noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      mix-blend-mode: overlay;
+      opacity: .08;
+      background-image:
+        repeating-radial-gradient(circle at center,
+        #fff 0px,
+        transparent 1px,
+        transparent 3px);
+    }
+
+    .preview-soft-mask {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,.12), transparent 20%, transparent 70%, rgba(0,0,0,.42)),
+        linear-gradient(90deg, rgba(0,0,0,.16), transparent 18%, transparent 82%, rgba(0,0,0,.16));
+    }
+
+    .open-preview-btn {
+      pointer-events: auto;
+    }
+  </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
@@ -137,6 +308,54 @@
     </div>
   </footer>
 
+  <!-- PHOTO PREVIEW MODAL -->
+  <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
+    <button class="photo-close" onclick="closePhotoModal()" aria-label="Close">✕</button>
+
+    <div class="photo-modal-box" onclick="event.stopPropagation()">
+      <img
+        id="photoModalImg"
+        class="photo-modal-img"
+        src=""
+        alt="Photo Preview"
+        draggable="false"
+      >
+
+      <div class="preview-soft-mask"></div>
+      <div class="preview-noise"></div>
+
+      <div class="watermark-layer">
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+        <span>KEITA PHOTO CAMERA</span>
+      </div>
+
+      <div class="watermark-center">
+        <span>KEITA PHOTO CAMERA</span>
+      </div>
+
+      <div class="photo-modal-info">
+        <div>
+          <p class="font-bold" id="photoModalName">-</p>
+          <p class="opacity-75">Preview only · Watermarked</p>
+        </div>
+        <div class="font-bold">฿<span id="photoModalPrice">0.00</span></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const db = window.sb || window.supabaseClient;
 
@@ -174,7 +393,10 @@
         noEventText: "กรุณาเลือก Event จากหน้าแรก",
         backHome: "หน้าแรก",
         errorTitle: "เกิดข้อผิดพลาด",
-        loadError: "โหลดหน้า Event ไม่สำเร็จ"
+        loadError: "โหลดหน้า Event ไม่สำเร็จ",
+        viewPhoto: "ดูรูป",
+        selectPhoto: "เลือกภาพ",
+        removePhoto: "ยกเลิกเลือก"
       },
 
       en: {
@@ -203,7 +425,10 @@
         noEventText: "Please choose an event from the home page",
         backHome: "Home",
         errorTitle: "Error",
-        loadError: "Failed to load event page"
+        loadError: "Failed to load event page",
+        viewPhoto: "View",
+        selectPhoto: "Select",
+        removePhoto: "Remove"
       },
 
       ru: {
@@ -232,7 +457,10 @@
         noEventText: "Пожалуйста, выберите событие на главной странице",
         backHome: "Главная",
         errorTitle: "Ошибка",
-        loadError: "Не удалось загрузить страницу события"
+        loadError: "Не удалось загрузить страницу события",
+        viewPhoto: "Просмотр",
+        selectPhoto: "Выбрать",
+        removePhoto: "Удалить"
       }
     };
 
@@ -407,32 +635,56 @@
       filteredPhotos.forEach(photo => {
         const price = getPhotoPrice(photo);
         const img = getPhotoUrl(photo);
-        const checked = selectedPhotos.has(photo.id) ? "checked" : "";
+        const isSelected = selectedPhotos.has(photo.id);
+        const fileName = escapeHtml(photo.file_name || photo.name || photo.id);
 
-        const el = document.createElement("label");
-        el.className = "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm cursor-pointer block active:scale-[0.99] transition";
+        const el = document.createElement("div");
+        el.className = "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm block active:scale-[0.99] transition";
 
         el.innerHTML = `
-          <input type="checkbox" class="hidden" ${checked} onchange="togglePhoto('${photo.id}')">
-
           <div class="relative aspect-[3/4] bg-slate-200 dark:bg-slate-800">
-            <img src="${img}" class="w-full h-full object-cover">
+            <img src="${escapeAttribute(img)}" class="w-full h-full object-cover" draggable="false">
 
-            <div class="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 dark:text-white rounded-full px-2 py-1 text-xs font-bold">
+            <button
+              type="button"
+              class="open-preview-btn absolute inset-0 z-10"
+              onclick="openPhotoModal('${escapeAttribute(photo.id)}')"
+              aria-label="View photo"
+            ></button>
+
+            <div class="absolute top-2 right-2 z-20 bg-white/90 dark:bg-slate-900/90 dark:text-white rounded-full px-2 py-1 text-xs font-bold pointer-events-none">
               ฿${formatMoney(price)}
             </div>
 
-            ${selectedPhotos.has(photo.id) ? `
-              <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+            <button
+              type="button"
+              class="open-preview-btn absolute top-2 left-2 z-30 bg-black/55 text-white rounded-full px-3 py-1 text-xs font-bold backdrop-blur"
+              onclick="openPhotoModal('${escapeAttribute(photo.id)}')"
+            >
+              🔍 ${t().viewPhoto}
+            </button>
+
+            ${isSelected ? `
+              <div class="absolute inset-0 z-20 bg-slate-900/40 flex items-center justify-center pointer-events-none">
                 <div class="bg-white text-slate-900 rounded-full px-4 py-2 font-bold">
                   ${t().selectedOverlay}
                 </div>
               </div>
             ` : ""}
 
-            <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs">
-              ${escapeHtml(photo.file_name || photo.name || photo.id)}
+            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black/50 text-white p-2 text-xs pointer-events-none">
+              ${fileName}
             </div>
+          </div>
+
+          <div class="p-2">
+            <button
+              type="button"
+              onclick="togglePhoto('${escapeAttribute(photo.id)}')"
+              class="w-full rounded-2xl py-2 text-sm font-bold transition ${isSelected ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'}"
+            >
+              ${isSelected ? t().removePhoto : t().selectPhoto}
+            </button>
           </div>
         `;
 
@@ -571,6 +823,7 @@
     function getPhotoUrl(photo) {
       return (
         photo.watermarked_url ||
+        photo.watermark_url ||
         photo.preview_url ||
         photo.thumbnail_url ||
         photo.public_url ||
@@ -578,6 +831,39 @@
         photo.full_url ||
         "https://placehold.co/600x800?text=Photo"
       );
+    }
+
+    function getSafePreviewUrl(photo) {
+      // สำหรับ modal หลีกเลี่ยง full_url เป็นหลัก ใช้เฉพาะรูป preview / watermark / thumbnail
+      return (
+        photo.watermarked_url ||
+        photo.watermark_url ||
+        photo.preview_url ||
+        photo.thumbnail_url ||
+        photo.public_url ||
+        photo.url ||
+        "https://placehold.co/600x800?text=Preview"
+      );
+    }
+
+    function openPhotoModal(photoId) {
+      const photo = allPhotos.find(p => String(p.id) === String(photoId));
+      if (!photo) return;
+
+      const img = getSafePreviewUrl(photo);
+
+      document.getElementById("photoModalImg").src = img || "";
+      document.getElementById("photoModalName").textContent = photo.file_name || photo.name || photo.id || "Photo";
+      document.getElementById("photoModalPrice").textContent = formatMoney(getPhotoPrice(photo));
+
+      document.getElementById("photoModal").classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePhotoModal() {
+      document.getElementById("photoModal").classList.remove("show");
+      document.getElementById("photoModalImg").src = "";
+      document.body.style.overflow = "";
     }
 
     function formatMoney(value) {
@@ -619,41 +905,35 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
-  </script>
 
-  <!-- ห้ามคลิกขวา -->
-  <script>
+    function escapeAttribute(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    /* =========================
+       PROTECTION EVENTS
+    ========================= */
+
+    // ห้ามคลิกขวา
     document.addEventListener('contextmenu', function(e) {
       e.preventDefault();
     });
-  </script>
 
-  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-  <style>
-    img {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    body {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-  </style>
-
-  <!-- ปิดการลากรูป -->
-  <script>
+    // ปิดการลากรูป
     document.addEventListener('dragstart', function(e) {
       e.preventDefault();
     });
-  </script>
 
-  <!-- ปิดปุ่มลัดบางอย่าง -->
-  <script>
+    // ปิดปุ่มลัดบางอย่าง + ESC ปิด modal
     document.addEventListener('keydown', function(e) {
+      if (e.key === "Escape") {
+        closePhotoModal();
+      }
 
       if (e.key === "F12") {
         e.preventDefault();
@@ -670,7 +950,6 @@
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
         e.preventDefault();
       }
-
     });
   </script>
 </body>
