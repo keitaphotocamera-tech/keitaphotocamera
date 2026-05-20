@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>ดาวน์โหลดภาพ</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: "class"
-    };
+    tailwind.config = { darkMode: "class" };
   </script>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -53,11 +50,11 @@
 
     <section id="downloadAllBox" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <button onclick="downloadAllFiles()" class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold">
-        ⬇️ <span id="txtDownloadAll">ดาวน์โหลดรูปทั้งหมด</span>
+        ⬇️ <span id="txtDownloadAll">เปิดรูปทั้งหมดเพื่อบันทึก</span>
       </button>
 
       <p id="txtDownloadAllHint" class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
-        มือถือจะเปิดเมนูแชร์เพื่อให้บันทึกรูปได้
+        มือถือให้กดค้างที่รูป แล้วเลือกบันทึกรูปภาพ
       </p>
     </section>
 
@@ -102,18 +99,16 @@
         blockedDesc: "กรุณารอแอดมินอนุมัติคำสั่งซื้อก่อน",
         backOrder: "กลับไปหน้าออเดอร์",
         noPhoto: "ไม่พบรายการภาพ",
-        downloadReady: "พร้อมดาวน์โหลด",
-        downloadBtn: "ดาวน์โหลด",
-        downloadAll: "ดาวน์โหลดรูปทั้งหมด",
-        downloadAllHint: "มือถือจะเปิดเมนูแชร์เพื่อให้บันทึกรูปได้",
-        downloadAllTitle: "ดาวน์โหลดทั้งหมด",
-        downloadAllText: "ระบบจะดาวน์โหลดทีละรูป มือถืออาจให้กดยืนยันบันทึกผ่านเมนูแชร์",
-        startDownload: "เริ่มดาวน์โหลด",
+        downloadReady: "กดเปิดรูป แล้วกดค้างเพื่อบันทึก",
+        downloadBtn: "เปิดรูป / ดาวน์โหลด",
+        downloadAll: "เปิดรูปทั้งหมดเพื่อบันทึก",
+        downloadAllHint: "มือถือให้กดค้างที่รูป แล้วเลือกบันทึกรูปภาพ",
+        downloadAllTitle: "เปิดรูปทั้งหมด",
+        downloadAllText: "ระบบจะเปิดรูปทีละภาพ หากอยู่บนมือถือให้กดค้างที่รูปเพื่อบันทึก",
+        startDownload: "เริ่มเปิดรูป",
         cancel: "ยกเลิก",
         noFile: "ไม่พบไฟล์",
         noFileDesc: "ยังไม่มี URL สำหรับดาวน์โหลด",
-        preparing: "กำลังเตรียมไฟล์...",
-        shareText: "บันทึกรูปภาพ",
         errorTitle: "เกิดข้อผิดพลาด"
       },
 
@@ -126,18 +121,16 @@
         blockedDesc: "Please wait for admin approval",
         backOrder: "Back to Orders",
         noPhoto: "No photos found",
-        downloadReady: "Ready to download",
-        downloadBtn: "Download",
-        downloadAll: "Download All Photos",
-        downloadAllHint: "On mobile, the share menu will open so you can save the photo",
-        downloadAllTitle: "Download All",
-        downloadAllText: "The system will download photos one by one. Mobile devices may ask you to save through the share menu.",
-        startDownload: "Start Download",
+        downloadReady: "Open the photo, then long-press to save",
+        downloadBtn: "Open / Download",
+        downloadAll: "Open All Photos",
+        downloadAllHint: "On mobile, long-press the photo and choose Save Image",
+        downloadAllTitle: "Open All Photos",
+        downloadAllText: "Photos will open one by one. On mobile, long-press to save.",
+        startDownload: "Start",
         cancel: "Cancel",
         noFile: "File Not Found",
         noFileDesc: "No download URL available",
-        preparing: "Preparing file...",
-        shareText: "Save photo",
         errorTitle: "Error"
       },
 
@@ -150,18 +143,16 @@
         blockedDesc: "Пожалуйста, дождитесь подтверждения администратора",
         backOrder: "Назад к заказам",
         noPhoto: "Фотографии не найдены",
-        downloadReady: "Готово к скачиванию",
-        downloadBtn: "Скачать",
-        downloadAll: "Скачать все фото",
-        downloadAllHint: "На телефоне откроется меню «Поделиться», чтобы сохранить фото",
-        downloadAllTitle: "Скачать всё",
-        downloadAllText: "Система будет скачивать фото по одному. На телефоне может потребоваться сохранить через меню «Поделиться».",
-        startDownload: "Начать скачивание",
+        downloadReady: "Откройте фото и удерживайте для сохранения",
+        downloadBtn: "Открыть / Скачать",
+        downloadAll: "Открыть все фото",
+        downloadAllHint: "На телефоне удерживайте фото и выберите сохранение",
+        downloadAllTitle: "Открыть все фото",
+        downloadAllText: "Фото будут открываться по одному. На телефоне удерживайте фото для сохранения.",
+        startDownload: "Начать",
         cancel: "Отмена",
         noFile: "Файл не найден",
         noFileDesc: "URL для скачивания отсутствует",
-        preparing: "Подготовка файла...",
-        shareText: "Сохранить фото",
         errorTitle: "Ошибка"
       }
     };
@@ -329,6 +320,7 @@
             </p>
 
             <button
+              type="button"
               onclick="downloadFile('${escapeAttr(downloadUrl)}', '${escapeAttr(photo.filename || item.photo_id)}')"
               class="mt-4 w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
               ${downloadUrl ? "" : "disabled"}
@@ -344,50 +336,31 @@
       grid.classList.remove("hidden");
     }
 
- async function downloadAllFiles() {
-  if (!order || order.status !== "paid") {
-    Swal.fire(t().blockedTitle, t().blockedDesc, "warning");
-    return;
-  }
+    function downloadFile(url, filename) {
+      if (!url) {
+        Swal.fire(t().noFile, t().noFileDesc, "warning");
+        return;
+      }
 
-  const files = (order.order_items || [])
-    .map(item => {
-      const photo = item.photos || {};
-      return photo.preview_url || photo.watermark_url || "";
-    })
-    .filter(Boolean);
+      const absoluteUrl = new URL(url, window.location.href).href;
 
-  if (!files.length) {
-    Swal.fire(t().noFile, t().noFileDesc, "warning");
-    return;
-  }
-
-  Swal.fire(
-    "เปิดรูปภาพ",
-    "ระบบจะเปิดรูปทีละภาพในเบราว์เซอร์นอก จากนั้นกดค้างที่รูปเพื่อบันทึก",
-    "info"
-  );
-
-  for (const url of files) {
-    downloadFile(url);
-    await new Promise(resolve => setTimeout(resolve, 800));
-  }
-}
-
-    function openImageForSave(url) {
       if (window.liff && liff.isInClient()) {
         liff.openWindow({
-          url: url,
+          url: absoluteUrl,
           external: true
         });
         return;
       }
 
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
+      const a = document.createElement("a");
+      a.href = absoluteUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.download = filename || "photo.jpg";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     async function downloadAllFiles() {
@@ -400,9 +373,7 @@
         return;
       }
 
-      const items = order.order_items || [];
-
-      const files = items
+      const files = (order.order_items || [])
         .map(item => {
           const photo = item.photos || {};
 
@@ -440,10 +411,10 @@
       if (!confirm.isConfirmed) return;
 
       for (const file of files) {
-        await downloadFile(file.url, file.filename);
+        downloadFile(file.url, file.filename);
 
         await new Promise(resolve =>
-          setTimeout(resolve, 700)
+          setTimeout(resolve, 900)
         );
       }
     }
