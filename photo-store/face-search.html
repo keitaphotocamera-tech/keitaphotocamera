@@ -1,859 +1,780 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ค้นหาภาพด้วยใบหน้า</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-darkMode: "class"
-};
-</script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-<script src="js/config.js"></script>
-<script src="js/liff-helper.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ค้นหาภาพด้วยใบหน้า</title>
 
-<!-- PHOTO PREVIEW MODAL STYLE -->
-<style>
-  .photo-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 18px;
-    background: rgba(2, 6, 23, 0.94);
-    backdrop-filter: blur(10px);
-  }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+  </script>
 
-  .photo-modal.show {
-    display: flex;
-    animation: photoModalFade .18s ease-out;
-  }
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-  @keyframes photoModalFade {
-    from { opacity: 0; transform: scale(0.985); }
-    to { opacity: 1; transform: scale(1); }
-  }
+  <script src="js/config.js"></script>
+  <script src="js/liff-helper.js"></script>
 
-  .photo-modal-card {
-    position: relative;
-    width: min(94vw, 920px);
-    height: min(86vh, 920px);
-    border-radius: 28px;
-    overflow: hidden;
-    background: #020617;
-    box-shadow: 0 24px 80px rgba(0,0,0,.55);
-  }
+  <style>
+    /* =========================
+       BASIC PROTECTION
+    ========================= */
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
 
-  .photo-modal-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-    background: #020617;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-drag: none;
-    filter: contrast(.9) saturate(.84) blur(.28px);
-  }
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
 
-  .photo-modal-close {
-    position: fixed;
-    top: max(16px, env(safe-area-inset-top));
-    right: 16px;
-    z-index: 100000;
-    width: 50px;
-    height: 50px;
-    border: 0;
-    border-radius: 999px;
-    background: rgba(255,255,255,.18);
-    color: #fff;
-    font-size: 24px;
-    font-weight: 900;
-    line-height: 1;
-    backdrop-filter: blur(12px);
-  }
-
-  .photo-modal-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 4;
-    padding: 16px;
-    background: linear-gradient(to top, rgba(0,0,0,.76), rgba(0,0,0,0));
-    color: white;
-  }
-
-  .photo-watermark-pattern {
-    position: absolute;
-    inset: -35%;
-    z-index: 3;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: clamp(42px, 6vw, 78px);
-    transform: rotate(-28deg);
-    opacity: .34;
-  }
-
-  .photo-watermark-row {
-    display: flex;
-    gap: clamp(80px, 12vw, 160px);
-    white-space: nowrap;
-  }
-
-  .photo-watermark-row:nth-child(even) {
-    transform: translateX(-120px);
-  }
-
-  .photo-watermark-row span {
-    color: rgba(255,255,255,.92);
-    font-size: clamp(20px, 4.2vw, 52px);
-    font-weight: 900;
-    letter-spacing: .08em;
-    text-shadow: 0 2px 10px rgba(0,0,0,.65);
-  }
-
-  .photo-noise-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: .08;
-    mix-blend-mode: overlay;
-    background-image: repeating-radial-gradient(circle at 30% 20%, rgba(255,255,255,.9) 0 1px, transparent 1px 4px);
-  }
-
-  .result-photo-tap {
-    cursor: pointer;
-  }
-
-  @media (max-width: 640px) {
+    /* =========================
+       PHOTO PREVIEW MODAL
+       รูปแบบเดียวกับ event.html
+    ========================= */
     .photo-modal {
-      padding: 10px;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .94);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
-    .photo-modal-card {
-      width: 96vw;
-      height: 82vh;
-      border-radius: 22px;
+    .photo-modal.show {
+      display: flex;
+      animation: modalFadeIn .18s ease-out;
     }
 
-    .photo-watermark-pattern {
-      gap: 44px;
-      opacity: .38;
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    .photo-watermark-row {
-      gap: 82px;
+    .photo-modal-box {
+      position: relative;
+      width: 100%;
+      max-width: 920px;
+      max-height: 90vh;
+      overflow: hidden;
+      border-radius: 26px;
+      background: #020617;
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
     }
-  }
-</style>
 
+    .photo-modal-img {
+      width: 100%;
+      height: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      display: block;
+      filter: contrast(.9) saturate(.86) blur(.35px);
+      transform: scale(.995);
+    }
+
+    .photo-close {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      right: 16px;
+      z-index: 100000;
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.16);
+      color: white;
+      font-size: 24px;
+      font-weight: 900;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .photo-modal-info {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,.55);
+      color: white;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 12px;
+    }
+
+    .watermark-layer {
+      position: absolute;
+      inset: -28%;
+      pointer-events: none;
+      z-index: 3;
+      transform: rotate(-24deg);
+      opacity: .30;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: clamp(42px, 7vw, 92px);
+    }
+
+    .wm-row {
+      display: flex;
+      gap: clamp(58px, 9vw, 130px);
+      white-space: nowrap;
+      color: rgba(255,255,255,.92);
+      font-size: clamp(18px, 3vw, 42px);
+      font-weight: 900;
+      letter-spacing: .12em;
+      line-height: 1;
+      text-shadow: 0 2px 12px rgba(0,0,0,.78);
+    }
+
+    .wm-row:nth-child(even) { transform: translateX(-12%); }
+    .wm-row:nth-child(odd) { transform: translateX(4%); }
+
+    .watermark-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 4;
+      transform: rotate(-24deg);
+    }
+
+    .watermark-center span {
+      color: rgba(255,255,255,.28);
+      font-size: clamp(30px, 6vw, 78px);
+      font-weight: 950;
+      letter-spacing: .12em;
+      white-space: nowrap;
+      padding: .35em .7em;
+      border: 2px solid rgba(255,255,255,.22);
+      border-radius: 18px;
+      text-shadow: 0 4px 18px rgba(0,0,0,.75);
+      background: rgba(0,0,0,.08);
+    }
+
+    .preview-noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      mix-blend-mode: overlay;
+      opacity: .08;
+      background-image:
+        repeating-radial-gradient(circle at center,
+        #fff 0px,
+        transparent 1px,
+        transparent 3px);
+    }
+
+    .preview-soft-mask {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,.12), transparent 20%, transparent 70%, rgba(0,0,0,.42)),
+        linear-gradient(90deg, rgba(0,0,0,.16), transparent 18%, transparent 82%, rgba(0,0,0,.16));
+    }
+
+    .open-preview-btn { pointer-events: auto; }
+  </style>
 </head>
+
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
-<main class="max-w-5xl mx-auto p-4 pb-28">
-<header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
-<div class="flex justify-between items-start gap-3">
-<div>
-<p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
-LINE Mini App
-</p>
-<h1 id="txtPageTitle" class="text-2xl font-bold">
-ค้นหาภาพด้วยใบหน้า
-</h1>
-<p id="eventText" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-กำลังโหลดข้อมูล...
-</p>
-</div>
-<div class="flex flex-col sm:flex-row gap-2">
-<button
-onclick="goEvent()"
-class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold"
->
-← <span id="txtBack">กลับ</span>
-</button>
-<select
-id="langSelect"
-onchange="changeLanguage(this.value)"
-class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
->
-<option value="th">🇹🇭 TH</option>
-<option value="en">🇺🇸 EN</option>
-<option value="ru">🇷🇺 RU</option>
-</select>
-<button
-onclick="toggleDarkMode()"
-id="darkBtn"
-class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
->
-🌙 Dark
-</button>
-</div>
-</div>
-</header>
-<section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm mb-4 transition">
-<h2 id="txtUploadTitle" class="font-bold text-lg">
-อัปโหลดรูปใบหน้า
-</h2>
-<p id="txtUploadDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-กรุณาใช้รูปที่เห็นใบหน้าชัดเจน
-</p>
-<input
-id="faceInput"
-type="file"
-accept="image/*"
-class="mt-4 w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4"
-/>
-<img
-id="previewImage"
-class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100 dark:bg-slate-800"
-/>
-<button
-id="searchBtn"
-onclick="searchByFace()"
-disabled
-class="mt-4 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
->
-ค้นหาภาพของฉัน
-</button>
-</section>
-<section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
-<div class="flex justify-between items-center">
-<div>
-<p id="txtSearchResult" class="text-xs text-slate-500 dark:text-slate-400">
-ผลการค้นหา
-</p>
-<p class="font-bold">
-<span id="resultCount">0</span>
-<span id="txtPhotoUnit">ภาพ</span>
-</p>
-</div>
-<button
-onclick="goCart()"
-class="bg-emerald-600 text-white rounded-2xl px-4 py-3 font-bold"
->
-<span id="txtGoCart">ไปตะกร้า</span>
-</button>
-</div>
-</section>
-<section
-id="resultGrid"
-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
-></section>
-<section
-id="emptyBox"
-class="hidden text-center py-16"
->
-<p class="text-5xl">🙂</p>
-<h2 id="txtNoResult" class="mt-3 text-lg font-bold">
-ยังไม่พบภาพ
-</h2>
-<p id="txtNoResultDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-ลองใช้รูปหน้าที่ชัดขึ้น
-</p>
-</section>
-</main>
 
-<!-- PHOTO PREVIEW MODAL -->
-<div id="photoPreviewModal" class="photo-modal" onclick="closePhotoPreviewModal()">
-  <button type="button" class="photo-modal-close" onclick="closePhotoPreviewModal()">×</button>
+  <main class="max-w-5xl mx-auto p-4 pb-28">
 
-  <div class="photo-modal-card" onclick="event.stopPropagation()">
-    <img id="photoPreviewModalImg" src="" alt="Photo preview" draggable="false" />
+    <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
+      <div class="flex justify-between items-start gap-3">
+        <div>
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
+          <h1 id="txtPageTitle" class="text-2xl font-bold">ค้นหาภาพด้วยใบหน้า</h1>
+          <p id="eventText" class="text-sm text-slate-500 dark:text-slate-400 mt-1">กำลังโหลดข้อมูล...</p>
+        </div>
 
-    <div class="photo-noise-layer"></div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button onclick="goEvent()" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
+            ← <span id="txtBack">กลับ</span>
+          </button>
 
-    <div class="photo-watermark-pattern" aria-hidden="true">
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-      <div class="photo-watermark-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
-    </div>
+          <select id="langSelect" onchange="changeLanguage(this.value)" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none">
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
 
-    <div class="photo-modal-info">
-      <p id="photoPreviewModalName" class="font-bold text-sm truncate">-</p>
-      <p class="text-xs text-white/75 mt-1">Preview protected by KEITA PHOTO CAMERA</p>
+          <button onclick="toggleDarkMode()" id="darkBtn" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold">🌙 Dark</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm mb-4 transition">
+      <h2 id="txtUploadTitle" class="font-bold text-lg">อัปโหลดรูปใบหน้า</h2>
+      <p id="txtUploadDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">กรุณาใช้รูปที่เห็นใบหน้าชัดเจน</p>
+
+      <input id="faceInput" type="file" accept="image/*" class="mt-4 w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4" />
+
+      <img id="previewImage" class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100 dark:bg-slate-800" />
+
+      <button id="searchBtn" onclick="searchByFace()" disabled class="mt-4 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40">
+        ค้นหาภาพของฉัน
+      </button>
+    </section>
+
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
+      <div class="flex justify-between items-center">
+        <div>
+          <p id="txtSearchResult" class="text-xs text-slate-500 dark:text-slate-400">ผลการค้นหา</p>
+          <p class="font-bold"><span id="resultCount">0</span> <span id="txtPhotoUnit">ภาพ</span></p>
+        </div>
+
+        <button onclick="goCart()" class="bg-emerald-600 text-white rounded-2xl px-4 py-3 font-bold">
+          <span id="txtGoCart">ไปตะกร้า</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="resultGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></section>
+
+    <section id="emptyBox" class="hidden text-center py-16">
+      <p class="text-5xl">🙂</p>
+      <h2 id="txtNoResult" class="mt-3 text-lg font-bold">ยังไม่พบภาพ</h2>
+      <p id="txtNoResultDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">ลองใช้รูปหน้าที่ชัดขึ้น</p>
+    </section>
+
+  </main>
+
+  <!-- PHOTO PREVIEW MODAL : เหมือนหน้า event.html -->
+  <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
+    <button class="photo-close" onclick="closePhotoModal()" aria-label="Close">✕</button>
+
+    <div class="photo-modal-box" onclick="event.stopPropagation()">
+      <img id="photoModalImg" class="photo-modal-img" src="" alt="Photo Preview" draggable="false">
+
+      <div class="preview-soft-mask"></div>
+      <div class="preview-noise"></div>
+
+      <div class="watermark-layer" aria-hidden="true">
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+      </div>
+
+      <div class="watermark-center"><span>KEITA PHOTO CAMERA</span></div>
+
+      <div class="photo-modal-info">
+        <div>
+          <p class="font-bold" id="photoModalName">-</p>
+          <p class="opacity-75">Preview only · Watermarked</p>
+        </div>
+        <div class="font-bold">฿<span id="photoModalPrice">0.00</span></div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-const db =
-window.sb ||
-window.supabaseClient;
-let profile = null;
-let eventId = null;
-let eventData = null;
-let selectedFile = null;
-let results = [];
-/****************************************
-* LANGUAGE
-****************************************/
-const LANG = {
-th: {
-miniApp: "LINE Mini App",
-pageTitle: "ค้นหาภาพด้วยใบหน้า",
-back: "กลับ",
-uploadTitle: "อัปโหลดรูปใบหน้า",
-uploadDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
-searchBtn: "ค้นหาภาพของฉัน",
-searchResult: "ผลการค้นหา",
-photoUnit: "ภาพ",
-goCart: "ไปตะกร้า",
-noResult: "ยังไม่พบภาพ",
-noResultDesc: "ลองใช้รูปหน้าที่ชัดขึ้น",
-loadingFace: "กำลังวิเคราะห์ใบหน้า...",
-loadingSearch: "กำลังค้นหารูป...",
-loadingSystem: "กำลังโหลดระบบค้นหาใบหน้า...",
-noFace: "ไม่พบใบหน้า",
-noFaceDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
-addSuccess: "เพิ่มลงตะกร้าแล้ว",
-goCartConfirm: "ไปตะกร้า",
-continueSelect: "เลือกต่อ",
-similarity: "ความใกล้เคียง"
-},
-en: {
-miniApp: "LINE Mini App",
-pageTitle: "Face Search",
-back: "Back",
-uploadTitle: "Upload Face Photo",
-uploadDesc: "Please use a clear face photo",
-searchBtn: "Search My Photos",
-searchResult: "Search Results",
-photoUnit: "photos",
-goCart: "Go to Cart",
-noResult: "No Photos Found",
-noResultDesc: "Try using a clearer face image",
-loadingFace: "Analyzing face...",
-loadingSearch: "Searching photos...",
-loadingSystem: "Loading face search system...",
-noFace: "Face not found",
-noFaceDesc: "Please use a clearer face photo",
-addSuccess: "Added to cart",
-goCartConfirm: "Go to Cart",
-continueSelect: "Continue",
-similarity: "Similarity"
-},
-ru: {
-miniApp: "LINE Мини-приложение",
-pageTitle: "Поиск по лицу",
-back: "Назад",
-uploadTitle: "Загрузить фото лица",
-uploadDesc: "Пожалуйста, используйте чёткое фото лица",
-searchBtn: "Найти мои фото",
-searchResult: "Результаты поиска",
-photoUnit: "фото",
-goCart: "В корзину",
-noResult: "Фото не найдены",
-noResultDesc: "Попробуйте использовать более чёткое фото",
-loadingFace: "Анализ лица...",
-loadingSearch: "Поиск фотографий...",
-loadingSystem: "Загрузка системы поиска...",
-noFace: "Лицо не найдено",
-noFaceDesc: "Пожалуйста, используйте более чёткое фото",
-addSuccess: "Добавлено в корзину",
-goCartConfirm: "В корзину",
-continueSelect: "Продолжить",
-similarity: "Схожесть"
-}
-};
-let currentLang =
-localStorage.getItem("lang") || "th";
-function t() {
-return LANG[currentLang];
-}
-function applyLanguage() {
-const x = t();
-document.documentElement.lang =
-currentLang;
-document.getElementById("txtMiniApp").textContent =
-x.miniApp;
-document.getElementById("txtPageTitle").textContent =
-x.pageTitle;
-document.getElementById("txtBack").textContent =
-x.back;
-document.getElementById("txtUploadTitle").textContent =
-x.uploadTitle;
-document.getElementById("txtUploadDesc").textContent =
-x.uploadDesc;
-document.getElementById("searchBtn").textContent =
-x.searchBtn;
-document.getElementById("txtSearchResult").textContent =
-x.searchResult;
-document.getElementById("txtPhotoUnit").textContent =
-x.photoUnit;
-document.getElementById("txtGoCart").textContent =
-x.goCart;
-document.getElementById("txtNoResult").textContent =
-x.noResult;
-document.getElementById("txtNoResultDesc").textContent =
-x.noResultDesc;
-document.getElementById("langSelect").value =
-currentLang;
-}
-function changeLanguage(lang) {
-currentLang = lang;
-localStorage.setItem(
-"lang",
-lang
-);
-applyLanguage();
-renderResults();
-}
-document.addEventListener(
-"DOMContentLoaded",
-async () => {
-try {
-initDarkMode();
-applyLanguage();
-if (!db) {
-throw new Error("ไม่พบ Supabase client");
-}
-eventId = getEventId();
-if (!eventId) {
-throw new Error("ไม่พบ event id");
-}
-profile = await AppLIFF.init();
-if (!profile) return;
-await loadModels();
-await loadEvent();
-document
-.getElementById("faceInput")
-.addEventListener("change", handleFile);
-} catch (err) {
-console.error(err);
-Swal.fire(
-"Error",
-err.message || "เปิดหน้าไม่สำเร็จ",
-"error"
-);
-}
-}
-);
-function getEventId() {
-const params =
-new URLSearchParams(window.location.search);
-return (
-params.get("event") ||
-params.get("event_id") ||
-params.get("id")
-);
-}
-async function loadModels() {
-Swal.fire({
-title: t().loadingSystem,
-allowOutsideClick: false,
-didOpen: () => Swal.showLoading()
-});
-const MODEL_URL =
-"https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
-await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-Swal.close();
-}
-async function loadEvent() {
-const { data, error } =
-await db
-.from("events")
-.select("*")
-.eq("id", eventId)
-.single();
-if (error) throw error;
-eventData = data;
-document.getElementById("eventText").textContent =
-data.name ||
-data.title ||
-"Face Search";
-}
-function handleFile(e) {
-const file = e.target.files[0];
-if (!file) return;
-selectedFile = file;
-const img =
-document.getElementById("previewImage");
-img.src = URL.createObjectURL(file);
-img.classList.remove("hidden");
-document.getElementById("searchBtn").disabled = false;
-}
-async function searchByFace() {
-try {
-if (!selectedFile) {
-Swal.fire(
-"Warning",
-"",
-"warning"
-);
-return;
-}
-Swal.fire({
-title: t().loadingFace,
-allowOutsideClick: false,
-didOpen: () => Swal.showLoading()
-});
-const img =
-await faceapi.bufferToImage(selectedFile);
-const options =
-new faceapi.SsdMobilenetv1Options({
-minConfidence: 0.2
-});
-const detection =
-await faceapi
-.detectSingleFace(img, options)
-.withFaceLandmarks()
-.withFaceDescriptor();
-if (!detection) {
-Swal.fire(
-t().noFace,
-t().noFaceDesc,
-"warning"
-);
-return;
-}
-const descriptor =
-Array.from(detection.descriptor);
-Swal.update({
-title: t().loadingSearch
-});
-const res =
-await fetch(
-`${CONFIG.SUPABASE_URL}/functions/v1/search-face`,
-{
-method: "POST",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify({
-event_id: eventId,
-descriptor,
-threshold: 0.45,
-max_results: 24,
-gap_limit: 0.08
-})
-}
-);
-const data =
-await res.json();
-if (!res.ok || !data.success) {
-throw new Error(
-data.error || "ค้นหาไม่สำเร็จ"
-);
-}
-results = data.results || [];
-Swal.close();
-renderResults();
-} catch (err) {
-console.error(err);
-Swal.fire(
-"Error",
-err.message || "ค้นหาไม่สำเร็จ",
-"error"
-);
-}
-}
-function renderResults() {
-const grid =
-document.getElementById("resultGrid");
-const empty =
-document.getElementById("emptyBox");
-grid.innerHTML = "";
-document.getElementById("resultCount").textContent =
-results.length;
-if (!results.length) {
-empty.classList.remove("hidden");
-return;
-}
-empty.classList.add("hidden");
-results.forEach(item => {
-const photo =
-item.photo || {};
-const img = getProtectedPreviewUrl(photo);
-const price =
-Number(
-photo.price ||
-eventData?.photo_price ||
-CONFIG.DEFAULT_PHOTO_PRICE ||
-0
-);
-const card =
-document.createElement("article");
-card.className =
-"bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
-card.innerHTML = `
-<div
-class="result-photo-tap"
-onclick="openPhotoPreviewModal('${photo.id}')"
->
-<img
-src="${img}"
-class="w-full aspect-[3/4] object-cover bg-slate-200 dark:bg-slate-800"
-alt="${escapeHtml(photo.filename || photo.file_name || photo.id || 'Photo')}"
-draggable="false"
->
-</div>
-<div class="p-3">
-<p class="font-bold truncate text-sm">
-${escapeHtml(photo.filename || photo.id)}
-</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">
-${t().similarity} :
-${formatConfidence(item.confidence, item.distance)}
-</p>
-<p class="mt-1 font-bold text-emerald-600">
-฿${formatMoney(price)}
-</p>
-<button
-onclick="event.stopPropagation(); addToCart('${photo.id}')"
-class="mt-3 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold text-sm"
->
-${t().goCart}
-</button>
-</div>
-`;
-grid.appendChild(card);
-});
-}
+  <script>
+    const db = window.sb || window.supabaseClient;
 
-function getProtectedPreviewUrl(photo) {
-  return (
-    photo.watermark_url ||
-    photo.watermarked_url ||
-    photo.preview_url ||
-    photo.thumbnail_url ||
-    photo.public_url ||
-    photo.url ||
-    "https://placehold.co/600x800?text=Photo"
-  );
-}
+    let profile = null;
+    let eventId = null;
+    let eventData = null;
+    let selectedFile = null;
+    let results = [];
 
-function openPhotoPreviewModal(photoId) {
-  const item = results.find(
-    r => String(r.photo?.id) === String(photoId)
-  );
+    /****************************************
+     * LANGUAGE
+     ****************************************/
+    const LANG = {
+      th: {
+        miniApp: "LINE Mini App",
+        pageTitle: "ค้นหาภาพด้วยใบหน้า",
+        back: "กลับ",
+        uploadTitle: "อัปโหลดรูปใบหน้า",
+        uploadDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+        searchBtn: "ค้นหาภาพของฉัน",
+        searchResult: "ผลการค้นหา",
+        photoUnit: "ภาพ",
+        goCart: "ไปตะกร้า",
+        noResult: "ยังไม่พบภาพ",
+        noResultDesc: "ลองใช้รูปหน้าที่ชัดขึ้น",
+        loadingFace: "กำลังวิเคราะห์ใบหน้า...",
+        loadingSearch: "กำลังค้นหารูป...",
+        loadingSystem: "กำลังโหลดระบบค้นหาใบหน้า...",
+        noFace: "ไม่พบใบหน้า",
+        noFaceDesc: "กรุณาใช้รูปที่เห็นใบหน้าชัดเจน",
+        addSuccess: "เพิ่มลงตะกร้าแล้ว",
+        goCartConfirm: "ไปตะกร้า",
+        continueSelect: "เลือกต่อ",
+        similarity: "ความใกล้เคียง",
+        viewPhoto: "ดูรูป",
+        addCart: "เพิ่มลงตะกร้า"
+      },
+      en: {
+        miniApp: "LINE Mini App",
+        pageTitle: "Face Search",
+        back: "Back",
+        uploadTitle: "Upload Face Photo",
+        uploadDesc: "Please use a clear face photo",
+        searchBtn: "Search My Photos",
+        searchResult: "Search Results",
+        photoUnit: "photos",
+        goCart: "Go to Cart",
+        noResult: "No Photos Found",
+        noResultDesc: "Try using a clearer face image",
+        loadingFace: "Analyzing face...",
+        loadingSearch: "Searching photos...",
+        loadingSystem: "Loading face search system...",
+        noFace: "Face not found",
+        noFaceDesc: "Please use a clearer face photo",
+        addSuccess: "Added to cart",
+        goCartConfirm: "Go to Cart",
+        continueSelect: "Continue",
+        similarity: "Similarity",
+        viewPhoto: "View",
+        addCart: "Add to Cart"
+      },
+      ru: {
+        miniApp: "LINE Мини-приложение",
+        pageTitle: "Поиск по лицу",
+        back: "Назад",
+        uploadTitle: "Загрузить фото лица",
+        uploadDesc: "Пожалуйста, используйте чёткое фото лица",
+        searchBtn: "Найти мои фото",
+        searchResult: "Результаты поиска",
+        photoUnit: "фото",
+        goCart: "В корзину",
+        noResult: "Фото не найдены",
+        noResultDesc: "Попробуйте использовать более чёткое фото",
+        loadingFace: "Анализ лица...",
+        loadingSearch: "Поиск фотографий...",
+        loadingSystem: "Загрузка системы поиска...",
+        noFace: "Лицо не найдено",
+        noFaceDesc: "Пожалуйста, используйте более чёткое фото",
+        addSuccess: "Добавлено в корзину",
+        goCartConfirm: "В корзину",
+        continueSelect: "Продолжить",
+        similarity: "Схожесть",
+        viewPhoto: "Просмотр",
+        addCart: "Добавить"
+      }
+    };
 
-  if (!item || !item.photo) return;
+    let currentLang = localStorage.getItem("lang") || "th";
 
-  const photo = item.photo;
-  const modal = document.getElementById("photoPreviewModal");
-  const img = document.getElementById("photoPreviewModalImg");
-  const name = document.getElementById("photoPreviewModalName");
+    function t() {
+      return LANG[currentLang] || LANG.th;
+    }
 
-  img.src = getProtectedPreviewUrl(photo);
-  name.textContent = photo.filename || photo.file_name || photo.name || photo.id || "Photo";
+    function applyLanguage() {
+      const x = t();
 
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
-}
+      document.documentElement.lang = currentLang;
+      document.getElementById("txtMiniApp").textContent = x.miniApp;
+      document.getElementById("txtPageTitle").textContent = x.pageTitle;
+      document.getElementById("txtBack").textContent = x.back;
+      document.getElementById("txtUploadTitle").textContent = x.uploadTitle;
+      document.getElementById("txtUploadDesc").textContent = x.uploadDesc;
+      document.getElementById("searchBtn").textContent = x.searchBtn;
+      document.getElementById("txtSearchResult").textContent = x.searchResult;
+      document.getElementById("txtPhotoUnit").textContent = x.photoUnit;
+      document.getElementById("txtGoCart").textContent = x.goCart;
+      document.getElementById("txtNoResult").textContent = x.noResult;
+      document.getElementById("txtNoResultDesc").textContent = x.noResultDesc;
+      document.getElementById("langSelect").value = currentLang;
+    }
 
-function closePhotoPreviewModal() {
-  const modal = document.getElementById("photoPreviewModal");
-  const img = document.getElementById("photoPreviewModalImg");
+    function changeLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("lang", lang);
+      applyLanguage();
+      renderResults();
+    }
 
-  if (!modal || !img) return;
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        initDarkMode();
+        applyLanguage();
 
-  modal.classList.remove("show");
-  img.src = "";
-  document.body.style.overflow = "";
-}
+        if (!db) {
+          throw new Error("ไม่พบ Supabase client");
+        }
 
-function formatConfidence(confidence, distance) {
-if (
-confidence !== undefined &&
-confidence !== null
-) {
-return `${Math.round(Number(confidence))}%`;
-}
-if (
-distance !== undefined &&
-distance !== null
-) {
-return `ระยะ ${Number(distance).toFixed(3)}`;
-}
-return "-";
-}
-function addToCart(photoId) {
-const item =
-results.find(
-r => String(r.photo?.id) === String(photoId)
-);
-if (!item) return;
-const photo = item.photo;
-const price =
-Number(
-photo.price ||
-eventData?.photo_price ||
-CONFIG.DEFAULT_PHOTO_PRICE ||
-0
-);
-const cartKey =
-AppLIFF.getCartKey();
-const oldCart =
-JSON.parse(
-localStorage.getItem(cartKey) || "[]"
-);
-const map =
-new Map(
-oldCart.map(i => [String(i.photo_id), i])
-);
-map.set(
-String(photo.id),
-{
-event_id: eventId,
-event_name:
-eventData?.name ||
-eventData?.title ||
-"",
-photo_id: photo.id,
-filename:
-photo.filename || "",
-file_name:
-photo.filename || "",
-preview_url:
-photo.watermark_url ||
-photo.preview_url ||
-"",
-price,
-line_user_id:
-profile.userId
-}
-);
-localStorage.setItem(
-cartKey,
-JSON.stringify([...map.values()])
-);
-Swal.fire({
-icon: "success",
-title: t().addSuccess,
-showCancelButton: true,
-confirmButtonText: t().goCartConfirm,
-cancelButtonText: t().continueSelect
-}).then(result => {
-if (result.isConfirmed) {
-goCart();
-}
-});
-}
-function goEvent() {
-window.location.href =
-`event.html?event=${encodeURIComponent(eventId)}`;
-}
-function goCart() {
-window.location.href =
-`cart.html?event=${encodeURIComponent(eventId)}`;
-}
-function formatMoney(value) {
-return Number(value || 0)
-.toLocaleString(
-"th-TH",
-{
-minimumFractionDigits: 2,
-maximumFractionDigits: 2
-}
-);
-}
-function toggleDarkMode() {
-const html =
-document.documentElement;
-html.classList.toggle("dark");
-const isDark =
-html.classList.contains("dark");
-localStorage.setItem(
-"darkMode",
-isDark ? "1" : "0"
-);
-updateDarkButton();
-}
-function updateDarkButton() {
-const btn =
-document.getElementById("darkBtn");
-if (!btn) return;
-const isDark =
-document.documentElement
-.classList
-.contains("dark");
-btn.innerHTML =
-isDark
-? "☀️ Light"
-: "🌙 Dark";
-}
-function initDarkMode() {
-const saved =
-localStorage.getItem("darkMode");
-if (saved === "1") {
-document.documentElement
-.classList.add("dark");
-}
-updateDarkButton();
-}
-function escapeHtml(text) {
-return String(text ?? "")
-.replace(/&/g, "&amp;")
-.replace(/</g, "&lt;")
-.replace(/>/g, "&gt;")
-.replace(/"/g, "&quot;")
-.replace(/'/g, "&#039;");
-}
-</script>
-<!-- ห้ามคลิกขวา -->
-<script>
-document.addEventListener('contextmenu', function(e) {
-e.preventDefault();
-});
-</script>
-<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-<style>
-img {
--webkit-touch-callout: none;
--webkit-user-select: none;
-user-select: none;
-pointer-events: none;
-}
-body {
--webkit-user-select: none;
-user-select: none;
--webkit-touch-callout: none;
-}
-</style>
-<!-- ปิดการลากรูป -->
-<script>
-document.addEventListener('dragstart', function(e) {
-e.preventDefault();
-});
-</script>
-<!-- ปิดปุ่มลัดบางอย่าง -->
-<script>
-document.addEventListener('keydown', function(e) {
-if (e.key === "F12") {
-e.preventDefault();
-}
-if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-e.preventDefault();
-}
-if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-e.preventDefault();
-}
-if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-e.preventDefault();
-}
-});
-</script>
-<script>
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closePhotoPreviewModal();
-  }
-});
-</script>
+        eventId = getEventId();
+        if (!eventId) {
+          throw new Error("ไม่พบ event id");
+        }
+
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        await loadModels();
+        await loadEvent();
+
+        document.getElementById("faceInput").addEventListener("change", handleFile);
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", err.message || "เปิดหน้าไม่สำเร็จ", "error");
+      }
+    });
+
+    function getEventId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("event") || params.get("event_id") || params.get("id");
+    }
+
+    async function loadModels() {
+      Swal.fire({
+        title: t().loadingSystem,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+      Swal.close();
+    }
+
+    async function loadEvent() {
+      const { data, error } = await db
+        .from("events")
+        .select("*")
+        .eq("id", eventId)
+        .single();
+
+      if (error) throw error;
+
+      eventData = data;
+      document.getElementById("eventText").textContent = data.name || data.title || "Face Search";
+    }
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+
+      const img = document.getElementById("previewImage");
+      img.src = URL.createObjectURL(file);
+      img.classList.remove("hidden");
+
+      document.getElementById("searchBtn").disabled = false;
+    }
+
+    async function searchByFace() {
+      try {
+        if (!selectedFile) {
+          Swal.fire("Warning", "", "warning");
+          return;
+        }
+
+        Swal.fire({
+          title: t().loadingFace,
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        const img = await faceapi.bufferToImage(selectedFile);
+        const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
+
+        const detection = await faceapi
+          .detectSingleFace(img, options)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (!detection) {
+          Swal.fire(t().noFace, t().noFaceDesc, "warning");
+          return;
+        }
+
+        const descriptor = Array.from(detection.descriptor);
+
+        Swal.update({ title: t().loadingSearch });
+
+        const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/search-face`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_id: eventId,
+            descriptor,
+            threshold: 0.45,
+            max_results: 24,
+            gap_limit: 0.08
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "ค้นหาไม่สำเร็จ");
+        }
+
+        results = data.results || [];
+        Swal.close();
+        renderResults();
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", err.message || "ค้นหาไม่สำเร็จ", "error");
+      }
+    }
+
+    function renderResults() {
+      const grid = document.getElementById("resultGrid");
+      const empty = document.getElementById("emptyBox");
+
+      grid.innerHTML = "";
+      document.getElementById("resultCount").textContent = results.length;
+
+      if (!results.length) {
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+
+      results.forEach(item => {
+        const photo = item.photo || {};
+        const img = getSafePreviewUrl(photo);
+        const price = getPhotoPrice(photo);
+        const fileName = escapeHtml(photo.filename || photo.file_name || photo.name || photo.id);
+        const photoId = escapeAttribute(photo.id);
+
+        const card = document.createElement("article");
+        card.className = "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
+
+        card.innerHTML = `
+          <div class="relative aspect-[3/4] bg-slate-200 dark:bg-slate-800">
+            <img
+              src="${escapeAttribute(img)}"
+              class="w-full h-full object-cover bg-slate-200 dark:bg-slate-800"
+              draggable="false"
+            >
+
+            <button
+              type="button"
+              class="open-preview-btn absolute inset-0 z-10"
+              onclick="openPhotoModal('${photoId}')"
+              aria-label="View photo"
+            ></button>
+
+            <button
+              type="button"
+              class="open-preview-btn absolute top-2 left-2 z-30 bg-black/55 text-white rounded-full px-3 py-1 text-xs font-bold backdrop-blur"
+              onclick="openPhotoModal('${photoId}')"
+            >
+              🔍 ${t().viewPhoto}
+            </button>
+
+            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black/50 text-white p-2 text-xs pointer-events-none">
+              ${fileName}
+            </div>
+          </div>
+
+          <div class="p-3">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              ${t().similarity} : ${formatConfidence(item.confidence, item.distance)}
+            </p>
+
+            <p class="mt-1 font-bold text-emerald-600">
+              ฿${formatMoney(price)}
+            </p>
+
+            <button
+              type="button"
+              onclick="addToCart('${photoId}')"
+              class="mt-3 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold text-sm"
+            >
+              ${t().addCart}
+            </button>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function formatConfidence(confidence, distance) {
+      if (confidence !== undefined && confidence !== null) {
+        return `${Math.round(Number(confidence))}%`;
+      }
+
+      if (distance !== undefined && distance !== null) {
+        return `ระยะ ${Number(distance).toFixed(3)}`;
+      }
+
+      return "-";
+    }
+
+    function addToCart(photoId) {
+      const item = results.find(r => String(r.photo?.id) === String(photoId));
+      if (!item) return;
+
+      const photo = item.photo;
+      const price = getPhotoPrice(photo);
+      const cartKey = AppLIFF.getCartKey();
+      const oldCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      const map = new Map(oldCart.map(i => [String(i.photo_id), i]));
+
+      map.set(String(photo.id), {
+        event_id: eventId,
+        event_name: eventData?.name || eventData?.title || "",
+        photo_id: photo.id,
+        filename: photo.filename || photo.file_name || photo.name || "",
+        file_name: photo.filename || photo.file_name || photo.name || "",
+        preview_url: getSafePreviewUrl(photo),
+        price,
+        line_user_id: profile.userId
+      });
+
+      localStorage.setItem(cartKey, JSON.stringify([...map.values()]));
+
+      Swal.fire({
+        icon: "success",
+        title: t().addSuccess,
+        showCancelButton: true,
+        confirmButtonText: t().goCartConfirm,
+        cancelButtonText: t().continueSelect
+      }).then(result => {
+        if (result.isConfirmed) goCart();
+      });
+    }
+
+    function goEvent() {
+      window.location.href = `event.html?event=${encodeURIComponent(eventId)}`;
+    }
+
+    function goCart() {
+      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
+    }
+
+    function getPhotoPrice(photo) {
+      return Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+    }
+
+    function getSafePreviewUrl(photo) {
+      // เหมือน event.html: ใช้เฉพาะรูป preview/watermark/thumbnail ไม่ดึง full_url ก่อน
+      return (
+        photo.watermarked_url ||
+        photo.watermark_url ||
+        photo.preview_url ||
+        photo.thumbnail_url ||
+        photo.public_url ||
+        photo.url ||
+        "https://placehold.co/600x800?text=Preview"
+      );
+    }
+
+    function openPhotoModal(photoId) {
+      const item = results.find(r => String(r.photo?.id) === String(photoId));
+      if (!item?.photo) return;
+
+      const photo = item.photo;
+      const img = getSafePreviewUrl(photo);
+
+      document.getElementById("photoModalImg").src = img || "";
+      document.getElementById("photoModalName").textContent = photo.filename || photo.file_name || photo.name || photo.id || "Photo";
+      document.getElementById("photoModalPrice").textContent = formatMoney(getPhotoPrice(photo));
+      document.getElementById("photoModal").classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePhotoModal() {
+      document.getElementById("photoModal").classList.remove("show");
+      document.getElementById("photoModalImg").src = "";
+      document.body.style.overflow = "";
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle("dark");
+
+      const isDark = html.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark ? "1" : "0");
+
+      updateDarkButton();
+    }
+
+    function updateDarkButton() {
+      const btn = document.getElementById("darkBtn");
+      if (!btn) return;
+
+      const isDark = document.documentElement.classList.contains("dark");
+      btn.innerHTML = isDark ? "☀️ Light" : "🌙 Dark";
+    }
+
+    function initDarkMode() {
+      const saved = localStorage.getItem("darkMode");
+      if (saved === "1") document.documentElement.classList.add("dark");
+      updateDarkButton();
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttribute(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    /* =========================
+       PROTECTION EVENTS
+    ========================= */
+    document.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("dragstart", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closePhotoModal();
+      if (e.key === "F12") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "i") e.preventDefault();
+    });
+  </script>
 </body>
 </html>
