@@ -2,7 +2,11 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>ออเดอร์ของฉัน</title>
 
@@ -15,32 +19,45 @@
   </script>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script src="js/config.js"></script>
   <script src="js/liff-helper.js"></script>
+
 </head>
 
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
 
-  <main class="max-w-4xl mx-auto p-4 pb-24">
+  <main class="max-w-5xl mx-auto p-4 pb-24">
 
+    <!-- HEADER -->
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
 
       <div class="flex justify-between gap-3">
 
         <div>
 
-          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
+          <p
+            id="txtMiniApp"
+            class="text-xs text-slate-500 dark:text-slate-400"
+          >
             LINE Mini App
           </p>
 
-          <h1 id="txtPageTitle" class="text-xl font-bold">
+          <h1
+            id="txtPageTitle"
+            class="text-xl font-bold"
+          >
             ออเดอร์ของฉัน
           </h1>
 
-          <p id="txtPageDesc" class="text-sm text-slate-500 dark:text-slate-400">
+          <p
+            id="txtPageDesc"
+            class="text-sm text-slate-500 dark:text-slate-400"
+          >
             รายการสั่งซื้อภาพของคุณ
           </p>
 
@@ -77,6 +94,7 @@
 
       </div>
 
+      <!-- PROFILE -->
       <div
         id="profileBox"
         class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition"
@@ -91,7 +109,10 @@
 
           <div>
 
-            <p id="lineName" class="font-bold">
+            <p
+              id="lineName"
+              class="font-bold"
+            >
               -
             </p>
 
@@ -110,6 +131,7 @@
 
     </header>
 
+    <!-- LOADING -->
     <section
       id="loadingBox"
       class="text-center py-10 text-slate-500 dark:text-slate-400"
@@ -117,11 +139,13 @@
       กำลังโหลดออเดอร์...
     </section>
 
+    <!-- ORDER LIST -->
     <section
       id="orderList"
       class="space-y-4 hidden"
     ></section>
 
+    <!-- EMPTY -->
     <section
       id="emptyBox"
       class="hidden text-center py-16"
@@ -257,32 +281,15 @@
       document.documentElement.lang =
         currentLang;
 
-      document.getElementById("txtMiniApp").textContent =
-        x.miniApp;
-
-      document.getElementById("txtPageTitle").textContent =
-        x.pageTitle;
-
-      document.getElementById("txtPageDesc").textContent =
-        x.pageDesc;
-
-      document.getElementById("txtHome").textContent =
-        x.home;
-
-      document.getElementById("txtConnected").textContent =
-        x.connected;
-
-      document.getElementById("loadingBox").textContent =
-        x.loading;
-
-      document.getElementById("txtEmptyTitle").textContent =
-        x.emptyTitle;
-
-      document.getElementById("txtEmptyDesc").textContent =
-        x.emptyDesc;
-
-      document.getElementById("txtChooseEvent").textContent =
-        x.chooseEvent;
+      document.getElementById("txtMiniApp").textContent = x.miniApp;
+      document.getElementById("txtPageTitle").textContent = x.pageTitle;
+      document.getElementById("txtPageDesc").textContent = x.pageDesc;
+      document.getElementById("txtHome").textContent = x.home;
+      document.getElementById("txtConnected").textContent = x.connected;
+      document.getElementById("loadingBox").textContent = x.loading;
+      document.getElementById("txtEmptyTitle").textContent = x.emptyTitle;
+      document.getElementById("txtEmptyDesc").textContent = x.emptyDesc;
+      document.getElementById("txtChooseEvent").textContent = x.chooseEvent;
 
       document.getElementById("langSelect").value =
         currentLang;
@@ -317,10 +324,7 @@
           applyLanguage();
 
           if (!db) {
-
-            throw new Error(
-              "ไม่พบ Supabase client"
-            );
+            throw new Error("ไม่พบ Supabase client");
           }
 
           profile =
@@ -530,7 +534,6 @@
             <img
               src="${img}"
               class="w-full h-20 object-cover rounded-2xl bg-slate-200 dark:bg-slate-800"
-              alt="${escapeHtml(photo.filename || item.photo_id)}"
             />
           `;
         })
@@ -575,26 +578,24 @@
         `;
       }
 
-      if (order.status === "pending_payment") {
-
-        return `
-          <button
-            disabled
-            class="w-full bg-yellow-100 text-yellow-700 rounded-2xl py-3 font-bold"
-          >
-            ${t().pendingPayment}
-          </button>
-        `;
-      }
-
       return `
         <button
           disabled
-          class="w-full bg-slate-100 text-slate-500 rounded-2xl py-3 font-bold"
+          class="w-full bg-slate-100 text-slate-600 rounded-2xl py-3 font-bold"
         >
           ${escapeHtml(order.status || t().waiting)}
         </button>
       `;
+    }
+
+    /****************************************
+     * DOWNLOAD PAGE
+     ****************************************/
+
+    function downloadOrder(orderId) {
+
+      window.location.href =
+        `download.html?order_id=${encodeURIComponent(orderId)}`;
     }
 
     function statusBadge(status) {
@@ -640,29 +641,6 @@
         </span>
       `;
     }
-
-   function downloadOrder(orderId) {
-
-  const url =
-    `${window.location.origin}${window.location.pathname.replace("order.html", "")}download.html?order_id=${encodeURIComponent(orderId)}`;
-
-  // LINE Browser
-  if (
-    window.liff &&
-    liff.isInClient()
-  ) {
-
-    liff.openWindow({
-      url: url,
-      external: true
-    });
-
-    return;
-  }
-
-  // Mobile Browser / PC
-  window.location.href = url;
-}
 
     function goHome() {
 
@@ -756,6 +734,10 @@
 
       updateDarkButton();
     }
+
+    /****************************************
+     * HELPERS
+     ****************************************/
 
     function escapeHtml(text) {
 
