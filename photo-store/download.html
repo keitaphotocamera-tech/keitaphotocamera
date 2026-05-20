@@ -89,6 +89,25 @@
     </header>
 
     <section
+      id="downloadAllBox"
+      class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition"
+    >
+      <button
+        onclick="downloadAllFiles()"
+        class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
+      >
+        ⬇️ <span id="txtDownloadAll">ดาวน์โหลดรูปทั้งหมด</span>
+      </button>
+
+      <p
+        id="txtDownloadAllHint"
+        class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400"
+      >
+        ระบบจะเปิดรูปในหน้าใหม่ เพื่อให้กดบันทึกได้สะดวก
+      </p>
+    </section>
+
+    <section
       id="loadingBox"
       class="text-center py-10 text-slate-500 dark:text-slate-400"
     >
@@ -160,6 +179,12 @@
         noPhoto: "ไม่พบรายการภาพใน Order นี้",
         downloadReady: "ดาวน์โหลดภาพที่อนุมัติแล้ว",
         downloadBtn: "ดาวน์โหลด",
+        downloadAll: "ดาวน์โหลดรูปทั้งหมด",
+        downloadAllHint: "ระบบจะเปิดรูปในหน้าใหม่ เพื่อให้กดบันทึกได้สะดวก",
+        downloadAllTitle: "ดาวน์โหลดทั้งหมด",
+        downloadAllText: "ระบบจะเปิดรูปทั้งหมดในหน้าใหม่ หากมือถือบล็อก ให้กดอนุญาตเปิดหลายหน้า",
+        startDownload: "เริ่มดาวน์โหลด",
+        cancel: "ยกเลิก",
         noFile: "ไม่พบไฟล์",
         noFileDesc: "ยังไม่มี URL สำหรับดาวน์โหลด",
         errorTitle: "เกิดข้อผิดพลาด"
@@ -177,6 +202,12 @@
         noPhoto: "No photos found in this order",
         downloadReady: "Approved photo download",
         downloadBtn: "Download",
+        downloadAll: "Download All Photos",
+        downloadAllHint: "Photos will open in a new page so you can save them easily",
+        downloadAllTitle: "Download All",
+        downloadAllText: "All photos will open in new pages. If your phone blocks popups, please allow multiple pages.",
+        startDownload: "Start Download",
+        cancel: "Cancel",
         noFile: "File Not Found",
         noFileDesc: "No download URL available",
         errorTitle: "Error"
@@ -194,6 +225,12 @@
         noPhoto: "В этом заказе нет фотографий",
         downloadReady: "Скачать одобренные фотографии",
         downloadBtn: "Скачать",
+        downloadAll: "Скачать все фото",
+        downloadAllHint: "Фотографии откроются в новой странице для удобного сохранения",
+        downloadAllTitle: "Скачать все",
+        downloadAllText: "Все фотографии откроются в новых страницах. Если телефон блокирует окна, разрешите открытие нескольких страниц.",
+        startDownload: "Начать скачивание",
+        cancel: "Отмена",
         noFile: "Файл не найден",
         noFileDesc: "URL для скачивания отсутствует",
         errorTitle: "Ошибка"
@@ -235,6 +272,12 @@
 
       document.getElementById("txtBackOrder").textContent =
         x.backOrder;
+
+      document.getElementById("txtDownloadAll").textContent =
+        x.downloadAll;
+
+      document.getElementById("txtDownloadAllHint").textContent =
+        x.downloadAllHint;
 
       document.getElementById("langSelect").value =
         currentLang;
@@ -368,6 +411,10 @@
         return;
       }
 
+      document
+        .getElementById("downloadAllBox")
+        .classList.remove("hidden");
+
       renderPhotos();
     }
 
@@ -462,7 +509,103 @@
         return;
       }
 
-      window.location.href = url;
+      openDownloadWindow(url);
+    }
+
+    function openDownloadWindow(url) {
+
+      if (
+        window.liff &&
+        liff.isInClient()
+      ) {
+
+        liff.openWindow({
+          url: url,
+          external: true
+        });
+
+        return;
+      }
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+
+    async function downloadAllFiles() {
+
+      if (
+        !order ||
+        order.status !== "paid"
+      ) {
+
+        Swal.fire(
+          t().blockedTitle,
+          t().blockedDesc,
+          "warning"
+        );
+
+        return;
+      }
+
+      const items =
+        order.order_items || [];
+
+      const urls =
+        items
+          .map(item => {
+
+            const photo =
+              item.photos || {};
+
+            return (
+              photo.preview_url ||
+              photo.watermark_url ||
+              ""
+            );
+          })
+          .filter(Boolean);
+
+      if (!urls.length) {
+
+        Swal.fire(
+          t().noFile,
+          t().noFileDesc,
+          "warning"
+        );
+
+        return;
+      }
+
+      const confirm =
+        await Swal.fire({
+          icon: "info",
+          title: t().downloadAllTitle,
+          html: `
+            <div style="text-align:left">
+              <p>${t().downloadAllText}</p>
+              <p style="margin-top:8px;color:#64748b">
+                จำนวน ${urls.length} รูป
+              </p>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: t().startDownload,
+          cancelButtonText: t().cancel
+        });
+
+      if (!confirm.isConfirmed) return;
+
+      urls.forEach((url, index) => {
+
+        setTimeout(() => {
+
+          openDownloadWindow(url);
+
+        }, index * 600);
+      });
     }
 
     function goOrder() {
