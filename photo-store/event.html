@@ -30,6 +30,14 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-start">
+
+          <button
+            onclick="goHome()"
+            class="rounded-full bg-white dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm"
+          >
+            ← <span id="txtBackHome">หน้าแรก</span>
+          </button>
+
           <select
             id="langSelect"
             onchange="changeLanguage(this.value)"
@@ -84,10 +92,12 @@
         <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400">ภาพทั้งหมด</p>
         <p id="photoTotal" class="text-2xl font-bold">0</p>
       </div>
+
       <div>
         <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
         <p id="selectedTotal" class="text-2xl font-bold">0</p>
       </div>
+
       <div>
         <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400">รวมเงิน</p>
         <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
@@ -162,10 +172,11 @@
         chooseMore: "เลือกต่อ",
         noEventTitle: "ไม่พบ Event",
         noEventText: "กรุณาเลือก Event จากหน้าแรก",
-        backHome: "กลับหน้าแรก",
+        backHome: "หน้าแรก",
         errorTitle: "เกิดข้อผิดพลาด",
         loadError: "โหลดหน้า Event ไม่สำเร็จ"
       },
+
       en: {
         miniApp: "LINE Mini App",
         pageTitle: "Choose Photos",
@@ -190,10 +201,11 @@
         chooseMore: "Choose More",
         noEventTitle: "Event not found",
         noEventText: "Please choose an event from the home page",
-        backHome: "Back Home",
+        backHome: "Home",
         errorTitle: "Error",
         loadError: "Failed to load event page"
       },
+
       ru: {
         miniApp: "LINE Мини-приложение",
         pageTitle: "Выберите фотографии",
@@ -218,7 +230,7 @@
         chooseMore: "Выбрать ещё",
         noEventTitle: "Событие не найдено",
         noEventText: "Пожалуйста, выберите событие на главной странице",
-        backHome: "На главную",
+        backHome: "Главная",
         errorTitle: "Ошибка",
         loadError: "Не удалось загрузить страницу события"
       }
@@ -273,6 +285,7 @@
       const x = t();
 
       document.documentElement.lang = currentLang;
+
       document.getElementById("txtMiniApp").textContent = x.miniApp;
       document.getElementById("txtCartBtn").textContent = x.cart;
       document.getElementById("txtConnected").textContent = x.connected;
@@ -287,6 +300,7 @@
       document.getElementById("addCartBtn").textContent = x.addCart;
       document.getElementById("loadingBox").textContent = x.loadingPhotos;
       document.getElementById("langSelect").value = currentLang;
+      document.getElementById("txtBackHome").textContent = x.backHome;
 
       if (!eventData) {
         document.getElementById("eventTitle").textContent = x.pageTitle;
@@ -297,6 +311,7 @@
     function changeLanguage(lang) {
       currentLang = lang;
       localStorage.setItem("lang", lang);
+
       applyLanguage();
 
       if (eventData) {
@@ -532,6 +547,10 @@
       renderPhotos();
     }
 
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
     function goCart() {
       window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
     }
@@ -603,56 +622,56 @@
   </script>
 
   <!-- ห้ามคลิกขวา -->
-<script>
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-</script>
+  <script>
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-<style>
-img {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: none;
-}
+  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
+  <style>
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
 
-body {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-</style>
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
 
-<!-- ปิดการลากรูป -->
-<script>
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-});
-</script>
+  <!-- ปิดการลากรูป -->
+  <script>
+    document.addEventListener('dragstart', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ปิดปุ่มลัดบางอย่าง -->
-<script>
-document.addEventListener('keydown', function(e) {
+  <!-- ปิดปุ่มลัดบางอย่าง -->
+  <script>
+    document.addEventListener('keydown', function(e) {
 
-  if (e.key === "F12") {
-    e.preventDefault();
-  }
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
 
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+      }
 
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+      }
 
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+      }
 
-});
-</script>
+    });
+  </script>
 </body>
 </html>
