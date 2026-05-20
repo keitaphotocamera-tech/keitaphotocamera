@@ -6,6 +6,10 @@
   <title>เลือกภาพถ่าย</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+  </script>
+
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -14,29 +18,49 @@
   <script src="js/liff-helper.js"></script>
 </head>
 
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
   <main class="max-w-6xl mx-auto p-4 pb-32">
 
-    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+    <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <div class="flex justify-between gap-3">
         <div>
-          <p class="text-xs text-slate-500">LINE Mini App</p>
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
           <h1 id="eventTitle" class="text-xl font-bold">เลือกภาพถ่าย</h1>
-          <p id="eventDesc" class="text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
+          <p id="eventDesc" class="text-sm text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
 
-        <button onclick="goCart()" class="relative bg-slate-900 text-white rounded-full px-4 py-2 font-bold">
-          🛒 ตะกร้า
-          <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center">0</span>
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-start">
+          <select
+            id="langSelect"
+            onchange="changeLanguage(this.value)"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
+          >
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
+
+          <button
+            onclick="toggleDarkMode()"
+            id="darkBtn"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+          >
+            🌙 Dark
+          </button>
+
+          <button onclick="goCart()" class="relative bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
+            🛒 <span id="txtCartBtn">ตะกร้า</span>
+            <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center">0</span>
+          </button>
+        </div>
       </div>
 
-      <div id="profileBox" class="hidden mt-4 bg-slate-50 rounded-2xl p-3">
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition">
         <div class="flex items-center gap-3">
-          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" />
+          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700" />
           <div>
             <p id="lineName" class="font-bold">-</p>
-            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+            <p id="txtConnected" class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
           </div>
         </div>
       </div>
@@ -46,31 +70,31 @@
       <input
         id="searchInput"
         oninput="searchPhotos()"
-        class="bg-white rounded-2xl px-4 py-3 outline-none shadow-sm"
+        class="bg-white dark:bg-slate-900 dark:text-white rounded-2xl px-4 py-3 outline-none shadow-sm"
         placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
       />
 
-      <button onclick="openFaceSearch()" class="bg-white rounded-2xl px-4 py-3 font-bold shadow-sm">
-        🙂 ค้นหาด้วยใบหน้า
+      <button onclick="openFaceSearch()" class="bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 font-bold shadow-sm">
+        🙂 <span id="txtFaceSearch">ค้นหาด้วยใบหน้า</span>
       </button>
     </section>
 
-    <section class="bg-white rounded-3xl p-4 shadow-sm mb-4 grid grid-cols-3 text-center">
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 grid grid-cols-3 text-center transition">
       <div>
-        <p class="text-xs text-slate-500">ภาพทั้งหมด</p>
+        <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400">ภาพทั้งหมด</p>
         <p id="photoTotal" class="text-2xl font-bold">0</p>
       </div>
       <div>
-        <p class="text-xs text-slate-500">เลือกแล้ว</p>
+        <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
         <p id="selectedTotal" class="text-2xl font-bold">0</p>
       </div>
       <div>
-        <p class="text-xs text-slate-500">รวมเงิน</p>
+        <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400">รวมเงิน</p>
         <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
       </div>
     </section>
 
-    <section id="loadingBox" class="text-center py-10 text-slate-500">
+    <section id="loadingBox" class="text-center py-10 text-slate-500 dark:text-slate-400">
       กำลังโหลดภาพ...
     </section>
 
@@ -78,17 +102,17 @@
 
     <section id="emptyBox" class="hidden text-center py-10">
       <p class="text-4xl">🖼️</p>
-      <p class="mt-2 font-bold">ไม่พบภาพในงานนี้</p>
+      <p id="txtNoPhotos" class="mt-2 font-bold">ไม่พบภาพในงานนี้</p>
     </section>
 
   </main>
 
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+  <footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
     <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
       <div>
-        <p class="text-xs text-slate-500">เลือกแล้ว</p>
+        <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
         <p class="font-bold">
-          <span id="bottomSelected">0</span> ภาพ · ฿<span id="bottomAmount">0.00</span>
+          <span id="bottomSelected">0</span> <span id="txtPhotoUnit">ภาพ</span> · ฿<span id="bottomAmount">0.00</span>
         </p>
       </div>
 
@@ -96,7 +120,7 @@
         id="addCartBtn"
         onclick="addSelectedToCart()"
         disabled
-        class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
+        class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
       >
         เพิ่มลงตะกร้า
       </button>
@@ -113,8 +137,100 @@
     let filteredPhotos = [];
     let selectedPhotos = new Map();
 
+    const LANG = {
+      th: {
+        miniApp: "LINE Mini App",
+        pageTitle: "เลือกภาพถ่าย",
+        loadingEvent: "กำลังโหลดข้อมูล...",
+        loadingPhotos: "กำลังโหลดภาพ...",
+        cart: "ตะกร้า",
+        connected: "เชื่อมต่อ LINE แล้ว",
+        searchPlaceholder: "ค้นหาชื่อไฟล์ / หมายเลขภาพ",
+        faceSearch: "ค้นหาด้วยใบหน้า",
+        totalPhotos: "ภาพทั้งหมด",
+        selected: "เลือกแล้ว",
+        totalAmount: "รวมเงิน",
+        noPhotos: "ไม่พบภาพในงานนี้",
+        photoUnit: "ภาพ",
+        addCart: "เพิ่มลงตะกร้า",
+        defaultDesc: "เลือกรูปที่ต้องการ แล้วเพิ่มลงตะกร้า",
+        selectedOverlay: "✓ เลือกแล้ว",
+        lineRequired: "กรุณาเข้าสู่ระบบ LINE",
+        addedTitle: "เพิ่มลงตะกร้าแล้ว",
+        addedText: "สามารถไปชำระเงินได้ที่หน้าตะกร้า",
+        goCart: "ไปตะกร้า",
+        chooseMore: "เลือกต่อ",
+        noEventTitle: "ไม่พบ Event",
+        noEventText: "กรุณาเลือก Event จากหน้าแรก",
+        backHome: "กลับหน้าแรก",
+        errorTitle: "เกิดข้อผิดพลาด",
+        loadError: "โหลดหน้า Event ไม่สำเร็จ"
+      },
+      en: {
+        miniApp: "LINE Mini App",
+        pageTitle: "Choose Photos",
+        loadingEvent: "Loading event...",
+        loadingPhotos: "Loading photos...",
+        cart: "Cart",
+        connected: "LINE Connected",
+        searchPlaceholder: "Search filename / photo number",
+        faceSearch: "Face Search",
+        totalPhotos: "Total Photos",
+        selected: "Selected",
+        totalAmount: "Total",
+        noPhotos: "No photos found in this event",
+        photoUnit: "photos",
+        addCart: "Add to Cart",
+        defaultDesc: "Choose your photos and add them to cart",
+        selectedOverlay: "✓ Selected",
+        lineRequired: "Please login with LINE",
+        addedTitle: "Added to cart",
+        addedText: "You can proceed to checkout from your cart",
+        goCart: "Go to Cart",
+        chooseMore: "Choose More",
+        noEventTitle: "Event not found",
+        noEventText: "Please choose an event from the home page",
+        backHome: "Back Home",
+        errorTitle: "Error",
+        loadError: "Failed to load event page"
+      },
+      ru: {
+        miniApp: "LINE Мини-приложение",
+        pageTitle: "Выберите фотографии",
+        loadingEvent: "Загрузка данных...",
+        loadingPhotos: "Загрузка фотографий...",
+        cart: "Корзина",
+        connected: "LINE подключён",
+        searchPlaceholder: "Поиск по имени файла / номеру фото",
+        faceSearch: "Поиск по лицу",
+        totalPhotos: "Всего фото",
+        selected: "Выбрано",
+        totalAmount: "Сумма",
+        noPhotos: "Фотографии для этого события не найдены",
+        photoUnit: "фото",
+        addCart: "Добавить в корзину",
+        defaultDesc: "Выберите нужные фотографии и добавьте в корзину",
+        selectedOverlay: "✓ Выбрано",
+        lineRequired: "Пожалуйста, войдите через LINE",
+        addedTitle: "Добавлено в корзину",
+        addedText: "Вы можете перейти к оплате из корзины",
+        goCart: "В корзину",
+        chooseMore: "Выбрать ещё",
+        noEventTitle: "Событие не найдено",
+        noEventText: "Пожалуйста, выберите событие на главной странице",
+        backHome: "На главную",
+        errorTitle: "Ошибка",
+        loadError: "Не удалось загрузить страницу события"
+      }
+    };
+
+    let currentLang = localStorage.getItem("lang") || "th";
+
     document.addEventListener("DOMContentLoaded", async () => {
       try {
+        initDarkMode();
+        applyLanguage();
+
         if (!db) {
           throw new Error("ไม่พบ Supabase client กรุณาตรวจสอบ js/config.js");
         }
@@ -124,9 +240,9 @@
         if (!eventId) {
           Swal.fire({
             icon: "warning",
-            title: "ไม่พบ Event",
-            text: "กรุณาเลือก Event จากหน้าแรก",
-            confirmButtonText: "กลับหน้าแรก"
+            title: t().noEventTitle,
+            text: t().noEventText,
+            confirmButtonText: t().backHome
           }).then(() => {
             window.location.href = "index.html";
           });
@@ -145,9 +261,54 @@
       } catch (err) {
         console.error(err);
         document.getElementById("loadingBox").classList.add("hidden");
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "โหลดหน้า Event ไม่สำเร็จ", "error");
+        Swal.fire(t().errorTitle, err.message || t().loadError, "error");
       }
     });
+
+    function t() {
+      return LANG[currentLang] || LANG.th;
+    }
+
+    function applyLanguage() {
+      const x = t();
+
+      document.documentElement.lang = currentLang;
+      document.getElementById("txtMiniApp").textContent = x.miniApp;
+      document.getElementById("txtCartBtn").textContent = x.cart;
+      document.getElementById("txtConnected").textContent = x.connected;
+      document.getElementById("searchInput").placeholder = x.searchPlaceholder;
+      document.getElementById("txtFaceSearch").textContent = x.faceSearch;
+      document.getElementById("txtTotalPhotos").textContent = x.totalPhotos;
+      document.getElementById("txtSelected").textContent = x.selected;
+      document.getElementById("txtTotalAmount").textContent = x.totalAmount;
+      document.getElementById("txtNoPhotos").textContent = x.noPhotos;
+      document.getElementById("txtBottomSelected").textContent = x.selected;
+      document.getElementById("txtPhotoUnit").textContent = x.photoUnit;
+      document.getElementById("addCartBtn").textContent = x.addCart;
+      document.getElementById("loadingBox").textContent = x.loadingPhotos;
+      document.getElementById("langSelect").value = currentLang;
+
+      if (!eventData) {
+        document.getElementById("eventTitle").textContent = x.pageTitle;
+        document.getElementById("eventDesc").textContent = x.loadingEvent;
+      }
+    }
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("lang", lang);
+      applyLanguage();
+
+      if (eventData) {
+        document.getElementById("eventTitle").textContent =
+          eventData.name || eventData.title || t().pageTitle;
+
+        document.getElementById("eventDesc").textContent =
+          eventData.description || eventData.location || t().defaultDesc;
+      }
+
+      renderPhotos();
+    }
 
     function getEventId() {
       const params = new URLSearchParams(window.location.search);
@@ -189,10 +350,10 @@
       eventData = data;
 
       document.getElementById("eventTitle").textContent =
-        data.name || data.title || "เลือกภาพถ่าย";
+        data.name || data.title || t().pageTitle;
 
       document.getElementById("eventDesc").textContent =
-        data.description || data.location || "เลือกรูปที่ต้องการ แล้วเพิ่มลงตะกร้า";
+        data.description || data.location || t().defaultDesc;
     }
 
     async function loadPhotos() {
@@ -234,22 +395,22 @@
         const checked = selectedPhotos.has(photo.id) ? "checked" : "";
 
         const el = document.createElement("label");
-        el.className = "bg-white rounded-3xl overflow-hidden shadow-sm cursor-pointer block active:scale-[0.99]";
+        el.className = "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm cursor-pointer block active:scale-[0.99] transition";
 
         el.innerHTML = `
           <input type="checkbox" class="hidden" ${checked} onchange="togglePhoto('${photo.id}')">
 
-          <div class="relative aspect-[3/4] bg-slate-200">
+          <div class="relative aspect-[3/4] bg-slate-200 dark:bg-slate-800">
             <img src="${img}" class="w-full h-full object-cover">
 
-            <div class="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-1 text-xs font-bold">
+            <div class="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 dark:text-white rounded-full px-2 py-1 text-xs font-bold">
               ฿${formatMoney(price)}
             </div>
 
             ${selectedPhotos.has(photo.id) ? `
               <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
                 <div class="bg-white text-slate-900 rounded-full px-4 py-2 font-bold">
-                  ✓ เลือกแล้ว
+                  ${t().selectedOverlay}
                 </div>
               </div>
             ` : ""}
@@ -294,7 +455,7 @@
 
     function addSelectedToCart() {
       if (!profile?.userId) {
-        Swal.fire("กรุณาเข้าสู่ระบบ LINE", "", "warning");
+        Swal.fire(t().lineRequired, "", "warning");
         return;
       }
 
@@ -324,11 +485,11 @@
 
       Swal.fire({
         icon: "success",
-        title: "เพิ่มลงตะกร้าแล้ว",
-        text: "สามารถไปชำระเงินได้ที่หน้าตะกร้า",
+        title: t().addedTitle,
+        text: t().addedText,
         showCancelButton: true,
-        confirmButtonText: "ไปตะกร้า",
-        cancelButtonText: "เลือกต่อ"
+        confirmButtonText: t().goCart,
+        cancelButtonText: t().chooseMore
       }).then(result => {
         if (result.isConfirmed) goCart();
       });
@@ -407,6 +568,30 @@
       });
     }
 
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle("dark");
+
+      const isDark = html.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark ? "1" : "0");
+
+      updateDarkButton();
+    }
+
+    function updateDarkButton() {
+      const btn = document.getElementById("darkBtn");
+      if (!btn) return;
+
+      const isDark = document.documentElement.classList.contains("dark");
+      btn.innerHTML = isDark ? "☀️ Light" : "🌙 Dark";
+    }
+
+    function initDarkMode() {
+      const saved = localStorage.getItem("darkMode");
+      if (saved === "1") document.documentElement.classList.add("dark");
+      updateDarkButton();
+    }
+
     function escapeHtml(text) {
       return String(text ?? "")
         .replace(/&/g, "&amp;")
@@ -451,22 +636,18 @@ document.addEventListener('dragstart', function(e) {
 <script>
 document.addEventListener('keydown', function(e) {
 
-  // F12
   if (e.key === "F12") {
     e.preventDefault();
   }
 
-  // Ctrl+S / Cmd+S
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
     e.preventDefault();
   }
 
-  // Ctrl+U
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
     e.preventDefault();
   }
 
-  // Ctrl+Shift+I
   if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
     e.preventDefault();
   }
