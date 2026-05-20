@@ -28,61 +28,36 @@
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <div class="flex justify-between gap-3">
         <div>
-          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
-            LINE Mini App
-          </p>
-
-          <h1 id="txtPageTitle" class="text-xl font-bold">
-            ดาวน์โหลดภาพ
-          </h1>
-
-          <p id="orderText" class="text-sm text-slate-500 dark:text-slate-400">
-            กำลังโหลดข้อมูล...
-          </p>
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
+          <h1 id="txtPageTitle" class="text-xl font-bold">ดาวน์โหลดภาพ</h1>
+          <p id="orderText" class="text-sm text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
-          <button
-            onclick="goOrder()"
-            class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold"
-          >
+          <button onclick="goOrder()" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
             <span id="txtOrderBtn">ออเดอร์</span>
           </button>
 
-          <select
-            id="langSelect"
-            onchange="changeLanguage(this.value)"
-            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
-          >
+          <select id="langSelect" onchange="changeLanguage(this.value)" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none">
             <option value="th">🇹🇭 TH</option>
             <option value="en">🇺🇸 EN</option>
             <option value="ru">🇷🇺 RU</option>
           </select>
 
-          <button
-            onclick="toggleDarkMode()"
-            id="darkBtn"
-            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
-          >
+          <button onclick="toggleDarkMode()" id="darkBtn" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold">
             🌙 Dark
           </button>
         </div>
       </div>
     </header>
 
-    <section
-      id="downloadAllBox"
-      class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition"
-    >
-      <button
-        onclick="downloadAllFiles()"
-        class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
-      >
+    <section id="downloadAllBox" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
+      <button onclick="downloadAllFiles()" class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold">
         ⬇️ <span id="txtDownloadAll">ดาวน์โหลดรูปทั้งหมด</span>
       </button>
 
       <p id="txtDownloadAllHint" class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
-        ระบบจะพยายามดาวน์โหลดลงเครื่องโดยตรง หากไม่ได้จะเปิดรูปในเบราว์เซอร์
+        มือถือจะเปิดเมนูแชร์เพื่อให้บันทึกรูปได้
       </p>
     </section>
 
@@ -90,10 +65,7 @@
       กำลังโหลดภาพ...
     </section>
 
-    <section
-      id="photoGrid"
-      class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
-    ></section>
+    <section id="photoGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></section>
 
     <section id="blockedBox" class="hidden text-center py-16">
       <p class="text-5xl">🔒</p>
@@ -106,10 +78,7 @@
         กรุณารอแอดมินอนุมัติคำสั่งซื้อก่อน
       </p>
 
-      <button
-        onclick="goOrder()"
-        class="mt-5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold"
-      >
+      <button onclick="goOrder()" class="mt-5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold">
         <span id="txtBackOrder">กลับไปหน้าออเดอร์</span>
       </button>
     </section>
@@ -136,14 +105,15 @@
         downloadReady: "พร้อมดาวน์โหลด",
         downloadBtn: "ดาวน์โหลด",
         downloadAll: "ดาวน์โหลดรูปทั้งหมด",
-        downloadAllHint: "ระบบจะพยายามดาวน์โหลดลงเครื่องโดยตรง หากไม่ได้จะเปิดรูปในเบราว์เซอร์",
+        downloadAllHint: "มือถือจะเปิดเมนูแชร์เพื่อให้บันทึกรูปได้",
         downloadAllTitle: "ดาวน์โหลดทั้งหมด",
-        downloadAllText: "ระบบจะดาวน์โหลดรูปทั้งหมดลงเครื่อง หากบางเครื่องไม่รองรับ ระบบจะเปิดรูปในเบราว์เซอร์แทน",
+        downloadAllText: "ระบบจะดาวน์โหลดทีละรูป มือถืออาจให้กดยืนยันบันทึกผ่านเมนูแชร์",
         startDownload: "เริ่มดาวน์โหลด",
         cancel: "ยกเลิก",
         noFile: "ไม่พบไฟล์",
         noFileDesc: "ยังไม่มี URL สำหรับดาวน์โหลด",
         preparing: "กำลังเตรียมไฟล์...",
+        shareText: "บันทึกรูปภาพ",
         errorTitle: "เกิดข้อผิดพลาด"
       },
 
@@ -159,14 +129,15 @@
         downloadReady: "Ready to download",
         downloadBtn: "Download",
         downloadAll: "Download All Photos",
-        downloadAllHint: "The system will try to download directly. If unsupported, it will open in a browser.",
+        downloadAllHint: "On mobile, the share menu will open so you can save the photo",
         downloadAllTitle: "Download All",
-        downloadAllText: "The system will download all photos. If unsupported, photos will open in a browser instead.",
+        downloadAllText: "The system will download photos one by one. Mobile devices may ask you to save through the share menu.",
         startDownload: "Start Download",
         cancel: "Cancel",
         noFile: "File Not Found",
         noFileDesc: "No download URL available",
         preparing: "Preparing file...",
+        shareText: "Save photo",
         errorTitle: "Error"
       },
 
@@ -182,14 +153,15 @@
         downloadReady: "Готово к скачиванию",
         downloadBtn: "Скачать",
         downloadAll: "Скачать все фото",
-        downloadAllHint: "Система попробует скачать напрямую. Если не получится, откроет фото в браузере.",
+        downloadAllHint: "На телефоне откроется меню «Поделиться», чтобы сохранить фото",
         downloadAllTitle: "Скачать всё",
-        downloadAllText: "Система скачает все фото. Если устройство не поддерживает, фото откроются в браузере.",
+        downloadAllText: "Система будет скачивать фото по одному. На телефоне может потребоваться сохранить через меню «Поделиться».",
         startDownload: "Начать скачивание",
         cancel: "Отмена",
         noFile: "Файл не найден",
         noFileDesc: "URL для скачивания отсутствует",
         preparing: "Подготовка файла...",
+        shareText: "Сохранить фото",
         errorTitle: "Ошибка"
       }
     };
@@ -374,36 +346,50 @@
 
     async function downloadFile(url, filename) {
       if (!url) {
-        Swal.fire(
-          t().noFile,
-          t().noFileDesc,
-          "warning"
-        );
+        Swal.fire(t().noFile, t().noFileDesc, "warning");
         return;
       }
 
       try {
         Swal.fire({
           title: t().preparing,
+          text: t().downloadAllHint,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
 
-        const response = await fetch(url, {
-          mode: "cors"
-        });
+        const response = await fetch(url, { mode: "cors" });
 
         if (!response.ok) {
           throw new Error("โหลดไฟล์ไม่สำเร็จ");
         }
 
         const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
 
         const safeName =
           filename && filename.includes(".")
             ? filename
             : `${filename || "photo"}.jpg`;
+
+        const file = new File([blob], safeName, {
+          type: blob.type || "image/jpeg"
+        });
+
+        Swal.close();
+
+        if (
+          navigator.canShare &&
+          navigator.canShare({ files: [file] })
+        ) {
+          await navigator.share({
+            files: [file],
+            title: safeName,
+            text: t().shareText
+          });
+          return;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
 
         const a = document.createElement("a");
         a.href = blobUrl;
@@ -414,12 +400,12 @@
         a.click();
         a.remove();
 
-        URL.revokeObjectURL(blobUrl);
-
-        Swal.close();
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
 
       } catch (err) {
-        console.warn("download fallback:", err);
+        console.warn("mobile download fallback:", err);
 
         Swal.close();
 
