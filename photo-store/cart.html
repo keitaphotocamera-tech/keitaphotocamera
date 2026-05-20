@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
   <title>ตะกร้าสินค้า</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class"
+    };
+  </script>
+
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -14,193 +22,572 @@
   <script src="js/liff-helper.js"></script>
 </head>
 
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
+
   <main class="max-w-4xl mx-auto p-4 pb-32">
 
-    <header class="bg-white rounded-3xl p-4 shadow-sm mb-4">
+    <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
+
       <div class="flex justify-between gap-3">
+
         <div>
-          <p class="text-xs text-slate-500">LINE Mini App</p>
-          <h1 class="text-xl font-bold">ตะกร้าสินค้า</h1>
-          <p id="cartDesc" class="text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
+
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
+            LINE Mini App
+          </p>
+
+          <h1 id="txtCartTitle" class="text-xl font-bold">
+            ตะกร้าสินค้า
+          </h1>
+
+          <p id="cartDesc" class="text-sm text-slate-500 dark:text-slate-400">
+            กำลังโหลดข้อมูล...
+          </p>
+
         </div>
 
-        <button onclick="goHome()" class="bg-white border border-slate-200 rounded-full px-4 py-2 font-bold">
-          หน้าแรก
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2">
+
+          <button
+            onclick="goHome()"
+            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-bold"
+          >
+            ← <span id="txtHome">หน้าแรก</span>
+          </button>
+
+          <select
+            id="langSelect"
+            onchange="changeLanguage(this.value)"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
+          >
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
+
+          <button
+            onclick="toggleDarkMode()"
+            id="darkBtn"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+          >
+            🌙 Dark
+          </button>
+
+        </div>
+
       </div>
 
-      <div id="profileBox" class="hidden mt-4 bg-slate-50 rounded-2xl p-3">
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition">
+
         <div class="flex items-center gap-3">
-          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200" />
+
+          <img
+            id="linePicture"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
+          />
+
           <div>
-            <p id="lineName" class="font-bold">-</p>
-            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+
+            <p id="lineName" class="font-bold">
+              -
+            </p>
+
+            <p id="txtConnected" class="text-xs text-emerald-600">
+              เชื่อมต่อ LINE แล้ว
+            </p>
+
           </div>
+
         </div>
+
       </div>
+
     </header>
 
     <section id="cartList" class="space-y-3"></section>
 
     <section id="emptyBox" class="hidden text-center py-16">
+
       <p class="text-5xl">🛒</p>
-      <h2 class="mt-3 text-lg font-bold">ยังไม่มีสินค้าในตะกร้า</h2>
-      <p class="text-sm text-slate-500 mt-1">กรุณาเลือกภาพจาก Event ก่อน</p>
-      <button onclick="goHome()" class="mt-5 bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold">
-        เลือก Event
+
+      <h2 id="txtEmptyTitle" class="mt-3 text-lg font-bold">
+        ยังไม่มีสินค้าในตะกร้า
+      </h2>
+
+      <p id="txtEmptyDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        กรุณาเลือกภาพจาก Event ก่อน
+      </p>
+
+      <button
+        onclick="goHome()"
+        class="mt-5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold"
+      >
+        <span id="txtChooseEvent">เลือก Event</span>
       </button>
+
     </section>
 
   </main>
 
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+  <footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+
     <div class="max-w-4xl mx-auto p-4">
+
       <div class="flex justify-between items-center gap-3">
+
         <div>
-          <p class="text-xs text-slate-500">รวมทั้งหมด</p>
-          <p class="text-xl font-bold">
-            <span id="totalItems">0</span> ภาพ · ฿<span id="totalAmount">0.00</span>
+
+          <p id="txtSummary" class="text-xs text-slate-500 dark:text-slate-400">
+            รวมทั้งหมด
           </p>
+
+          <p class="text-xl font-bold">
+            <span id="totalItems">0</span>
+            <span id="txtPhotoUnit">ภาพ</span>
+            ·
+            ฿<span id="totalAmount">0.00</span>
+          </p>
+
         </div>
 
         <button
           id="checkoutBtn"
           onclick="goCheckout()"
           disabled
-          class="bg-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
+          class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
         >
-          ชำระเงิน
+          <span id="txtCheckout">ชำระเงิน</span>
         </button>
+
       </div>
+
     </div>
+
   </footer>
 
   <script>
+
     let profile = null;
     let cartKey = null;
     let cart = [];
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        profile = await AppLIFF.init();
-        if (!profile) return;
+    /****************************************
+     * LANGUAGE
+     ****************************************/
 
-        cartKey = AppLIFF.getCartKey();
+    const LANG = {
 
-        showProfile();
-        loadCart();
-        renderCart();
+      th: {
+        miniApp: "LINE Mini App",
+        cartTitle: "ตะกร้าสินค้า",
+        loading: "กำลังโหลดข้อมูล...",
+        home: "หน้าแรก",
+        connected: "เชื่อมต่อ LINE แล้ว",
+        emptyTitle: "ยังไม่มีสินค้าในตะกร้า",
+        emptyDesc: "กรุณาเลือกภาพจาก Event ก่อน",
+        chooseEvent: "เลือก Event",
+        summary: "รวมทั้งหมด",
+        photoUnit: "ภาพ",
+        checkout: "ชำระเงิน",
+        remove: "ลบ",
+        cartHas: "มีภาพในตะกร้า",
+        cartEmpty: "ยังไม่มีสินค้าในตะกร้า",
+        photoEvent: "Photo Event",
+        emptyCartTitle: "ตะกร้าว่าง",
+        emptyCartDesc: "กรุณาเลือกภาพก่อนชำระเงิน"
+      },
 
-      } catch (err) {
-        console.error(err);
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "โหลดตะกร้าไม่สำเร็จ", "error");
+      en: {
+        miniApp: "LINE Mini App",
+        cartTitle: "Shopping Cart",
+        loading: "Loading data...",
+        home: "Home",
+        connected: "LINE Connected",
+        emptyTitle: "Your cart is empty",
+        emptyDesc: "Please select photos from an Event first",
+        chooseEvent: "Choose Event",
+        summary: "Total",
+        photoUnit: "photos",
+        checkout: "Checkout",
+        remove: "Remove",
+        cartHas: "photos in cart",
+        cartEmpty: "Your cart is empty",
+        photoEvent: "Photo Event",
+        emptyCartTitle: "Empty Cart",
+        emptyCartDesc: "Please select photos before checkout"
+      },
+
+      ru: {
+        miniApp: "LINE Мини-приложение",
+        cartTitle: "Корзина",
+        loading: "Загрузка данных...",
+        home: "Главная",
+        connected: "LINE подключён",
+        emptyTitle: "Корзина пуста",
+        emptyDesc: "Пожалуйста, выберите фотографии из события",
+        chooseEvent: "Выбрать событие",
+        summary: "Итого",
+        photoUnit: "фото",
+        checkout: "Оплатить",
+        remove: "Удалить",
+        cartHas: "фото в корзине",
+        cartEmpty: "Корзина пуста",
+        photoEvent: "Фото Событие",
+        emptyCartTitle: "Пустая корзина",
+        emptyCartDesc: "Пожалуйста, выберите фото перед оплатой"
       }
-    });
+
+    };
+
+    let currentLang =
+      localStorage.getItem("lang") || "th";
+
+    function t() {
+      return LANG[currentLang];
+    }
+
+    function applyLanguage() {
+
+      const x = t();
+
+      document.documentElement.lang =
+        currentLang;
+
+      document.getElementById("txtMiniApp").textContent =
+        x.miniApp;
+
+      document.getElementById("txtCartTitle").textContent =
+        x.cartTitle;
+
+      document.getElementById("txtHome").textContent =
+        x.home;
+
+      document.getElementById("txtConnected").textContent =
+        x.connected;
+
+      document.getElementById("txtEmptyTitle").textContent =
+        x.emptyTitle;
+
+      document.getElementById("txtEmptyDesc").textContent =
+        x.emptyDesc;
+
+      document.getElementById("txtChooseEvent").textContent =
+        x.chooseEvent;
+
+      document.getElementById("txtSummary").textContent =
+        x.summary;
+
+      document.getElementById("txtPhotoUnit").textContent =
+        x.photoUnit;
+
+      document.getElementById("txtCheckout").textContent =
+        x.checkout;
+
+      document.getElementById("langSelect").value =
+        currentLang;
+    }
+
+    function changeLanguage(lang) {
+
+      currentLang = lang;
+
+      localStorage.setItem(
+        "lang",
+        lang
+      );
+
+      applyLanguage();
+
+      renderCart();
+    }
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      async () => {
+
+        try {
+
+          initDarkMode();
+          applyLanguage();
+
+          profile =
+            await AppLIFF.init();
+
+          if (!profile) return;
+
+          cartKey =
+            AppLIFF.getCartKey();
+
+          showProfile();
+
+          loadCart();
+
+          renderCart();
+
+        } catch (err) {
+
+          console.error(err);
+
+          Swal.fire(
+            "Error",
+            err.message || "โหลดตะกร้าไม่สำเร็จ",
+            "error"
+          );
+        }
+      }
+    );
 
     function showProfile() {
-      document.getElementById("profileBox").classList.remove("hidden");
-      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
+
+      document.getElementById("profileBox")
+        .classList.remove("hidden");
+
+      document.getElementById("lineName").textContent =
+        profile.displayName || "LINE User";
+
       document.getElementById("linePicture").src =
-        profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+        profile.pictureUrl ||
+        "https://placehold.co/100x100?text=LINE";
     }
 
     function loadCart() {
-      cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
-      cart = cart.filter(item => item && item.photo_id);
+
+      cart =
+        JSON.parse(
+          localStorage.getItem(cartKey) || "[]"
+        );
+
+      cart =
+        cart.filter(
+          item => item && item.photo_id
+        );
     }
 
     function saveCart() {
-      localStorage.setItem(cartKey, JSON.stringify(cart));
+
+      localStorage.setItem(
+        cartKey,
+        JSON.stringify(cart)
+      );
     }
 
     function renderCart() {
-      const list = document.getElementById("cartList");
-      const empty = document.getElementById("emptyBox");
-      const checkoutBtn = document.getElementById("checkoutBtn");
+
+      const list =
+        document.getElementById("cartList");
+
+      const empty =
+        document.getElementById("emptyBox");
+
+      const checkoutBtn =
+        document.getElementById("checkoutBtn");
 
       list.innerHTML = "";
 
       if (!cart.length) {
+
         list.classList.add("hidden");
+
         empty.classList.remove("hidden");
+
         checkoutBtn.disabled = true;
+
         updateSummary();
+
         return;
       }
 
       list.classList.remove("hidden");
+
       empty.classList.add("hidden");
+
       checkoutBtn.disabled = false;
 
       cart.forEach((item, index) => {
-        const price = Number(item.price || 0);
-        const img = item.preview_url || item.watermarked_url || item.thumbnail_url || "https://placehold.co/300x400?text=Photo";
 
-        const card = document.createElement("article");
-        card.className = "bg-white rounded-3xl p-3 shadow-sm flex gap-3";
+        const price =
+          Number(item.price || 0);
+
+        const img =
+          item.preview_url ||
+          item.watermarked_url ||
+          item.thumbnail_url ||
+          "https://placehold.co/300x400?text=Photo";
+
+        const card =
+          document.createElement("article");
+
+        card.className =
+          "bg-white dark:bg-slate-900 rounded-3xl p-3 shadow-sm flex gap-3 transition";
 
         card.innerHTML = `
-          <img src="${img}" class="w-24 h-28 rounded-2xl object-cover bg-slate-200" />
+          <img
+            src="${img}"
+            class="w-24 h-28 rounded-2xl object-cover bg-slate-200 dark:bg-slate-800"
+          />
 
           <div class="flex-1 min-w-0">
-            <p class="font-bold truncate">${escapeHtml(item.file_name || item.photo_id)}</p>
-            <p class="text-xs text-slate-500 truncate">${escapeHtml(item.event_name || "Photo Event")}</p>
-            <p class="mt-2 text-lg font-bold text-emerald-600">฿${formatMoney(price)}</p>
+
+            <p class="font-bold truncate">
+              ${escapeHtml(item.file_name || item.photo_id)}
+            </p>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+              ${escapeHtml(item.event_name || t().photoEvent)}
+            </p>
+
+            <p class="mt-2 text-lg font-bold text-emerald-600">
+              ฿${formatMoney(price)}
+            </p>
 
             <div class="mt-3 flex gap-2">
-              <button onclick="removeItem(${index})" class="bg-red-50 text-red-600 rounded-xl px-3 py-2 text-sm font-bold">
-                ลบ
+
+              <button
+                onclick="removeItem(${index})"
+                class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl px-3 py-2 text-sm font-bold"
+              >
+                ${t().remove}
               </button>
+
             </div>
+
           </div>
         `;
 
         list.appendChild(card);
+
       });
 
       updateSummary();
     }
 
     function updateSummary() {
-      const totalItems = cart.length;
-      const totalAmount = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+      const totalItems =
+        cart.length;
+
+      const totalAmount =
+        cart.reduce(
+          (sum, item) =>
+            sum + Number(item.price || 0),
+          0
+        );
 
       document.getElementById("cartDesc").textContent =
-        totalItems > 0 ? `มีภาพในตะกร้า ${totalItems} ภาพ` : "ยังไม่มีสินค้าในตะกร้า";
+        totalItems > 0
+          ? `${t().cartHas} ${totalItems} ${t().photoUnit}`
+          : t().cartEmpty;
 
-      document.getElementById("totalItems").textContent = totalItems;
-      document.getElementById("totalAmount").textContent = formatMoney(totalAmount);
+      document.getElementById("totalItems").textContent =
+        totalItems;
+
+      document.getElementById("totalAmount").textContent =
+        formatMoney(totalAmount);
     }
 
     function removeItem(index) {
+
       cart.splice(index, 1);
+
       saveCart();
+
       renderCart();
     }
 
     function goCheckout() {
+
       if (!cart.length) {
-        Swal.fire("ตะกร้าว่าง", "กรุณาเลือกภาพก่อนชำระเงิน", "warning");
+
+        Swal.fire(
+          t().emptyCartTitle,
+          t().emptyCartDesc,
+          "warning"
+        );
+
         return;
       }
 
-      const eventId = cart[0]?.event_id || "";
-      window.location.href = `checkout.html?event=${encodeURIComponent(eventId)}`;
+      const eventId =
+        cart[0]?.event_id || "";
+
+      window.location.href =
+        `checkout.html?event=${encodeURIComponent(eventId)}`;
     }
 
     function goHome() {
-      window.location.href = "index.html";
+
+      window.location.href =
+        "index.html";
     }
 
     function formatMoney(value) {
-      return Number(value || 0).toLocaleString("th-TH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
+
+      return Number(value || 0)
+        .toLocaleString(
+          "th-TH",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        );
+    }
+
+    /****************************************
+     * DARK MODE
+     ****************************************/
+
+    function toggleDarkMode() {
+
+      const html =
+        document.documentElement;
+
+      html.classList.toggle("dark");
+
+      const isDark =
+        html.classList.contains("dark");
+
+      localStorage.setItem(
+        "darkMode",
+        isDark ? "1" : "0"
+      );
+
+      updateDarkButton();
+    }
+
+    function updateDarkButton() {
+
+      const btn =
+        document.getElementById("darkBtn");
+
+      if (!btn) return;
+
+      const isDark =
+        document.documentElement
+          .classList
+          .contains("dark");
+
+      btn.innerHTML =
+        isDark
+          ? "☀️ Light"
+          : "🌙 Dark";
+    }
+
+    function initDarkMode() {
+
+      const saved =
+        localStorage.getItem("darkMode");
+
+      if (saved === "1") {
+
+        document.documentElement
+          .classList.add("dark");
+      }
+
+      updateDarkButton();
     }
 
     function escapeHtml(text) {
+
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -208,63 +595,61 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
   </script>
 
   <!-- ห้ามคลิกขวา -->
-<script>
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-</script>
+  <script>
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-<style>
-img {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: none;
-}
+  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
+  <style>
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
 
-body {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-</style>
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
 
-<!-- ปิดการลากรูป -->
-<script>
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-});
-</script>
+  <!-- ปิดการลากรูป -->
+  <script>
+    document.addEventListener('dragstart', function(e) {
+      e.preventDefault();
+    });
+  </script>
 
-<!-- ปิดปุ่มลัดบางอย่าง -->
-<script>
-document.addEventListener('keydown', function(e) {
+  <!-- ปิดปุ่มลัดบางอย่าง -->
+  <script>
+    document.addEventListener('keydown', function(e) {
 
-  // F12
-  if (e.key === "F12") {
-    e.preventDefault();
-  }
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
 
-  // Ctrl+S / Cmd+S
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+      }
 
-  // Ctrl+U
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+      }
 
-  // Ctrl+Shift+I
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-    e.preventDefault();
-  }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+      }
 
-});
-</script>
+    });
+  </script>
+
 </body>
 </html>
