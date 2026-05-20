@@ -120,23 +120,35 @@
 
     .watermark-layer {
       position: absolute;
-      inset: -35%;
+      inset: -28%;
       pointer-events: none;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 42px;
-      transform: rotate(-30deg);
-      opacity: .34;
       z-index: 3;
+      transform: rotate(-24deg);
+      opacity: .30;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: clamp(42px, 7vw, 92px);
     }
 
-    .watermark-layer span {
-      color: white;
-      font-size: clamp(24px, 4vw, 60px);
-      font-weight: 950;
+    .wm-row {
+      display: flex;
+      gap: clamp(58px, 9vw, 130px);
       white-space: nowrap;
-      letter-spacing: .08em;
-      text-shadow: 0 0 8px rgba(0,0,0,.75), 0 2px 12px rgba(0,0,0,.6);
+      color: rgba(255,255,255,.92);
+      font-size: clamp(18px, 3vw, 42px);
+      font-weight: 900;
+      letter-spacing: .12em;
+      line-height: 1;
+      text-shadow: 0 2px 12px rgba(0,0,0,.78);
+    }
+
+    .wm-row:nth-child(even) {
+      transform: translateX(-12%);
+    }
+
+    .wm-row:nth-child(odd) {
+      transform: translateX(4%);
     }
 
     .watermark-center {
@@ -147,16 +159,20 @@
       justify-content: center;
       pointer-events: none;
       z-index: 4;
-      transform: rotate(-22deg);
+      transform: rotate(-24deg);
     }
 
     .watermark-center span {
-      color: rgba(255,255,255,.42);
-      font-size: clamp(32px, 7vw, 86px);
+      color: rgba(255,255,255,.28);
+      font-size: clamp(30px, 6vw, 78px);
       font-weight: 950;
-      letter-spacing: .08em;
+      letter-spacing: .12em;
       white-space: nowrap;
+      padding: .35em .7em;
+      border: 2px solid rgba(255,255,255,.22);
+      border-radius: 18px;
       text-shadow: 0 4px 18px rgba(0,0,0,.75);
+      background: rgba(0,0,0,.08);
     }
 
     .preview-noise {
@@ -324,22 +340,12 @@
       <div class="preview-soft-mask"></div>
       <div class="preview-noise"></div>
 
-      <div class="watermark-layer">
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
-        <span>KEITA PHOTO CAMERA</span>
+      <div class="watermark-layer" aria-hidden="true">
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
+        <div class="wm-row"><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span><span>KEITA PHOTO CAMERA</span></div>
       </div>
 
       <div class="watermark-center">
