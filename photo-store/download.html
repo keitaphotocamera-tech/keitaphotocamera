@@ -2,15 +2,11 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>ดาวน์โหลดภาพ</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-
   <script>
     tailwind.config = {
       darkMode: "class"
@@ -29,38 +25,23 @@
 
   <main class="max-w-5xl mx-auto p-4 pb-24">
 
-    <!-- HEADER -->
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
-
       <div class="flex justify-between gap-3">
-
         <div>
-
-          <p
-            id="txtMiniApp"
-            class="text-xs text-slate-500 dark:text-slate-400"
-          >
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
             LINE Mini App
           </p>
 
-          <h1
-            id="txtPageTitle"
-            class="text-xl font-bold"
-          >
+          <h1 id="txtPageTitle" class="text-xl font-bold">
             ดาวน์โหลดภาพ
           </h1>
 
-          <p
-            id="orderText"
-            class="text-sm text-slate-500 dark:text-slate-400"
-          >
+          <p id="orderText" class="text-sm text-slate-500 dark:text-slate-400">
             กำลังโหลดข้อมูล...
           </p>
-
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
-
           <button
             onclick="goOrder()"
             class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold"
@@ -85,19 +66,14 @@
           >
             🌙 Dark
           </button>
-
         </div>
-
       </div>
-
     </header>
 
-    <!-- DOWNLOAD ALL -->
     <section
       id="downloadAllBox"
       class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition"
     >
-
       <button
         onclick="downloadAllFiles()"
         class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
@@ -105,48 +81,28 @@
         ⬇️ <span id="txtDownloadAll">ดาวน์โหลดรูปทั้งหมด</span>
       </button>
 
-      <p
-        id="txtDownloadAllHint"
-        class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400"
-      >
-        ระบบจะดาวน์โหลดรูปลงเครื่องอัตโนมัติ
+      <p id="txtDownloadAllHint" class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
+        ระบบจะพยายามดาวน์โหลดลงเครื่องโดยตรง หากไม่ได้จะเปิดรูปในเบราว์เซอร์
       </p>
-
     </section>
 
-    <!-- LOADING -->
-    <section
-      id="loadingBox"
-      class="text-center py-10 text-slate-500 dark:text-slate-400"
-    >
+    <section id="loadingBox" class="text-center py-10 text-slate-500 dark:text-slate-400">
       กำลังโหลดภาพ...
     </section>
 
-    <!-- PHOTO GRID -->
     <section
       id="photoGrid"
       class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
     ></section>
 
-    <!-- BLOCK -->
-    <section
-      id="blockedBox"
-      class="hidden text-center py-16"
-    >
-
+    <section id="blockedBox" class="hidden text-center py-16">
       <p class="text-5xl">🔒</p>
 
-      <h2
-        id="txtBlockedTitle"
-        class="mt-3 text-lg font-bold"
-      >
+      <h2 id="txtBlockedTitle" class="mt-3 text-lg font-bold">
         ยังไม่สามารถดาวน์โหลดได้
       </h2>
 
-      <p
-        id="txtBlockedDesc"
-        class="text-sm text-slate-500 dark:text-slate-400 mt-1"
-      >
+      <p id="txtBlockedDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
         กรุณารอแอดมินอนุมัติคำสั่งซื้อก่อน
       </p>
 
@@ -156,27 +112,18 @@
       >
         <span id="txtBackOrder">กลับไปหน้าออเดอร์</span>
       </button>
-
     </section>
 
   </main>
 
   <script>
-
-    const db =
-      window.sb ||
-      window.supabaseClient;
+    const db = window.sb || window.supabaseClient;
 
     let profile = null;
     let orderId = null;
     let order = null;
 
-    /****************************************
-     * LANGUAGE
-     ****************************************/
-
     const LANG = {
-
       th: {
         miniApp: "LINE Mini App",
         pageTitle: "ดาวน์โหลดภาพ",
@@ -189,9 +136,9 @@
         downloadReady: "พร้อมดาวน์โหลด",
         downloadBtn: "ดาวน์โหลด",
         downloadAll: "ดาวน์โหลดรูปทั้งหมด",
-        downloadAllHint: "ระบบจะดาวน์โหลดรูปลงเครื่องอัตโนมัติ",
+        downloadAllHint: "ระบบจะพยายามดาวน์โหลดลงเครื่องโดยตรง หากไม่ได้จะเปิดรูปในเบราว์เซอร์",
         downloadAllTitle: "ดาวน์โหลดทั้งหมด",
-        downloadAllText: "ระบบจะดาวน์โหลดรูปทั้งหมดลงเครื่อง",
+        downloadAllText: "ระบบจะดาวน์โหลดรูปทั้งหมดลงเครื่อง หากบางเครื่องไม่รองรับ ระบบจะเปิดรูปในเบราว์เซอร์แทน",
         startDownload: "เริ่มดาวน์โหลด",
         cancel: "ยกเลิก",
         noFile: "ไม่พบไฟล์",
@@ -212,9 +159,9 @@
         downloadReady: "Ready to download",
         downloadBtn: "Download",
         downloadAll: "Download All Photos",
-        downloadAllHint: "Photos will automatically download to your device",
+        downloadAllHint: "The system will try to download directly. If unsupported, it will open in a browser.",
         downloadAllTitle: "Download All",
-        downloadAllText: "All photos will be downloaded automatically",
+        downloadAllText: "The system will download all photos. If unsupported, photos will open in a browser instead.",
         startDownload: "Start Download",
         cancel: "Cancel",
         noFile: "File Not Found",
@@ -235,9 +182,9 @@
         downloadReady: "Готово к скачиванию",
         downloadBtn: "Скачать",
         downloadAll: "Скачать все фото",
-        downloadAllHint: "Фотографии будут автоматически скачаны",
+        downloadAllHint: "Система попробует скачать напрямую. Если не получится, откроет фото в браузере.",
         downloadAllTitle: "Скачать всё",
-        downloadAllText: "Все фотографии будут автоматически скачаны",
+        downloadAllText: "Система скачает все фото. Если устройство не поддерживает, фото откроются в браузере.",
         startDownload: "Начать скачивание",
         cancel: "Отмена",
         noFile: "Файл не найден",
@@ -245,22 +192,18 @@
         preparing: "Подготовка файла...",
         errorTitle: "Ошибка"
       }
-
     };
 
-    let currentLang =
-      localStorage.getItem("lang") || "th";
+    let currentLang = localStorage.getItem("lang") || "th";
 
     function t() {
-      return LANG[currentLang];
+      return LANG[currentLang] || LANG.th;
     }
 
     function applyLanguage() {
-
       const x = t();
 
-      document.documentElement.lang =
-        currentLang;
+      document.documentElement.lang = currentLang;
 
       document.getElementById("txtMiniApp").textContent = x.miniApp;
       document.getElementById("txtPageTitle").textContent = x.pageTitle;
@@ -271,19 +214,12 @@
       document.getElementById("txtBackOrder").textContent = x.backOrder;
       document.getElementById("txtDownloadAll").textContent = x.downloadAll;
       document.getElementById("txtDownloadAllHint").textContent = x.downloadAllHint;
-
-      document.getElementById("langSelect").value =
-        currentLang;
+      document.getElementById("langSelect").value = currentLang;
     }
 
     function changeLanguage(lang) {
-
       currentLang = lang;
-
-      localStorage.setItem(
-        "lang",
-        lang
-      );
+      localStorage.setItem("lang", lang);
 
       applyLanguage();
 
@@ -292,130 +228,91 @@
       }
     }
 
-    /****************************************
-     * INIT
-     ****************************************/
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        initDarkMode();
+        applyLanguage();
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      async () => {
-
-        try {
-
-          initDarkMode();
-          applyLanguage();
-
-          if (!db) {
-            throw new Error("ไม่พบ Supabase client");
-          }
-
-          profile =
-            await AppLIFF.init();
-
-          if (!profile) return;
-
-          orderId =
-            getOrderId();
-
-          if (!orderId) {
-            throw new Error("ไม่พบ order_id");
-          }
-
-          await loadOrder();
-
-        } catch (err) {
-
-          console.error(err);
-
-          document
-            .getElementById("loadingBox")
-            .classList.add("hidden");
-
-          Swal.fire(
-            t().errorTitle,
-            err.message || "โหลดข้อมูลไม่สำเร็จ",
-            "error"
-          );
+        if (!db) {
+          throw new Error("ไม่พบ Supabase client");
         }
+
+        profile = await AppLIFF.init();
+        if (!profile) return;
+
+        orderId = getOrderId();
+
+        if (!orderId) {
+          throw new Error("ไม่พบ order_id");
+        }
+
+        await loadOrder();
+
+      } catch (err) {
+        console.error(err);
+
+        document.getElementById("loadingBox").classList.add("hidden");
+
+        Swal.fire(
+          t().errorTitle,
+          err.message || "โหลดข้อมูลไม่สำเร็จ",
+          "error"
+        );
       }
-    );
+    });
 
     function getOrderId() {
-
-      const params =
-        new URLSearchParams(window.location.search);
-
-      return (
-        params.get("order_id") ||
-        params.get("id")
-      );
+      const params = new URLSearchParams(window.location.search);
+      return params.get("order_id") || params.get("id");
     }
 
     async function loadOrder() {
-
-      const { data, error } =
-        await db
-          .from("orders")
-          .select(`
-            *,
-            order_items (
+      const { data, error } = await db
+        .from("orders")
+        .select(`
+          *,
+          order_items (
+            id,
+            photo_id,
+            price,
+            photos (
               id,
-              photo_id,
-              price,
-              photos (
-                id,
-                filename,
-                preview_url,
-                watermark_url
-              )
+              filename,
+              preview_url,
+              watermark_url
             )
-          `)
-          .eq("id", orderId)
-          .eq(
-            "line_user_id",
-            profile.userId
           )
-          .single();
+        `)
+        .eq("id", orderId)
+        .eq("line_user_id", profile.userId)
+        .single();
 
       if (error) throw error;
 
       order = data;
 
-      document
-        .getElementById("loadingBox")
-        .classList.add("hidden");
+      document.getElementById("loadingBox").classList.add("hidden");
 
       document.getElementById("orderText").textContent =
         `Order: ${order.order_no || order.id}`;
 
       if (order.status !== "paid") {
-
-        document
-          .getElementById("blockedBox")
-          .classList.remove("hidden");
-
+        document.getElementById("blockedBox").classList.remove("hidden");
         return;
       }
 
-      document
-        .getElementById("downloadAllBox")
-        .classList.remove("hidden");
+      document.getElementById("downloadAllBox").classList.remove("hidden");
 
       renderPhotos();
     }
 
     function renderPhotos() {
-
-      const grid =
-        document.getElementById("photoGrid");
-
-      const items =
-        order.order_items || [];
+      const grid = document.getElementById("photoGrid");
+      const items = order.order_items || [];
 
       grid.innerHTML = "";
 
       if (!items.length) {
-
         grid.innerHTML = `
           <div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
             ${t().noPhoto}
@@ -423,14 +320,11 @@
         `;
 
         grid.classList.remove("hidden");
-
         return;
       }
 
       items.forEach(item => {
-
-        const photo =
-          item.photos || {};
+        const photo = item.photos || {};
 
         const preview =
           photo.watermark_url ||
@@ -442,8 +336,7 @@
           photo.watermark_url ||
           "";
 
-        const card =
-          document.createElement("article");
+        const card = document.createElement("article");
 
         card.className =
           "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
@@ -455,7 +348,6 @@
           />
 
           <div class="p-4">
-
             <p class="font-bold truncate">
               ${escapeHtml(photo.filename || item.photo_id)}
             </p>
@@ -471,73 +363,55 @@
             >
               ${t().downloadBtn}
             </button>
-
           </div>
         `;
 
         grid.appendChild(card);
-
       });
 
       grid.classList.remove("hidden");
     }
 
-    /****************************************
-     * DOWNLOAD
-     ****************************************/
-
     async function downloadFile(url, filename) {
-
       if (!url) {
-
         Swal.fire(
           t().noFile,
           t().noFileDesc,
           "warning"
         );
-
         return;
       }
 
       try {
-
         Swal.fire({
           title: t().preparing,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
 
-        const response =
-          await fetch(url, {
-            mode: "cors"
-          });
+        const response = await fetch(url, {
+          mode: "cors"
+        });
 
         if (!response.ok) {
           throw new Error("โหลดไฟล์ไม่สำเร็จ");
         }
 
-        const blob =
-          await response.blob();
-
-        const blobUrl =
-          URL.createObjectURL(blob);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
 
         const safeName =
           filename && filename.includes(".")
             ? filename
             : `${filename || "photo"}.jpg`;
 
-        const a =
-          document.createElement("a");
-
+        const a = document.createElement("a");
         a.href = blobUrl;
         a.download = safeName;
         a.style.display = "none";
 
         document.body.appendChild(a);
-
         a.click();
-
         a.remove();
 
         URL.revokeObjectURL(blobUrl);
@@ -545,104 +419,81 @@
         Swal.close();
 
       } catch (err) {
-
-        console.warn(
-          "download fallback:",
-          err
-        );
+        console.warn("download fallback:", err);
 
         Swal.close();
 
-        if (
-          window.liff &&
-          liff.isInClient()
-        ) {
-
-          liff.openWindow({
-            url: url,
-            external: true
-          });
-
-          return;
-        }
-
-        window.open(
-          url,
-          "_blank",
-          "noopener,noreferrer"
-        );
+        openImageForSave(url);
       }
     }
 
+    function openImageForSave(url) {
+      if (window.liff && liff.isInClient()) {
+        liff.openWindow({
+          url: url,
+          external: true
+        });
+        return;
+      }
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+
     async function downloadAllFiles() {
-
-      if (
-        !order ||
-        order.status !== "paid"
-      ) {
-
+      if (!order || order.status !== "paid") {
         Swal.fire(
           t().blockedTitle,
           t().blockedDesc,
           "warning"
         );
-
         return;
       }
 
-      const items =
-        order.order_items || [];
+      const items = order.order_items || [];
 
-      const urls =
-        items
-          .map(item => {
+      const files = items
+        .map(item => {
+          const photo = item.photos || {};
 
-            const photo =
-              item.photos || {};
+          return {
+            url:
+              photo.preview_url ||
+              photo.watermark_url ||
+              "",
 
-            return {
-              url:
-                photo.preview_url ||
-                photo.watermark_url ||
-                "",
+            filename:
+              photo.filename ||
+              item.photo_id
+          };
+        })
+        .filter(item => item.url);
 
-              filename:
-                photo.filename ||
-                item.photo_id
-            };
-
-          })
-          .filter(item => item.url);
-
-      if (!urls.length) {
-
+      if (!files.length) {
         Swal.fire(
           t().noFile,
           t().noFileDesc,
           "warning"
         );
-
         return;
       }
 
-      const confirm =
-        await Swal.fire({
-          icon: "info",
-          title: t().downloadAllTitle,
-          text: t().downloadAllText,
-          showCancelButton: true,
-          confirmButtonText: t().startDownload,
-          cancelButtonText: t().cancel
-        });
+      const confirm = await Swal.fire({
+        icon: "info",
+        title: t().downloadAllTitle,
+        text: t().downloadAllText,
+        showCancelButton: true,
+        confirmButtonText: t().startDownload,
+        cancelButtonText: t().cancel
+      });
 
       if (!confirm.isConfirmed) return;
 
-      for (const item of urls) {
-
-        await downloadFile(
-          item.url,
-          item.filename
-        );
+      for (const file of files) {
+        await downloadFile(file.url, file.filename);
 
         await new Promise(resolve =>
           setTimeout(resolve, 700)
@@ -651,24 +502,15 @@
     }
 
     function goOrder() {
-
-      window.location.href =
-        "order.html";
+      window.location.href = "order.html";
     }
 
-    /****************************************
-     * DARK MODE
-     ****************************************/
-
     function toggleDarkMode() {
-
-      const html =
-        document.documentElement;
+      const html = document.documentElement;
 
       html.classList.toggle("dark");
 
-      const isDark =
-        html.classList.contains("dark");
+      const isDark = html.classList.contains("dark");
 
       localStorage.setItem(
         "darkMode",
@@ -679,9 +521,7 @@
     }
 
     function updateDarkButton() {
-
-      const btn =
-        document.getElementById("darkBtn");
+      const btn = document.getElementById("darkBtn");
 
       if (!btn) return;
 
@@ -697,25 +537,16 @@
     }
 
     function initDarkMode() {
-
-      const saved =
-        localStorage.getItem("darkMode");
+      const saved = localStorage.getItem("darkMode");
 
       if (saved === "1") {
-
-        document.documentElement
-          .classList.add("dark");
+        document.documentElement.classList.add("dark");
       }
 
       updateDarkButton();
     }
 
-    /****************************************
-     * HELPERS
-     ****************************************/
-
     function escapeHtml(text) {
-
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -725,11 +556,8 @@
     }
 
     function escapeAttr(text) {
-
-      return escapeHtml(text)
-        .replace(/`/g, "&#096;");
+      return escapeHtml(text).replace(/`/g, "&#096;");
     }
-
   </script>
 
 </body>
