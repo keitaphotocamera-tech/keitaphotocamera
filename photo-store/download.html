@@ -2,7 +2,10 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>ดาวน์โหลดภาพ</title>
 
@@ -26,6 +29,7 @@
 
   <main class="max-w-5xl mx-auto p-4 pb-24">
 
+    <!-- HEADER -->
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
 
       <div class="flex justify-between gap-3">
@@ -88,10 +92,12 @@
 
     </header>
 
+    <!-- DOWNLOAD ALL -->
     <section
       id="downloadAllBox"
       class="hidden bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition"
     >
+
       <button
         onclick="downloadAllFiles()"
         class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
@@ -103,10 +109,12 @@
         id="txtDownloadAllHint"
         class="mt-3 text-center text-xs text-slate-500 dark:text-slate-400"
       >
-        ระบบจะเปิดรูปในหน้าใหม่ เพื่อให้กดบันทึกได้สะดวก
+        ระบบจะดาวน์โหลดรูปลงเครื่องอัตโนมัติ
       </p>
+
     </section>
 
+    <!-- LOADING -->
     <section
       id="loadingBox"
       class="text-center py-10 text-slate-500 dark:text-slate-400"
@@ -114,11 +122,13 @@
       กำลังโหลดภาพ...
     </section>
 
+    <!-- PHOTO GRID -->
     <section
       id="photoGrid"
       class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
     ></section>
 
+    <!-- BLOCK -->
     <section
       id="blockedBox"
       class="hidden text-center py-16"
@@ -170,69 +180,69 @@
       th: {
         miniApp: "LINE Mini App",
         pageTitle: "ดาวน์โหลดภาพ",
-        loading: "กำลังโหลดข้อมูล...",
         loadingPhoto: "กำลังโหลดภาพ...",
         orderBtn: "ออเดอร์",
         blockedTitle: "ยังไม่สามารถดาวน์โหลดได้",
         blockedDesc: "กรุณารอแอดมินอนุมัติคำสั่งซื้อก่อน",
         backOrder: "กลับไปหน้าออเดอร์",
-        noPhoto: "ไม่พบรายการภาพใน Order นี้",
-        downloadReady: "ดาวน์โหลดภาพที่อนุมัติแล้ว",
+        noPhoto: "ไม่พบรายการภาพ",
+        downloadReady: "พร้อมดาวน์โหลด",
         downloadBtn: "ดาวน์โหลด",
         downloadAll: "ดาวน์โหลดรูปทั้งหมด",
-        downloadAllHint: "ระบบจะเปิดรูปในหน้าใหม่ เพื่อให้กดบันทึกได้สะดวก",
+        downloadAllHint: "ระบบจะดาวน์โหลดรูปลงเครื่องอัตโนมัติ",
         downloadAllTitle: "ดาวน์โหลดทั้งหมด",
-        downloadAllText: "ระบบจะเปิดรูปทั้งหมดในหน้าใหม่ หากมือถือบล็อก ให้กดอนุญาตเปิดหลายหน้า",
+        downloadAllText: "ระบบจะดาวน์โหลดรูปทั้งหมดลงเครื่อง",
         startDownload: "เริ่มดาวน์โหลด",
         cancel: "ยกเลิก",
         noFile: "ไม่พบไฟล์",
         noFileDesc: "ยังไม่มี URL สำหรับดาวน์โหลด",
+        preparing: "กำลังเตรียมไฟล์...",
         errorTitle: "เกิดข้อผิดพลาด"
       },
 
       en: {
         miniApp: "LINE Mini App",
         pageTitle: "Download Photos",
-        loading: "Loading data...",
         loadingPhoto: "Loading photos...",
         orderBtn: "Orders",
         blockedTitle: "Download Not Available Yet",
-        blockedDesc: "Please wait for admin approval before downloading",
+        blockedDesc: "Please wait for admin approval",
         backOrder: "Back to Orders",
-        noPhoto: "No photos found in this order",
-        downloadReady: "Approved photo download",
+        noPhoto: "No photos found",
+        downloadReady: "Ready to download",
         downloadBtn: "Download",
         downloadAll: "Download All Photos",
-        downloadAllHint: "Photos will open in a new page so you can save them easily",
+        downloadAllHint: "Photos will automatically download to your device",
         downloadAllTitle: "Download All",
-        downloadAllText: "All photos will open in new pages. If your phone blocks popups, please allow multiple pages.",
+        downloadAllText: "All photos will be downloaded automatically",
         startDownload: "Start Download",
         cancel: "Cancel",
         noFile: "File Not Found",
         noFileDesc: "No download URL available",
+        preparing: "Preparing file...",
         errorTitle: "Error"
       },
 
       ru: {
         miniApp: "LINE Мини-приложение",
         pageTitle: "Скачать Фото",
-        loading: "Загрузка данных...",
         loadingPhoto: "Загрузка фотографий...",
         orderBtn: "Заказы",
-        blockedTitle: "Скачивание пока недоступно",
+        blockedTitle: "Скачивание недоступно",
         blockedDesc: "Пожалуйста, дождитесь подтверждения администратора",
         backOrder: "Назад к заказам",
-        noPhoto: "В этом заказе нет фотографий",
-        downloadReady: "Скачать одобренные фотографии",
+        noPhoto: "Фотографии не найдены",
+        downloadReady: "Готово к скачиванию",
         downloadBtn: "Скачать",
         downloadAll: "Скачать все фото",
-        downloadAllHint: "Фотографии откроются в новой странице для удобного сохранения",
-        downloadAllTitle: "Скачать все",
-        downloadAllText: "Все фотографии откроются в новых страницах. Если телефон блокирует окна, разрешите открытие нескольких страниц.",
+        downloadAllHint: "Фотографии будут автоматически скачаны",
+        downloadAllTitle: "Скачать всё",
+        downloadAllText: "Все фотографии будут автоматически скачаны",
         startDownload: "Начать скачивание",
         cancel: "Отмена",
         noFile: "Файл не найден",
         noFileDesc: "URL для скачивания отсутствует",
+        preparing: "Подготовка файла...",
         errorTitle: "Ошибка"
       }
 
@@ -252,32 +262,15 @@
       document.documentElement.lang =
         currentLang;
 
-      document.getElementById("txtMiniApp").textContent =
-        x.miniApp;
-
-      document.getElementById("txtPageTitle").textContent =
-        x.pageTitle;
-
-      document.getElementById("loadingBox").textContent =
-        x.loadingPhoto;
-
-      document.getElementById("txtOrderBtn").textContent =
-        x.orderBtn;
-
-      document.getElementById("txtBlockedTitle").textContent =
-        x.blockedTitle;
-
-      document.getElementById("txtBlockedDesc").textContent =
-        x.blockedDesc;
-
-      document.getElementById("txtBackOrder").textContent =
-        x.backOrder;
-
-      document.getElementById("txtDownloadAll").textContent =
-        x.downloadAll;
-
-      document.getElementById("txtDownloadAllHint").textContent =
-        x.downloadAllHint;
+      document.getElementById("txtMiniApp").textContent = x.miniApp;
+      document.getElementById("txtPageTitle").textContent = x.pageTitle;
+      document.getElementById("loadingBox").textContent = x.loadingPhoto;
+      document.getElementById("txtOrderBtn").textContent = x.orderBtn;
+      document.getElementById("txtBlockedTitle").textContent = x.blockedTitle;
+      document.getElementById("txtBlockedDesc").textContent = x.blockedDesc;
+      document.getElementById("txtBackOrder").textContent = x.backOrder;
+      document.getElementById("txtDownloadAll").textContent = x.downloadAll;
+      document.getElementById("txtDownloadAllHint").textContent = x.downloadAllHint;
 
       document.getElementById("langSelect").value =
         currentLang;
@@ -310,14 +303,10 @@
         try {
 
           initDarkMode();
-
           applyLanguage();
 
           if (!db) {
-
-            throw new Error(
-              "ไม่พบ Supabase client"
-            );
+            throw new Error("ไม่พบ Supabase client");
           }
 
           profile =
@@ -329,10 +318,7 @@
             getOrderId();
 
           if (!orderId) {
-
-            throw new Error(
-              "ไม่พบ order_id"
-            );
+            throw new Error("ไม่พบ order_id");
           }
 
           await loadOrder();
@@ -496,7 +482,11 @@
       grid.classList.remove("hidden");
     }
 
-    function downloadFile(url, filename) {
+    /****************************************
+     * DOWNLOAD
+     ****************************************/
+
+    async function downloadFile(url, filename) {
 
       if (!url) {
 
@@ -509,29 +499,79 @@
         return;
       }
 
-      openDownloadWindow(url);
-    }
+      try {
 
-    function openDownloadWindow(url) {
-
-      if (
-        window.liff &&
-        liff.isInClient()
-      ) {
-
-        liff.openWindow({
-          url: url,
-          external: true
+        Swal.fire({
+          title: t().preparing,
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
         });
 
-        return;
-      }
+        const response =
+          await fetch(url, {
+            mode: "cors"
+          });
 
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
+        if (!response.ok) {
+          throw new Error("โหลดไฟล์ไม่สำเร็จ");
+        }
+
+        const blob =
+          await response.blob();
+
+        const blobUrl =
+          URL.createObjectURL(blob);
+
+        const safeName =
+          filename && filename.includes(".")
+            ? filename
+            : `${filename || "photo"}.jpg`;
+
+        const a =
+          document.createElement("a");
+
+        a.href = blobUrl;
+        a.download = safeName;
+        a.style.display = "none";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        URL.revokeObjectURL(blobUrl);
+
+        Swal.close();
+
+      } catch (err) {
+
+        console.warn(
+          "download fallback:",
+          err
+        );
+
+        Swal.close();
+
+        if (
+          window.liff &&
+          liff.isInClient()
+        ) {
+
+          liff.openWindow({
+            url: url,
+            external: true
+          });
+
+          return;
+        }
+
+        window.open(
+          url,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
     }
 
     async function downloadAllFiles() {
@@ -560,13 +600,19 @@
             const photo =
               item.photos || {};
 
-            return (
-              photo.preview_url ||
-              photo.watermark_url ||
-              ""
-            );
+            return {
+              url:
+                photo.preview_url ||
+                photo.watermark_url ||
+                "",
+
+              filename:
+                photo.filename ||
+                item.photo_id
+            };
+
           })
-          .filter(Boolean);
+          .filter(item => item.url);
 
       if (!urls.length) {
 
@@ -583,14 +629,7 @@
         await Swal.fire({
           icon: "info",
           title: t().downloadAllTitle,
-          html: `
-            <div style="text-align:left">
-              <p>${t().downloadAllText}</p>
-              <p style="margin-top:8px;color:#64748b">
-                จำนวน ${urls.length} รูป
-              </p>
-            </div>
-          `,
+          text: t().downloadAllText,
           showCancelButton: true,
           confirmButtonText: t().startDownload,
           cancelButtonText: t().cancel
@@ -598,14 +637,17 @@
 
       if (!confirm.isConfirmed) return;
 
-      urls.forEach((url, index) => {
+      for (const item of urls) {
 
-        setTimeout(() => {
+        await downloadFile(
+          item.url,
+          item.filename
+        );
 
-          openDownloadWindow(url);
-
-        }, index * 600);
-      });
+        await new Promise(resolve =>
+          setTimeout(resolve, 700)
+        );
+      }
     }
 
     function goOrder() {
@@ -667,6 +709,10 @@
 
       updateDarkButton();
     }
+
+    /****************************************
+     * HELPERS
+     ****************************************/
 
     function escapeHtml(text) {
 
