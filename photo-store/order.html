@@ -641,23 +641,27 @@
       `;
     }
 
-    function downloadOrder(orderId) {
-  const url =
-    `download.html?order_id=${encodeURIComponent(orderId)}`;
+   function downloadOrder(orderId) {
 
-  if (window.liff && liff.isInClient()) {
+  const url =
+    `${window.location.origin}${window.location.pathname.replace("order.html", "")}download.html?order_id=${encodeURIComponent(orderId)}`;
+
+  // LINE Browser
+  if (
+    window.liff &&
+    liff.isInClient()
+  ) {
+
     liff.openWindow({
       url: url,
       external: true
     });
+
     return;
   }
 
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  // Mobile Browser / PC
+  window.location.href = url;
 }
 
     function goHome() {
