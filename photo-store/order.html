@@ -642,10 +642,23 @@
     }
 
     function downloadOrder(orderId) {
+  const url =
+    `download.html?order_id=${encodeURIComponent(orderId)}`;
 
-      window.location.href =
-        `download.html?order_id=${encodeURIComponent(orderId)}`;
-    }
+  if (window.liff && liff.isInClient()) {
+    liff.openWindow({
+      url: url,
+      external: true
+    });
+    return;
+  }
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
 
     function goHome() {
 
