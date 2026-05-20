@@ -93,8 +93,8 @@
           >
             <option value="draft">Draft</option>
             <option value="active">Active</option>
-            <option value="closed">Closed</option>
             <option value="published">Published</option>
+            <option value="closed">Closed</option>
             <option value="archived">Archived</option>
           </select>
         </div>
@@ -199,7 +199,10 @@
       const { error: uploadError } = await db
         .storage
         .from(BUCKET_NAME)
-        .upload(path, file);
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
@@ -264,7 +267,9 @@
             <div style="text-align:left">
               <p><b>Event ID:</b></p>
               <p style="word-break:break-all">${data.id}</p>
+
               <hr style="margin:12px 0">
+
               <p><b>URL Event:</b></p>
               <p style="word-break:break-all">../event.html?event=${data.id}</p>
             </div>
@@ -455,9 +460,11 @@
         html: `
           <div style="text-align:left">
             <p><b>${escapeHtml(eventTitle)}</b></p>
+
             <p style="color:#dc2626;margin-top:8px">
               ระบบจะลบ Event, รูปทั้งหมด, faces และไฟล์ใน Bucket
             </p>
+
             <p style="margin-top:8px">
               การลบนี้ไม่สามารถย้อนกลับได้
             </p>
@@ -474,17 +481,19 @@
       try {
         Swal.fire({
           title: "กำลังลบ Event...",
-          text: "กรุณารอสักครู่",
+          text: "กำลังลบข้อมูลและไฟล์รูปภาพทั้งหมด",
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
 
-        const res = await fetch(
+        const response = await fetch(
           `${CONFIG.SUPABASE_URL}/functions/v1/delete-event-deep`,
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              apikey: CONFIG.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
               event_id: eventId
@@ -492,17 +501,24 @@
           }
         );
 
-        const data = await res.json();
+        const data = await response.json();
 
-        if (!res.ok || !data.success) {
+        if (!response.ok || !data.success) {
           throw new Error(data.error || "ลบ Event ไม่สำเร็จ");
         }
 
-        Swal.fire(
-          "ลบสำเร็จ",
-          `ลบรูป ${data.deleted_photos || 0} รายการ และไฟล์ ${data.deleted_files || 0} ไฟล์แล้ว`,
-          "success"
-        );
+        Swal.fire({
+          icon: "success",
+          title: "ลบสำเร็จ",
+          html: `
+            <div style="text-align:left">
+              <p>ลบ Event สำเร็จแล้ว</p>
+              <p>ลบรูปในตาราง: <b>${data.deleted_photos || 0}</b> รายการ</p>
+              <p>ลบไฟล์รูปภาพ: <b>${data.deleted_photo_files || data.deleted_files || 0}</b> ไฟล์</p>
+              <p>ลบไฟล์ Cover: <b>${data.deleted_cover_files || 0}</b> ไฟล์</p>
+            </div>
+          `
+        });
 
         await loadEvents();
 
