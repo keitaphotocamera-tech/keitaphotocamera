@@ -6,6 +6,7 @@
   <title>Photo Store</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
     tailwind.config = {
       darkMode: "class"
@@ -50,17 +51,41 @@
 </head>
 
 <body class="text-slate-800 dark:text-white safe-bottom transition">
+
   <main class="max-w-4xl mx-auto px-4 pb-24">
 
     <header class="sticky top-0 z-30 -mx-4 px-4 pt-4 pb-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-100 dark:border-slate-800 transition">
+
       <div class="flex items-start justify-between gap-3">
+
         <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Photo Store</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">เลือกงานถ่ายภาพที่ต้องการ</p>
+
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
+            LINE Mini App
+          </p>
+
+          <h1 id="txtTitle" class="text-2xl font-bold text-slate-900 dark:text-white">
+            Photo Store
+          </h1>
+
+          <p id="txtSubtitle" class="text-sm text-slate-500 dark:text-slate-400">
+            เลือกงานถ่ายภาพที่ต้องการ
+          </p>
+
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+
+          <select
+            id="langSelect"
+            onchange="changeLanguage(this.value)"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
+          >
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
+
           <button
             onclick="toggleDarkMode()"
             id="darkBtn"
@@ -70,194 +95,470 @@
           </button>
 
           <button onclick="goOrder()" class="shrink-0 rounded-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95">
-            ออเดอร์ของฉัน
+            <span id="txtMyOrders">ออเดอร์ของฉัน</span>
           </button>
+
         </div>
+
       </div>
 
       <section id="profileBox" class="hidden mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 transition">
+
         <div class="flex items-center gap-3">
-          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-800" alt="LINE Profile" />
+
+          <img
+            id="linePicture"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-800"
+            alt="LINE Profile"
+          />
+
           <div class="min-w-0">
-            <p id="lineName" class="font-semibold line-clamp-1">-</p>
-            <p class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
+
+            <p id="lineName" class="font-semibold line-clamp-1">
+              -
+            </p>
+
+            <p class="text-xs text-emerald-600">
+              <span id="txtConnected">เชื่อมต่อ LINE แล้ว</span>
+            </p>
+
           </div>
+
         </div>
+
       </section>
+
     </header>
 
     <section class="mt-4">
+
       <input
         id="searchInput"
         type="search"
         oninput="searchEvents()"
-        placeholder="ค้นหาชื่องาน / สถานที่"
         class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 dark:text-white px-4 py-3 outline-none shadow-sm focus:ring-4 focus:ring-slate-900/10"
       />
+
     </section>
 
     <section id="loadingBox" class="mt-8 text-center text-slate-500 dark:text-slate-400">
       กำลังโหลดรายการ Event...
     </section>
 
-    <section id="eventGrid" class="hidden mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4"></section>
+    <section
+      id="eventGrid"
+      class="hidden mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4"
+    ></section>
 
     <section id="emptyBox" class="hidden mt-12 text-center">
-      <div class="mx-auto w-20 h-20 rounded-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-4xl shadow-sm">📷</div>
-      <h2 class="mt-4 text-lg font-bold">ยังไม่มี Event</h2>
-      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">กรุณาเพิ่ม Event ในระบบ Admin ก่อน</p>
+
+      <div class="mx-auto w-20 h-20 rounded-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-4xl shadow-sm">
+        📷
+      </div>
+
+      <h2 id="txtNoEvent" class="mt-4 text-lg font-bold">
+        ยังไม่มี Event
+      </h2>
+
+      <p id="txtNoEventDesc" class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        กรุณาเพิ่ม Event ในระบบ Admin ก่อน
+      </p>
+
     </section>
+
   </main>
 
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 safe-bottom transition">
+
     <div class="max-w-4xl mx-auto grid grid-cols-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
-      <a href="index.html" class="py-3 text-center text-slate-900 dark:text-white active:scale-95">🏠<br>หน้าแรก</a>
-      <a href="cart.html" class="py-3 text-center active:scale-95">🛒<br>ตะกร้า</a>
-      <a href="order.html" class="py-3 text-center active:scale-95">🧾<br>ออเดอร์</a>
+
+      <a href="index.html" class="py-3 text-center text-slate-900 dark:text-white active:scale-95">
+        🏠<br>หน้าแรก
+      </a>
+
+      <a href="cart.html" class="py-3 text-center active:scale-95">
+        🛒<br>ตะกร้า
+      </a>
+
+      <a href="order.html" class="py-3 text-center active:scale-95">
+        🧾<br>ออเดอร์
+      </a>
+
     </div>
+
   </nav>
 
   <script>
+
+    /****************************************
+     * LANGUAGE
+     ****************************************/
+
+    const LANG = {
+
+      th: {
+        miniApp: "LINE Mini App",
+        title: "Photo Store",
+        subtitle: "เลือกงานถ่ายภาพที่ต้องการ",
+        myOrders: "ออเดอร์ของฉัน",
+        searchPlaceholder: "ค้นหาชื่องาน / สถานที่",
+        noEvent: "ยังไม่มี Event",
+        noEventDesc: "กรุณาเพิ่ม Event ในระบบ Admin ก่อน",
+        home: "หน้าแรก",
+        cart: "ตะกร้า",
+        order: "ออเดอร์",
+        connected: "เชื่อมต่อ LINE แล้ว",
+        viewPhotos: "ดูภาพ →"
+      },
+
+      en: {
+        miniApp: "LINE Mini App",
+        title: "Photo Store",
+        subtitle: "Choose your photo event",
+        myOrders: "My Orders",
+        searchPlaceholder: "Search event / location",
+        noEvent: "No Events",
+        noEventDesc: "Please create events in Admin Panel",
+        home: "Home",
+        cart: "Cart",
+        order: "Orders",
+        connected: "LINE Connected",
+        viewPhotos: "View Photos →"
+      },
+
+      ru: {
+        miniApp: "LINE Мини-приложение",
+        title: "Фото Магазин",
+        subtitle: "Выберите фото-событие",
+        myOrders: "Мои заказы",
+        searchPlaceholder: "Поиск события / места",
+        noEvent: "Нет событий",
+        noEventDesc: "Сначала создайте событие в панели администратора",
+        home: "Главная",
+        cart: "Корзина",
+        order: "Заказы",
+        connected: "LINE подключён",
+        viewPhotos: "Смотреть фото →"
+      }
+
+    };
+
+    let currentLang =
+      localStorage.getItem("lang") || "th";
+
     let profile = null;
     let allEvents = [];
     let filteredEvents = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
+
       try {
+
         initDarkMode();
+        applyLanguage();
 
         profile = await AppLIFF.init();
+
         if (!profile) return;
 
         showProfile();
+
         await saveUser();
+
         await loadEvents();
+
       } catch (err) {
+
         console.error(err);
-        document.getElementById("loadingBox").classList.add("hidden");
-        Swal.fire("เกิดข้อผิดพลาด", err.message || "เปิดหน้าแรกไม่สำเร็จ", "error");
+
+        document.getElementById("loadingBox")
+          .classList.add("hidden");
+
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.message || "เปิดหน้าแรกไม่สำเร็จ",
+          "error"
+        );
       }
     });
 
+    function applyLanguage() {
+
+      const t = LANG[currentLang];
+
+      document.getElementById("txtMiniApp").textContent =
+        t.miniApp;
+
+      document.getElementById("txtTitle").textContent =
+        t.title;
+
+      document.getElementById("txtSubtitle").textContent =
+        t.subtitle;
+
+      document.getElementById("txtMyOrders").textContent =
+        t.myOrders;
+
+      document.getElementById("txtConnected").textContent =
+        t.connected;
+
+      document.getElementById("searchInput").placeholder =
+        t.searchPlaceholder;
+
+      document.getElementById("txtNoEvent").textContent =
+        t.noEvent;
+
+      document.getElementById("txtNoEventDesc").textContent =
+        t.noEventDesc;
+
+      document.getElementById("langSelect").value =
+        currentLang;
+
+      const navs =
+        document.querySelectorAll("nav a");
+
+      if (navs[0]) navs[0].innerHTML =
+        `🏠<br>${t.home}`;
+
+      if (navs[1]) navs[1].innerHTML =
+        `🛒<br>${t.cart}`;
+
+      if (navs[2]) navs[2].innerHTML =
+        `🧾<br>${t.order}`;
+    }
+
+    function changeLanguage(lang) {
+
+      currentLang = lang;
+
+      localStorage.setItem("lang", lang);
+
+      applyLanguage();
+
+      renderEvents();
+    }
+
     function showProfile() {
-      document.getElementById("profileBox").classList.remove("hidden");
-      document.getElementById("lineName").textContent = profile.displayName || "LINE User";
-      document.getElementById("linePicture").src = profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+
+      document.getElementById("profileBox")
+        .classList.remove("hidden");
+
+      document.getElementById("lineName").textContent =
+        profile.displayName || "LINE User";
+
+      document.getElementById("linePicture").src =
+        profile.pictureUrl ||
+        "https://placehold.co/100x100?text=LINE";
     }
 
     async function saveUser() {
-      const { error } = await sb.from("users").upsert({
-        line_user_id: profile.userId,
-        line_display_name: profile.displayName || null,
-        line_picture: profile.pictureUrl || null,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: "line_user_id"
-      });
+
+      const { error } = await sb
+        .from("users")
+        .upsert({
+          line_user_id: profile.userId,
+          line_display_name: profile.displayName || null,
+          line_picture: profile.pictureUrl || null,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "line_user_id"
+        });
 
       if (error) {
-        console.warn("users upsert error:", error.message);
+        console.warn(
+          "users upsert error:",
+          error.message
+        );
       }
     }
 
     async function loadEvents() {
+
       const { data, error } = await sb
         .from("events")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false
+        });
 
       if (error) throw error;
 
       allEvents = data || [];
       filteredEvents = [...allEvents];
 
-      document.getElementById("loadingBox").classList.add("hidden");
+      document.getElementById("loadingBox")
+        .classList.add("hidden");
+
       renderEvents();
     }
 
     function renderEvents() {
-      const grid = document.getElementById("eventGrid");
-      const empty = document.getElementById("emptyBox");
+
+      const grid =
+        document.getElementById("eventGrid");
+
+      const empty =
+        document.getElementById("emptyBox");
 
       grid.innerHTML = "";
 
       if (!filteredEvents.length) {
+
         grid.classList.add("hidden");
+
         empty.classList.remove("hidden");
+
         return;
       }
 
       empty.classList.add("hidden");
+
       grid.classList.remove("hidden");
 
       filteredEvents.forEach(event => {
-        const cover = getEventCover(event);
-        const title = event.name || event.title || "ไม่มีชื่องาน";
-        const desc = event.description || event.location || "เลือกดูภาพในงานนี้";
-        const dateText = formatDate(event.event_date || event.created_at);
-        const price = Number(event.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
 
-        const card = document.createElement("article");
-        card.className = "overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.99] transition";
+        const cover =
+          getEventCover(event);
+
+        const title =
+          event.name ||
+          event.title ||
+          "ไม่มีชื่องาน";
+
+        const desc =
+          event.description ||
+          event.location ||
+          LANG[currentLang].viewPhotos;
+
+        const dateText =
+          formatDate(
+            event.event_date ||
+            event.created_at
+          );
+
+        const price =
+          Number(
+            event.photo_price ||
+            CONFIG.DEFAULT_PHOTO_PRICE ||
+            0
+          );
+
+        const card =
+          document.createElement("article");
+
+        card.className =
+          "overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.99] transition";
 
         card.innerHTML = `
-          <button onclick="openEvent('${event.id}')" class="block w-full text-left">
+          <button
+            onclick="openEvent('${event.id}')"
+            class="block w-full text-left"
+          >
+
             <div class="aspect-[16/10] bg-slate-200 dark:bg-slate-800 overflow-hidden">
-              <img src="${cover}" alt="${escapeHtml(title)}" class="w-full h-full object-cover" loading="lazy" />
+
+              <img
+                src="${cover}"
+                alt="${escapeHtml(title)}"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+
             </div>
 
             <div class="p-4">
+
               <div class="flex items-start justify-between gap-3">
+
                 <div class="min-w-0">
-                  <h2 class="font-bold text-lg text-slate-900 dark:text-white line-clamp-1">${escapeHtml(title)}</h2>
-                  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(desc)}</p>
+
+                  <h2 class="font-bold text-lg text-slate-900 dark:text-white line-clamp-1">
+                    ${escapeHtml(title)}
+                  </h2>
+
+                  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                    ${escapeHtml(desc)}
+                  </p>
+
                 </div>
-                <span class="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1">฿${formatMoney(price)}</span>
+
+                <span class="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1">
+                  ฿${formatMoney(price)}
+                </span>
+
               </div>
 
               <div class="mt-4 flex items-center justify-between text-sm">
-                <span class="text-slate-500 dark:text-slate-400">${dateText}</span>
-                <span class="font-bold text-slate-900 dark:text-white">ดูภาพ →</span>
+
+                <span class="text-slate-500 dark:text-slate-400">
+                  ${dateText}
+                </span>
+
+                <span class="font-bold text-slate-900 dark:text-white">
+                  ${LANG[currentLang].viewPhotos}
+                </span>
+
               </div>
+
             </div>
+
           </button>
         `;
 
         grid.appendChild(card);
+
       });
     }
 
     function searchEvents() {
-      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const keyword =
+        document.getElementById("searchInput")
+        .value
+        .trim()
+        .toLowerCase();
 
       if (!keyword) {
-        filteredEvents = [...allEvents];
-      } else {
-        filteredEvents = allEvents.filter(event => {
-          const text = [
-            event.name,
-            event.title,
-            event.description,
-            event.location,
-            event.id
-          ].filter(Boolean).join(" ").toLowerCase();
 
-          return text.includes(keyword);
-        });
+        filteredEvents = [...allEvents];
+
+      } else {
+
+        filteredEvents =
+          allEvents.filter(event => {
+
+            const text = [
+
+              event.name,
+              event.title,
+              event.description,
+              event.location,
+              event.id
+
+            ].filter(Boolean)
+             .join(" ")
+             .toLowerCase();
+
+            return text.includes(keyword);
+          });
       }
 
       renderEvents();
     }
 
     function openEvent(eventId) {
-      window.location.href = `event.html?event=${encodeURIComponent(eventId)}`;
+
+      window.location.href =
+        `event.html?event=${encodeURIComponent(eventId)}`;
     }
 
     function goOrder() {
-      window.location.href = "order.html";
+
+      window.location.href =
+        "order.html";
     }
 
     function getEventCover(event) {
+
       return (
         event.cover_url ||
         event.thumbnail_url ||
@@ -268,19 +569,24 @@
     }
 
     function formatDate(dateString) {
+
       if (!dateString) return "";
-      return new Date(dateString).toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
+
+      return new Date(dateString)
+        .toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        });
     }
 
     function formatMoney(value) {
-      return Number(value || 0).toLocaleString("th-TH", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      });
+
+      return Number(value || 0)
+        .toLocaleString("th-TH", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        });
     }
 
     /****************************************
@@ -288,34 +594,57 @@
      ****************************************/
 
     function toggleDarkMode() {
-      const html = document.documentElement;
+
+      const html =
+        document.documentElement;
+
       html.classList.toggle("dark");
 
-      const isDark = html.classList.contains("dark");
-      localStorage.setItem("darkMode", isDark ? "1" : "0");
+      const isDark =
+        html.classList.contains("dark");
+
+      localStorage.setItem(
+        "darkMode",
+        isDark ? "1" : "0"
+      );
 
       updateDarkButton();
     }
 
     function updateDarkButton() {
-      const btn = document.getElementById("darkBtn");
+
+      const btn =
+        document.getElementById("darkBtn");
+
       if (!btn) return;
 
-      const isDark = document.documentElement.classList.contains("dark");
-      btn.innerHTML = isDark ? "☀️ Light" : "🌙 Dark";
+      const isDark =
+        document.documentElement
+          .classList
+          .contains("dark");
+
+      btn.innerHTML =
+        isDark
+          ? "☀️ Light"
+          : "🌙 Dark";
     }
 
     function initDarkMode() {
-      const saved = localStorage.getItem("darkMode");
+
+      const saved =
+        localStorage.getItem("darkMode");
 
       if (saved === "1") {
-        document.documentElement.classList.add("dark");
+
+        document.documentElement
+          .classList.add("dark");
       }
 
       updateDarkButton();
     }
 
     function escapeHtml(text) {
+
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -323,13 +652,17 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
   </script>
 
   <!-- ห้ามคลิกขวา -->
   <script>
-    document.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-    });
+    document.addEventListener(
+      'contextmenu',
+      function(e) {
+        e.preventDefault();
+      }
+    );
   </script>
 
   <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
@@ -350,36 +683,55 @@
 
   <!-- ปิดการลากรูป -->
   <script>
-    document.addEventListener('dragstart', function(e) {
-      e.preventDefault();
-    });
+    document.addEventListener(
+      'dragstart',
+      function(e) {
+        e.preventDefault();
+      }
+    );
   </script>
 
   <!-- ปิดปุ่มลัดบางอย่าง -->
   <script>
-    document.addEventListener('keydown', function(e) {
 
-      // F12
-      if (e.key === "F12") {
-        e.preventDefault();
+    document.addEventListener(
+      'keydown',
+      function(e) {
+
+        // F12
+        if (e.key === "F12") {
+          e.preventDefault();
+        }
+
+        // Ctrl+S / Cmd+S
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          e.key.toLowerCase() === 's'
+        ) {
+          e.preventDefault();
+        }
+
+        // Ctrl+U
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          e.key.toLowerCase() === 'u'
+        ) {
+          e.preventDefault();
+        }
+
+        // Ctrl+Shift+I
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          e.shiftKey &&
+          e.key.toLowerCase() === 'i'
+        ) {
+          e.preventDefault();
+        }
+
       }
+    );
 
-      // Ctrl+S / Cmd+S
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-      }
-
-      // Ctrl+U
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-        e.preventDefault();
-      }
-
-      // Ctrl+Shift+I
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-      }
-
-    });
   </script>
+
 </body>
 </html>
