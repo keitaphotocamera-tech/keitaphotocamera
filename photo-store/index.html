@@ -21,9 +21,7 @@
   <script src="js/liff-helper.js"></script>
 
   <style>
-    *,
-    *::before,
-    *::after {
+    * {
       box-sizing: border-box;
     }
 
@@ -31,36 +29,16 @@
     body {
       width: 100%;
       max-width: 100%;
-      overflow-x: hidden !important;
+      overflow-x: hidden;
     }
 
     body {
-      margin: 0;
       min-height: 100vh;
       background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
     }
 
     html.dark body {
       background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
-    }
-
-    main,
-    header,
-    section,
-    nav {
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    img {
-      max-width: 100%;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-      pointer-events: none;
     }
 
     .safe-bottom {
@@ -80,71 +58,81 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
     }
+
+    select,
+    button,
+    input {
+      max-width: 100%;
+    }
+
+    #txtMyOrders {
+      display: inline-block;
+      max-width: 100%;
+      white-space: normal;
+      word-break: break-word;
+    }
   </style>
 </head>
 
 <body class="text-slate-800 dark:text-white safe-bottom transition">
 
-  <main class="w-full max-w-4xl mx-auto px-3 sm:px-4 pb-24 overflow-x-hidden">
+  <main class="w-full max-w-4xl mx-auto px-4 pb-24 overflow-x-hidden">
 
-    <header class="sticky top-0 z-30 w-full px-3 sm:px-4 pt-4 pb-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-100 dark:border-slate-800 transition overflow-hidden">
+    <header class="sticky top-0 z-30 w-full max-w-full pt-4 pb-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-100 dark:border-slate-800 transition overflow-x-hidden">
 
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between min-w-0">
+      <div class="flex items-start justify-between gap-2 w-full max-w-full overflow-hidden">
 
-        <div class="min-w-0 flex-1">
-          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+        <div class="min-w-0 flex-1 pr-2">
+
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">
             LINE Mini App
           </p>
 
-          <h1 id="txtTitle" class="text-2xl font-bold text-slate-900 dark:text-white truncate">
+          <h1 id="txtTitle" class="text-2xl font-bold text-slate-900 dark:text-white">
             Photo Store
           </h1>
 
-          <p id="txtSubtitle" class="text-sm text-slate-500 dark:text-slate-400 truncate">
+          <p id="txtSubtitle" class="text-sm text-slate-500 dark:text-slate-400">
             เลือกงานถ่ายภาพที่ต้องการ
           </p>
+
         </div>
 
-        <div class="w-full sm:w-[180px] min-w-0">
-          <div class="flex flex-col gap-2 w-full">
+        <div class="shrink-0 w-[118px] sm:w-[140px] flex flex-col gap-2 items-stretch">
 
-            <select
-              id="langSelect"
-              onchange="changeLanguage(this.value)"
-              class="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold outline-none"
-            >
-              <option value="th">🇹🇭 TH</option>
-              <option value="en">🇺🇸 EN</option>
-              <option value="ru">🇷🇺 RU</option>
-            </select>
+          <select
+            id="langSelect"
+            onchange="changeLanguage(this.value)"
+            class="w-full max-w-full rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-xs sm:text-sm font-bold outline-none"
+          >
+            <option value="th">🇹🇭 TH</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
 
-            <button
-              onclick="toggleDarkMode()"
-              id="darkBtn"
-              class="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95 truncate"
-            >
-              🌙 Dark
-            </button>
+          <button
+            onclick="toggleDarkMode()"
+            id="darkBtn"
+            class="w-full max-w-full rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-xs sm:text-sm font-bold shadow-sm active:scale-95 leading-tight text-center"
+          >
+            🌙 Dark
+          </button>
 
-            <button
-              onclick="goOrder()"
-              class="w-full rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 text-sm font-bold shadow-sm active:scale-95 truncate"
-            >
-              <span id="txtMyOrders">ออเดอร์ของฉัน</span>
-            </button>
+          <button onclick="goOrder()" class="w-full max-w-full rounded-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-3 py-2 text-xs sm:text-sm font-bold shadow-sm active:scale-95 leading-tight text-center">
+            <span id="txtMyOrders">ออเดอร์ของฉัน</span>
+          </button>
 
-          </div>
         </div>
 
       </div>
 
       <section id="profileBox" class="hidden mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 transition">
 
-        <div class="flex items-center gap-3 min-w-0">
+        <div class="flex items-center gap-3">
 
           <img
             id="linePicture"
-            class="w-11 h-11 shrink-0 rounded-full object-cover bg-slate-200 dark:bg-slate-800"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-800"
             alt="LINE Profile"
           />
 
@@ -154,7 +142,7 @@
               -
             </p>
 
-            <p class="text-xs text-emerald-600 truncate">
+            <p class="text-xs text-emerald-600">
               <span id="txtConnected">เชื่อมต่อ LINE แล้ว</span>
             </p>
 
@@ -166,7 +154,7 @@
 
     </header>
 
-    <section class="mt-4 w-full">
+    <section class="mt-4">
 
       <input
         id="searchInput"
@@ -183,10 +171,10 @@
 
     <section
       id="eventGrid"
-      class="hidden mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
+      class="hidden mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0"
     ></section>
 
-    <section id="emptyBox" class="hidden mt-12 text-center w-full">
+    <section id="emptyBox" class="hidden mt-12 text-center">
 
       <div class="mx-auto w-20 h-20 rounded-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-4xl shadow-sm">
         📷
@@ -204,19 +192,19 @@
 
   </main>
 
-  <nav class="fixed bottom-0 left-0 right-0 z-40 overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 safe-bottom transition">
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 safe-bottom transition">
 
     <div class="w-full max-w-4xl mx-auto grid grid-cols-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
 
-      <a href="index.html" class="min-w-0 py-3 text-center text-slate-900 dark:text-white active:scale-95 truncate">
+      <a href="index.html" class="py-3 text-center text-slate-900 dark:text-white active:scale-95">
         🏠<br>หน้าแรก
       </a>
 
-      <a href="cart.html" class="min-w-0 py-3 text-center active:scale-95 truncate">
+      <a href="cart.html" class="py-3 text-center active:scale-95">
         🛒<br>ตะกร้า
       </a>
 
-      <a href="order.html" class="min-w-0 py-3 text-center active:scale-95 truncate">
+      <a href="order.html" class="py-3 text-center active:scale-95">
         🧾<br>ออเดอร์
       </a>
 
@@ -225,6 +213,7 @@
   </nav>
 
   <script>
+
     /****************************************
      * LANGUAGE
      ****************************************/
@@ -278,7 +267,8 @@
 
     };
 
-    let currentLang = localStorage.getItem("lang") || "th";
+    let currentLang =
+      localStorage.getItem("lang") || "th";
 
     let profile = null;
     let allEvents = [];
@@ -687,56 +677,84 @@
         .replace(/'/g, "&#039;");
     }
 
-    /****************************************
-     * PROTECTION EVENTS
-     ****************************************/
+  </script>
 
+  <!-- ห้ามคลิกขวา -->
+  <script>
     document.addEventListener(
-      "contextmenu",
+      'contextmenu',
       function(e) {
         e.preventDefault();
       }
     );
+  </script>
 
+  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
+  <style>
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
+
+  <!-- ปิดการลากรูป -->
+  <script>
     document.addEventListener(
-      "dragstart",
+      'dragstart',
       function(e) {
         e.preventDefault();
       }
     );
+  </script>
+
+  <!-- ปิดปุ่มลัดบางอย่าง -->
+  <script>
 
     document.addEventListener(
-      "keydown",
+      'keydown',
       function(e) {
 
+        // F12
         if (e.key === "F12") {
           e.preventDefault();
         }
 
+        // Ctrl+S / Cmd+S
         if (
           (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === "s"
+          e.key.toLowerCase() === 's'
         ) {
           e.preventDefault();
         }
 
+        // Ctrl+U
         if (
           (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === "u"
+          e.key.toLowerCase() === 'u'
         ) {
           e.preventDefault();
         }
 
+        // Ctrl+Shift+I
         if (
           (e.ctrlKey || e.metaKey) &&
           e.shiftKey &&
-          e.key.toLowerCase() === "i"
+          e.key.toLowerCase() === 'i'
         ) {
           e.preventDefault();
         }
 
       }
     );
+
   </script>
 
 </body>
