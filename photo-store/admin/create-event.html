@@ -25,7 +25,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <p class="text-xs text-slate-500 dark:text-slate-400">ADMIN PANEL</p>
-          <h1 class="text-3xl font-bold mt-1">สร้าง Event</h1>
+          <h1 id="pageTitle" class="text-3xl font-bold mt-1">สร้าง Event</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
             ระบบขายภาพผ่าน LINE LIFF + Supabase
           </p>
@@ -122,6 +122,14 @@
           สร้าง Event
         </button>
 
+        <button
+          onclick="cancelEditEvent()"
+          id="cancelEditBtn"
+          class="hidden w-full bg-slate-200 dark:bg-slate-800 dark:text-white text-slate-700 rounded-2xl py-4 font-bold text-lg"
+        >
+          ยกเลิกการแก้ไข
+        </button>
+
       </div>
     </section>
 
@@ -155,6 +163,8 @@
 
     let selectedCover = null;
     let allEvents = [];
+    let editingEventId = null;
+    let editingCoverUrl = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
@@ -218,7 +228,7 @@
       try {
         const btn = document.getElementById("createBtn");
         btn.disabled = true;
-        btn.textContent = "กำลังสร้าง...";
+        btn.textContent = editingEventId ? "กำลังบันทึก..." : "กำลังสร้าง...";
 
         const title = document.getElementById("eventTitle").value.trim();
         const description = document.getElementById("eventDescription").value.trim();
@@ -230,7 +240,7 @@
           throw new Error("กรุณากรอกชื่อ Event");
         }
 
-        let coverUrl = null;
+        let coverUrl = editingCoverUrl || null;
 
         if (selectedCover) {
           Swal.fire({
@@ -244,7 +254,6 @@
 
         const payload = {
           title,
-          slug: `${generateSlug(title)}-${Date.now()}`,
           description,
           event_date: eventDate || null,
           cover_url: coverUrl,
@@ -252,17 +261,37 @@
           status
         };
 
-        const { data, error } = await db
-          .from("events")
-          .insert(payload)
-          .select()
-          .single();
+        let data = null;
+        let error = null;
+
+        if (editingEventId) {
+          const result = await db
+            .from("events")
+            .update(payload)
+            .eq("id", editingEventId)
+            .select()
+            .single();
+
+          data = result.data;
+          error = result.error;
+        } else {
+          payload.slug = `${generateSlug(title)}-${Date.now()}`;
+
+          const result = await db
+            .from("events")
+            .insert(payload)
+            .select()
+            .single();
+
+          data = result.data;
+          error = result.error;
+        }
 
         if (error) throw error;
 
         Swal.fire({
           icon: "success",
-          title: "สร้าง Event สำเร็จ",
+          title: editingEventId ? "แก้ไข Event สำเร็จ" : "สร้าง Event สำเร็จ",
           html: `
             <div style="text-align:left">
               <p><b>Event ID:</b></p>
@@ -284,14 +313,14 @@
 
         Swal.fire(
           "เกิดข้อผิดพลาด",
-          err.message || "สร้าง Event ไม่สำเร็จ",
+          err.message || "บันทึก Event ไม่สำเร็จ",
           "error"
         );
 
       } finally {
         const btn = document.getElementById("createBtn");
         btn.disabled = false;
-        btn.textContent = "สร้าง Event";
+        btn.textContent = editingEventId ? "บันทึกการแก้ไข Event" : "สร้าง Event";
       }
     }
 
@@ -402,7 +431,7 @@
 
                 <div
                   id="menu-${event.id}"
-                  class="hidden mt-3 grid grid-cols-1 md:grid-cols-4 gap-2"
+                  class="hidden mt-3 grid grid-cols-1 md:grid-cols-5 gap-2"
                 >
                   <a
                     href="../event.html?event=${event.id}"
@@ -429,6 +458,13 @@
                   </a>
 
                   <button
+                    onclick="startEditEvent('${event.id}')"
+                    class="bg-amber-500 text-white rounded-2xl py-3 font-bold"
+                  >
+                    แก้ไข
+                  </button>
+
+                  <button
                     onclick="deleteEventDeep('${event.id}')"
                     class="bg-red-600 text-white rounded-2xl py-3 font-bold"
                   >
@@ -448,6 +484,49 @@
       const menu = document.getElementById(`menu-${eventId}`);
       if (!menu) return;
       menu.classList.toggle("hidden");
+    }
+
+    function startEditEvent(eventId) {
+      const event = allEvents.find(e => String(e.id) === String(eventId));
+
+      if (!event) {
+        Swal.fire("ไม่พบข้อมูล", "ไม่พบ Event ที่ต้องการแก้ไข", "error");
+        return;
+      }
+
+      editingEventId = event.id;
+      editingCoverUrl = event.cover_url || null;
+      selectedCover = null;
+
+      document.getElementById("eventTitle").value = event.title || "";
+      document.getElementById("eventDescription").value = event.description || "";
+      document.getElementById("eventDate").value = event.event_date || "";
+      document.getElementById("photoPrice").value = event.photo_price || 50;
+      document.getElementById("eventStatus").value = event.status || "draft";
+      document.getElementById("coverInput").value = "";
+
+      const img = document.getElementById("coverPreview");
+
+      if (editingCoverUrl) {
+        img.src = editingCoverUrl;
+        img.classList.remove("hidden");
+      } else {
+        img.src = "";
+        img.classList.add("hidden");
+      }
+
+      document.getElementById("pageTitle").textContent = "แก้ไข Event";
+      document.getElementById("createBtn").textContent = "บันทึกการแก้ไข Event";
+      document.getElementById("cancelEditBtn").classList.remove("hidden");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function cancelEditEvent() {
+      clearForm();
     }
 
     async function deleteEventDeep(eventId) {
@@ -546,6 +625,12 @@
       img.classList.add("hidden");
 
       selectedCover = null;
+      editingEventId = null;
+      editingCoverUrl = null;
+
+      document.getElementById("pageTitle").textContent = "สร้าง Event";
+      document.getElementById("createBtn").textContent = "สร้าง Event";
+      document.getElementById("cancelEditBtn").classList.add("hidden");
     }
 
     function toggleDarkMode() {
