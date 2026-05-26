@@ -252,7 +252,9 @@ footer {
 </head>
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
-  <main class="max-w-6xl mx-auto p-4 pb-32">
+  <!-- <main class="max-w-6xl mx-auto p-4 pb-32"> -->
+
+  <main class="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-32 overflow-x-hidden">
 
    <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition overflow-hidden">
 
@@ -390,7 +392,7 @@ footer {
 
   </main>
 
-  <footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+  <!-- <footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
     <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
       <div>
         <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
@@ -408,7 +410,26 @@ footer {
         เพิ่มลงตะกร้า
       </button>
     </div>
-  </footer>
+  </footer> -->
+  <footer class="fixed bottom-0 left-0 right-0 w-full max-w-full overflow-hidden bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+  <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 flex justify-between items-center gap-3 min-w-0">
+    <div class="min-w-0 overflow-hidden">
+      <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
+      <p class="font-bold truncate">
+        <span id="bottomSelected">0</span> <span id="txtPhotoUnit">ภาพ</span> · ฿<span id="bottomAmount">0.00</span>
+      </p>
+    </div>
+
+    <button
+      id="addCartBtn"
+      onclick="addSelectedToCart()"
+      disabled
+      class="shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-3 font-bold disabled:opacity-40"
+    >
+      เพิ่มลงตะกร้า
+    </button>
+  </div>
+</footer>
 
   <!-- PHOTO PREVIEW MODAL -->
   <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
