@@ -411,24 +411,43 @@ footer {
       </button>
     </div>
   </footer> -->
-  <footer class="fixed bottom-0 left-0 right-0 w-full max-w-full overflow-hidden bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
-  <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 flex justify-between items-center gap-3 min-w-0">
-    <div class="min-w-0 overflow-hidden">
-      <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
-      <p class="font-bold truncate">
-        <span id="bottomSelected">0</span> <span id="txtPhotoUnit">ภาพ</span> · ฿<span id="bottomAmount">0.00</span>
-      </p>
+ <footer class="fixed bottom-0 inset-x-0 z-50 w-full overflow-hidden bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+
+  <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3">
+
+    <div class="flex items-center justify-between gap-3 min-w-0">
+
+      <!-- LEFT -->
+      <div class="min-w-0 flex-1 overflow-hidden">
+
+        <p id="txtBottomSelected"
+           class="text-xs text-slate-500 dark:text-slate-400 truncate">
+          เลือกแล้ว
+        </p>
+
+        <p class="font-bold truncate">
+          <span id="bottomSelected">0</span>
+          <span id="txtPhotoUnit">ภาพ</span>
+
+          · ฿<span id="bottomAmount">0.00</span>
+        </p>
+
+      </div>
+
+      <!-- RIGHT -->
+      <button
+        id="addCartBtn"
+        onclick="addSelectedToCart()"
+        disabled
+        class="shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-3 font-bold disabled:opacity-40"
+      >
+        เพิ่มลงตะกร้า
+      </button>
+
     </div>
 
-    <button
-      id="addCartBtn"
-      onclick="addSelectedToCart()"
-      disabled
-      class="shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-3 font-bold disabled:opacity-40"
-    >
-      เพิ่มลงตะกร้า
-    </button>
   </div>
+
 </footer>
 
   <!-- PHOTO PREVIEW MODAL -->
