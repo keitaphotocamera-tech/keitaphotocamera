@@ -18,29 +18,31 @@
   <script src="js/liff-helper.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
 
-  * {
-  box-sizing: border-box;
-}
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden !important;
+    }
 
-html,
-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-}
+    body {
+      position: relative;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
 
-body {
-  position: relative;
-}
-
-main,
-header,
-section,
-footer {
-  max-width: 100%;
-  overflow-x: hidden;
-}
+    main,
+    header,
+    section,
+    footer {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
 
     /* =========================
        BASIC PROTECTION
@@ -52,16 +54,6 @@ footer {
       pointer-events: none;
     }
 
-    body {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-    html,
-    body {
-      width: 100%;
-      overflow-x: hidden;
-    }
     /* =========================
        PHOTO PREVIEW MODAL
     ========================= */
@@ -230,150 +222,132 @@ footer {
     .open-preview-btn {
       pointer-events: auto;
     }
-
-    .no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-   
   </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
-  <!-- <main class="max-w-6xl mx-auto p-4 pb-32"> -->
 
- <main class="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-32 overflow-x-hidden flex flex-col items-center">
+  <main class="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-32 overflow-x-hidden flex flex-col items-center">
 
-   <header class="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition overflow-hidden">
+    <header class="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition overflow-hidden">
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:justify-between min-w-0">
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-between min-w-0">
 
-    <!-- LEFT -->
-    <div class="min-w-0 flex-1">
-      <p id="txtMiniApp"
-         class="text-xs text-slate-500 dark:text-slate-400 truncate">
-        LINE Mini App
-      </p>
+        <!-- LEFT -->
+        <div class="min-w-0 flex-1">
+          <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            LINE Mini App
+          </p>
 
-      <h1 id="eventTitle"
-          class="text-xl font-bold truncate">
-        เลือกภาพถ่าย
-      </h1>
+          <h1 id="eventTitle" class="text-xl font-bold truncate">
+            เลือกภาพถ่าย
+          </h1>
 
-      <p id="eventDesc"
-         class="text-sm text-slate-500 dark:text-slate-400 truncate">
-        กำลังโหลดข้อมูล...
-      </p>
-    </div>
+          <p id="eventDesc" class="text-sm text-slate-500 dark:text-slate-400 truncate">
+            กำลังโหลดข้อมูล...
+          </p>
+        </div>
 
-    <!-- RIGHT -->
-    <div class="w-full sm:w-auto min-w-0">
+        <!-- RIGHT : ปุ่มเรียงแนวตั้ง -->
+        <div class="w-full sm:w-[180px] min-w-0">
 
-      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div class="flex flex-col gap-2 w-full">
 
-        <button
-          onclick="goHome()"
-          class="shrink-0 whitespace-nowrap rounded-full bg-white dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm border border-slate-200 dark:border-slate-700"
-        >
-          ← <span id="txtBackHome">หน้าแรก</span>
-        </button>
+            <button
+              onclick="goHome()"
+              class="w-full whitespace-nowrap rounded-2xl bg-white dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm border border-slate-200 dark:border-slate-700"
+            >
+              ← <span id="txtBackHome">หน้าแรก</span>
+            </button>
 
-        <select
-          id="langSelect"
-          onchange="changeLanguage(this.value)"
-          class="shrink-0 whitespace-nowrap rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
-        >
-          <option value="th">🇹🇭 TH</option>
-          <option value="en">🇺🇸 EN</option>
-          <option value="ru">🇷🇺 RU</option>
-        </select>
+            <select
+              id="langSelect"
+              onchange="changeLanguage(this.value)"
+              class="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold outline-none"
+            >
+              <option value="th">🇹🇭 TH</option>
+              <option value="en">🇺🇸 EN</option>
+              <option value="ru">🇷🇺 RU</option>
+            </select>
 
-        <button
-          onclick="toggleDarkMode()"
-          id="darkBtn"
-          class="shrink-0 whitespace-nowrap rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
-        >
-          🌙 Dark
-        </button>
+            <button
+              onclick="toggleDarkMode()"
+              id="darkBtn"
+              class="w-full whitespace-nowrap rounded-2xl bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+            >
+              🌙 Dark
+            </button>
 
-        <button
-          onclick="goCart()"
-          class="relative shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold"
-        >
-          🛒 <span id="txtCartBtn">ตะกร้า</span>
+            <button
+              onclick="goCart()"
+              class="relative w-full whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-2 font-bold"
+            >
+              🛒 <span id="txtCartBtn">ตะกร้า</span>
 
-          <span
-            id="cartCount"
-            class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center"
-          >
-            0
-          </span>
-        </button>
+              <span
+                id="cartCount"
+                class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center"
+              >
+                0
+              </span>
+            </button>
+
+          </div>
+
+        </div>
 
       </div>
 
-    </div>
+      <div id="profileBox" class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition">
+        <div class="flex items-center gap-3">
+          <img
+            id="linePicture"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
+          />
 
-  </div>
-
-  <div id="profileBox"
-       class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition">
-
-    <div class="flex items-center gap-3">
-      <img id="linePicture"
-           class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700" />
-
-      <div class="min-w-0">
-        <p id="lineName" class="font-bold truncate">-</p>
-
-        <p id="txtConnected"
-           class="text-xs text-emerald-600 truncate">
-          เชื่อมต่อ LINE แล้ว
-        </p>
+          <div class="min-w-0">
+            <p id="lineName" class="font-bold truncate">-</p>
+            <p id="txtConnected" class="text-xs text-emerald-600 truncate">
+              เชื่อมต่อ LINE แล้ว
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
 
-  </div>
-
-</header>
+    </header>
 
     <section class="w-full mb-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-  <input
-    id="searchInput"
-    oninput="searchPhotos()"
-    class="w-full bg-white dark:bg-slate-900 dark:text-white rounded-2xl px-4 py-3 outline-none shadow-sm"
-    placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
-  />
+      <input
+        id="searchInput"
+        oninput="searchPhotos()"
+        class="w-full bg-white dark:bg-slate-900 dark:text-white rounded-2xl px-4 py-3 outline-none shadow-sm"
+        placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
+      />
 
-  <button
-    onclick="openFaceSearch()"
-    class="w-full sm:w-auto bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 font-bold shadow-sm whitespace-nowrap"
-  >
-    🙂 <span id="txtFaceSearch">ค้นหาด้วยใบหน้า</span>
-  </button>
-</section>
+      <button
+        onclick="openFaceSearch()"
+        class="w-full sm:w-auto bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 font-bold shadow-sm whitespace-nowrap"
+      >
+        🙂 <span id="txtFaceSearch">ค้นหาด้วยใบหน้า</span>
+      </button>
+    </section>
 
     <section class="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 grid grid-cols-3 text-center transition">
-  <div class="min-w-0 px-1">
-    <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400 truncate">ภาพทั้งหมด</p>
-    <p id="photoTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
-  </div>
+      <div class="min-w-0 px-1">
+        <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400 truncate">ภาพทั้งหมด</p>
+        <p id="photoTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
+      </div>
 
-  <div class="min-w-0 px-1">
-    <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">เลือกแล้ว</p>
-    <p id="selectedTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
-  </div>
+      <div class="min-w-0 px-1">
+        <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">เลือกแล้ว</p>
+        <p id="selectedTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
+      </div>
 
-  <div class="min-w-0 px-1">
-    <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400 truncate">รวมเงิน</p>
-    <p id="selectedAmount" class="text-xl sm:text-2xl font-bold text-emerald-600 truncate">0</p>
-  </div>
-</section>
+      <div class="min-w-0 px-1">
+        <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400 truncate">รวมเงิน</p>
+        <p id="selectedAmount" class="text-xl sm:text-2xl font-bold text-emerald-600 truncate">0</p>
+      </div>
+    </section>
 
     <section id="loadingBox" class="text-center py-10 text-slate-500 dark:text-slate-400">
       กำลังโหลดภาพ...
@@ -388,34 +362,35 @@ footer {
 
   </main>
 
-<footer class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
-  <div class="px-3 py-3">
-    <div class="flex items-center gap-2 min-w-0">
+  <footer class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+    <div class="px-3 py-3">
+      <div class="flex items-center gap-2 min-w-0">
 
-      <div class="flex-1 min-w-0 overflow-hidden">
-        <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">
-          เลือกแล้ว
-        </p>
+        <div class="flex-1 min-w-0 overflow-hidden">
+          <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            เลือกแล้ว
+          </p>
 
-        <p class="font-bold text-sm truncate">
-          <span id="bottomSelected">0</span>
-          <span id="txtPhotoUnit">ภาพ</span>
-          · ฿<span id="bottomAmount">0.00</span>
-        </p>
+          <p class="font-bold text-sm truncate">
+            <span id="bottomSelected">0</span>
+            <span id="txtPhotoUnit">ภาพ</span>
+            · ฿<span id="bottomAmount">0.00</span>
+          </p>
+        </div>
+
+        <button
+          id="addCartBtn"
+          onclick="addSelectedToCart()"
+          disabled
+          class="shrink-0 max-w-[38vw] truncate rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-3 py-2 text-sm font-bold disabled:opacity-40"
+        >
+          เพิ่มลงตะกร้า
+        </button>
+
       </div>
-
-      <button
-        id="addCartBtn"
-        onclick="addSelectedToCart()"
-        disabled
-        class="shrink-0 max-w-[38vw] truncate rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-3 py-2 text-sm font-bold disabled:opacity-40"
-      >
-        เพิ่มลงตะกร้า
-      </button>
-
     </div>
-  </div>
-</footer>
+  </footer>
+
   <!-- PHOTO PREVIEW MODAL -->
   <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
     <button class="photo-close" onclick="closePhotoModal()" aria-label="Close">✕</button>
@@ -932,7 +907,6 @@ footer {
     }
 
     function getSafePreviewUrl(photo) {
-      // สำหรับ modal หลีกเลี่ยง full_url เป็นหลัก ใช้เฉพาะรูป preview / watermark / thumbnail
       return (
         photo.watermarked_url ||
         photo.watermark_url ||
@@ -1017,18 +991,15 @@ footer {
        PROTECTION EVENTS
     ========================= */
 
-    // ห้ามคลิกขวา
-    document.addEventListener('contextmenu', function(e) {
+    document.addEventListener("contextmenu", function(e) {
       e.preventDefault();
     });
 
-    // ปิดการลากรูป
-    document.addEventListener('dragstart', function(e) {
+    document.addEventListener("dragstart", function(e) {
       e.preventDefault();
     });
 
-    // ปิดปุ่มลัดบางอย่าง + ESC ปิด modal
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") {
         closePhotoModal();
       }
@@ -1037,15 +1008,15 @@ footer {
         e.preventDefault();
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") {
         e.preventDefault();
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "i") {
         e.preventDefault();
       }
     });
