@@ -216,11 +216,12 @@
           <p id="eventDesc" class="text-sm text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-start">
+        <!-- <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-start"> -->
+        <div class="flex items-center gap-2 overflow-x-auto max-w-full no-scrollbar">
 
           <button
             onclick="goHome()"
-            class="rounded-full bg-white dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm"
+            class="shrink-0 rounded-full bg-white dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold shadow-sm"
           >
             ← <span id="txtBackHome">หน้าแรก</span>
           </button>
@@ -238,12 +239,12 @@
           <button
             onclick="toggleDarkMode()"
             id="darkBtn"
-            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+            class="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
           >
             🌙 Dark
           </button>
 
-          <button onclick="goCart()" class="relative bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
+          <button onclick="goCart()" class="shrink-0 relative bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
             🛒 <span id="txtCartBtn">ตะกร้า</span>
             <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-6 h-6 items-center justify-center">0</span>
           </button>
