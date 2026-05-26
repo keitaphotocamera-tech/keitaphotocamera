@@ -532,19 +532,20 @@
         const orderNo = "ORD-" + Date.now();
 
         const { data: orderData, error: orderError } = await db
-          .from("orders")
-          .insert({
-            order_no: orderNo,
-            line_user_id: profile.userId,
-            line_display_name: profile.displayName || null,
-            line_picture: profile.pictureUrl || null,
-            event_id: eventId,
-            total_amount: totalAmount,
-            status: "waiting_approve",
-            slip_url: slipUrl
-          })
-          .select()
-          .single();
+  .from("orders")
+  .insert({
+    order_no: orderNo,
+    line_user_id: profile.userId,
+    line_display_name: profile.displayName || null,
+    line_picture: profile.pictureUrl || null,
+    event_id: eventId,
+    total_amount: totalAmount,
+    status: "waiting_approve",
+    slip_url: slipUrl,
+    language: currentLang || "th"
+  })
+  .select()
+  .single();
 
         if (orderError) throw orderError;
 
