@@ -649,7 +649,13 @@
 
         el.innerHTML = `
           <div class="relative aspect-[3/4] bg-slate-200 dark:bg-slate-800">
-            <img src="${escapeAttribute(img)}" class="w-full h-full object-cover" draggable="false">
+            <img 
+  src="${escapeAttribute(img)}" 
+  class="w-full h-full object-cover" 
+  loading="lazy"
+  decoding="async"
+  draggable="false"
+>
 
             <button
               type="button"
