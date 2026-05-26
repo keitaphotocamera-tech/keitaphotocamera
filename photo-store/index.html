@@ -397,13 +397,13 @@
 
     async function loadEvents() {
 
-      const { data, error } = await sb
-        .from("events")
-        .select("*")
-        .order("created_at", {
-          ascending: false
-        });
-
+     const { data, error } = await sb
+  .from("events")
+  .select("*")
+  .eq("status", "published")
+  .order("created_at", {
+    ascending: false
+  });
       if (error) throw error;
 
       allEvents = data || [];
