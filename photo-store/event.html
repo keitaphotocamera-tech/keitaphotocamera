@@ -247,7 +247,7 @@ footer {
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
   <!-- <main class="max-w-6xl mx-auto p-4 pb-32"> -->
 
-  <main class="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-32 overflow-x-hidden flex flex-col items-center">
+ <main class="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-32 overflow-x-hidden flex flex-col items-center">
 
    <header class="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition overflow-hidden">
 
@@ -343,34 +343,37 @@ footer {
 </header>
 
     <section class="w-full mb-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-      <input
-        id="searchInput"
-        oninput="searchPhotos()"
-        class="bg-white dark:bg-slate-900 dark:text-white rounded-2xl px-4 py-3 outline-none shadow-sm"
-        placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
-      />
+  <input
+    id="searchInput"
+    oninput="searchPhotos()"
+    class="w-full bg-white dark:bg-slate-900 dark:text-white rounded-2xl px-4 py-3 outline-none shadow-sm"
+    placeholder="ค้นหาชื่อไฟล์ / หมายเลขภาพ"
+  />
 
-      <button onclick="openFaceSearch()" class="bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 font-bold shadow-sm">
-        🙂 <span id="txtFaceSearch">ค้นหาด้วยใบหน้า</span>
-      </button>
-    </section>
+  <button
+    onclick="openFaceSearch()"
+    class="w-full sm:w-auto bg-white dark:bg-slate-900 rounded-2xl px-4 py-3 font-bold shadow-sm whitespace-nowrap"
+  >
+    🙂 <span id="txtFaceSearch">ค้นหาด้วยใบหน้า</span>
+  </button>
+</section>
 
     <section class="w-full bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 grid grid-cols-3 text-center transition">
-      <div>
-        <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400">ภาพทั้งหมด</p>
-        <p id="photoTotal" class="text-2xl font-bold">0</p>
-      </div>
+  <div class="min-w-0 px-1">
+    <p id="txtTotalPhotos" class="text-xs text-slate-500 dark:text-slate-400 truncate">ภาพทั้งหมด</p>
+    <p id="photoTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
+  </div>
 
-      <div>
-        <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400">เลือกแล้ว</p>
-        <p id="selectedTotal" class="text-2xl font-bold">0</p>
-      </div>
+  <div class="min-w-0 px-1">
+    <p id="txtSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">เลือกแล้ว</p>
+    <p id="selectedTotal" class="text-xl sm:text-2xl font-bold truncate">0</p>
+  </div>
 
-      <div>
-        <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400">รวมเงิน</p>
-        <p id="selectedAmount" class="text-2xl font-bold text-emerald-600">0</p>
-      </div>
-    </section>
+  <div class="min-w-0 px-1">
+    <p id="txtTotalAmount" class="text-xs text-slate-500 dark:text-slate-400 truncate">รวมเงิน</p>
+    <p id="selectedAmount" class="text-xl sm:text-2xl font-bold text-emerald-600 truncate">0</p>
+  </div>
+</section>
 
     <section id="loadingBox" class="text-center py-10 text-slate-500 dark:text-slate-400">
       กำลังโหลดภาพ...
@@ -405,42 +408,32 @@ footer {
     </div>
   </footer> -->
  <footer class="fixed bottom-0 inset-x-0 z-50 w-full overflow-hidden bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
-
   <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3">
-
     <div class="flex items-center justify-between gap-3 min-w-0">
 
-      <!-- LEFT -->
       <div class="min-w-0 flex-1 overflow-hidden">
-
-        <p id="txtBottomSelected"
-           class="text-xs text-slate-500 dark:text-slate-400 truncate">
+        <p id="txtBottomSelected" class="text-xs text-slate-500 dark:text-slate-400 truncate">
           เลือกแล้ว
         </p>
 
-        <p class="font-bold truncate">
+        <p class="font-bold truncate text-sm sm:text-base">
           <span id="bottomSelected">0</span>
           <span id="txtPhotoUnit">ภาพ</span>
-
           · ฿<span id="bottomAmount">0.00</span>
         </p>
-
       </div>
 
-      <!-- RIGHT -->
       <button
         id="addCartBtn"
         onclick="addSelectedToCart()"
         disabled
-        class="shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-3 font-bold disabled:opacity-40"
+        class="shrink-0 whitespace-nowrap bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-3 sm:px-4 py-3 font-bold disabled:opacity-40 text-sm sm:text-base"
       >
         เพิ่มลงตะกร้า
       </button>
 
     </div>
-
   </div>
-
 </footer>
 
   <!-- PHOTO PREVIEW MODAL -->
