@@ -48,16 +48,37 @@
       </div>
     </header>
 
+    <!-- เพิ่มเฉพาะส่วนนี้: ปุ่มแก้ไข Event / ล้าง Event -->
     <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
-      <label class="font-bold block mb-2">ค้นหาตาม Event</label>
+      <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <div class="flex-1">
+          <label class="font-bold block mb-2">ค้นหาตาม Event</label>
 
-      <select
-        id="eventFilter"
-        onchange="setEventFilter(this.value)"
-        class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
-      >
-        <option value="all">ทุก Event</option>
-      </select>
+          <select
+            id="eventFilter"
+            onchange="setEventFilter(this.value)"
+            class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
+          >
+            <option value="all">ทุก Event</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 md:flex gap-2">
+          <button
+            onclick="openEditSelectedEvent()"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-5 py-4 font-bold transition"
+          >
+            แก้ไข Event
+          </button>
+
+          <button
+            onclick="clearEventFilter()"
+            class="bg-slate-100 dark:bg-slate-800 dark:text-white rounded-2xl px-5 py-4 font-bold transition"
+          >
+            ล้าง Event
+          </button>
+        </div>
+      </div>
     </section>
 
     <section class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
@@ -173,9 +194,14 @@
         ${allEvents.map(event => `
           <option value="${event.id}">
             ${escapeHtml(event.title || event.id)}
+            ${event.event_date ? " - " + formatDateOnly(event.event_date) : ""}
           </option>
         `).join("")}
       `;
+
+      if (currentEventFilter && currentEventFilter !== "all") {
+        select.value = currentEventFilter;
+      }
     }
 
     async function loadOrders() {
@@ -418,6 +444,150 @@
       renderOrders();
     }
 
+    /*
+      เพิ่มใหม่:
+      - ล้าง Event
+      - เปิดฟอร์มแก้ไข Event ที่เลือก
+      - บันทึกชื่อ Event และวันที่ Event
+    */
+    function clearEventFilter() {
+      currentEventFilter = "all";
+
+      const select = document.getElementById("eventFilter");
+      if (select) select.value = "all";
+
+      renderOrders();
+    }
+
+    function openEditSelectedEvent() {
+      if (!currentEventFilter || currentEventFilter === "all") {
+        Swal.fire(
+          "กรุณาเลือก Event",
+          "เลือก Event ที่ต้องการแก้ไขก่อนครับ",
+          "warning"
+        );
+        return;
+      }
+
+      openEditEvent(currentEventFilter);
+    }
+
+    async function openEditEvent(eventId) {
+      const event = allEvents.find(e => String(e.id) === String(eventId));
+
+      if (!event) {
+        Swal.fire(
+          "ไม่พบ Event",
+          "กรุณากดรีเฟรชแล้วลองใหม่อีกครั้ง",
+          "error"
+        );
+        return;
+      }
+
+      const currentTitle = event.title || "";
+      const currentDate = event.event_date
+        ? String(event.event_date).slice(0, 10)
+        : "";
+
+      const result = await Swal.fire({
+        title: "แก้ไข Event",
+        width: 560,
+        html: `
+          <div style="text-align:left">
+            <label style="font-weight:bold;display:block;margin-bottom:6px;">
+              ชื่อ Event
+            </label>
+            <input
+              id="editEventTitle"
+              class="swal2-input"
+              style="width:100%;margin:0 0 14px 0;"
+              value="${escapeAttr(currentTitle)}"
+              placeholder="ชื่อ Event"
+            />
+
+            <label style="font-weight:bold;display:block;margin-bottom:6px;">
+              วันที่ Event
+            </label>
+            <input
+              id="editEventDate"
+              type="date"
+              class="swal2-input"
+              style="width:100%;margin:0;"
+              value="${escapeAttr(currentDate)}"
+            />
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "บันทึก",
+        cancelButtonText: "ยกเลิก",
+        focusConfirm: false,
+        preConfirm: () => {
+          const title = document.getElementById("editEventTitle").value.trim();
+          const eventDate = document.getElementById("editEventDate").value;
+
+          if (!title) {
+            Swal.showValidationMessage("กรุณากรอกชื่อ Event");
+            return false;
+          }
+
+          return {
+            title,
+            event_date: eventDate || null
+          };
+        }
+      });
+
+      if (!result.isConfirmed) return;
+
+      await updateEvent(eventId, result.value);
+    }
+
+    async function updateEvent(eventId, payload) {
+      try {
+        Swal.fire({
+          title: "กำลังบันทึก Event...",
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        const { error } = await db
+          .from("events")
+          .update({
+            title: payload.title,
+            event_date: payload.event_date
+          })
+          .eq("id", eventId);
+
+        if (error) throw error;
+
+        Swal.fire(
+          "สำเร็จ",
+          "แก้ไขข้อมูล Event เรียบร้อยแล้ว",
+          "success"
+        );
+
+        const oldEventFilter = currentEventFilter;
+
+        await loadEventsForFilter();
+
+        currentEventFilter = oldEventFilter;
+
+        const select = document.getElementById("eventFilter");
+        if (select) select.value = oldEventFilter;
+
+        renderOrders();
+
+      } catch (err) {
+        console.error(err);
+
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.message || "แก้ไข Event ไม่สำเร็จ",
+          "error"
+        );
+      }
+    }
+
     function getEventName(eventId) {
       const event = allEvents.find(e => String(e.id) === String(eventId));
       return event?.title || eventId || "-";
@@ -653,6 +823,16 @@
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit"
+      });
+    }
+
+    function formatDateOnly(dateString) {
+      if (!dateString) return "-";
+
+      return new Date(dateString).toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
       });
     }
 
