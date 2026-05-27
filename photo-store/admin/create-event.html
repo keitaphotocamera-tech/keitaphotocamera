@@ -20,6 +20,7 @@
   <style>
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html,
@@ -28,100 +29,158 @@
       min-height: 100%;
       overflow-x: hidden;
       -webkit-text-size-adjust: 100%;
-      touch-action: manipulation;
     }
 
     body {
       position: relative;
     }
 
-    main,
-    header,
-    section,
-    div {
-      position: relative;
-    }
-
-    main {
-      z-index: 1;
-    }
-
-    header,
-    section {
-      z-index: 2;
-    }
-
-    header::before,
-    header::after,
-    section::before,
-    section::after,
-    main::before,
-    main::after,
-    body::before,
-    body::after {
-      pointer-events: none !important;
-    }
-
     input,
-    select,
     textarea,
     button,
     a {
-      position: relative;
-      z-index: 20;
-      pointer-events: auto !important;
       touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
     }
 
     input,
-    select,
+    textarea,
+    button {
+      font-size: 16px !important;
+    }
+
+    input,
     textarea {
       min-height: 56px;
-      font-size: 16px;
-      line-height: normal;
-    }
-
-    select,
-    input[type="date"],
-    input[type="number"],
-    input[type="text"],
-    input[type="file"] {
-      width: 100%;
-      -webkit-appearance: auto !important;
-      appearance: auto !important;
-    }
-
-    input[type="date"] {
-      color-scheme: light dark;
-    }
-
-    select {
-      cursor: pointer;
     }
 
     textarea {
       min-height: 120px;
     }
 
-    .swal2-container {
-      z-index: 99999 !important;
+    button {
+      cursor: pointer;
     }
 
-    @media (max-width: 768px) {
-      input,
-      select,
-      textarea,
-      button {
-        font-size: 16px !important;
-      }
+    .custom-picker-btn {
+      width: 100%;
+      min-height: 56px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+    }
 
-      select,
-      input[type="date"] {
-        min-height: 58px;
-        padding-top: 14px !important;
-        padding-bottom: 14px !important;
-      }
+    .picker-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 99998;
+      background: rgba(15, 23, 42, 0.72);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .picker-backdrop.show {
+      display: flex;
+    }
+
+    .picker-panel {
+      width: 100%;
+      max-width: 520px;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 28px;
+      padding: 18px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .dark .picker-panel {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .date-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .date-cell,
+    .day-name {
+      min-height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .day-name {
+      color: #64748b;
+      min-height: 32px;
+    }
+
+    .date-cell {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .dark .date-cell {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    .date-cell.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .dark .date-cell.active {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .date-cell.disabled {
+      opacity: 0.25;
+    }
+
+    .status-option {
+      width: 100%;
+      min-height: 56px;
+      border-radius: 18px;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 800;
+      background: #f1f5f9;
+      color: #0f172a;
+      margin-top: 10px;
+    }
+
+    .dark .status-option {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    .status-option.active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .dark .status-option.active {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .swal2-container {
+      z-index: 100000 !important;
     }
   </style>
 </head>
@@ -154,7 +213,7 @@
       <div class="space-y-5">
 
         <div>
-          <label for="eventTitle" class="font-bold block mb-2">ชื่อ Event</label>
+          <label class="font-bold block mb-2">ชื่อ Event</label>
           <input
             id="eventTitle"
             type="text"
@@ -164,7 +223,7 @@
         </div>
 
         <div>
-          <label for="eventDescription" class="font-bold block mb-2">รายละเอียด</label>
+          <label class="font-bold block mb-2">รายละเอียด</label>
           <textarea
             id="eventDescription"
             rows="4"
@@ -175,16 +234,23 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="eventDate" class="font-bold block mb-2">วันที่จัดงาน</label>
-            <input
-              id="eventDate"
-              type="date"
-              class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
-            />
+            <label class="font-bold block mb-2">วันที่จัดงาน</label>
+
+            <input id="eventDate" type="hidden" />
+
+            <button
+              type="button"
+              id="eventDateBtn"
+              onclick="openDatePicker()"
+              class="custom-picker-btn bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
+            >
+              <span id="eventDateText" class="text-slate-400">เลือกวันที่จัดงาน</span>
+              <span>📅</span>
+            </button>
           </div>
 
           <div>
-            <label for="photoPrice" class="font-bold block mb-2">ราคาภาพ</label>
+            <label class="font-bold block mb-2">ราคาภาพ</label>
             <input
               id="photoPrice"
               type="number"
@@ -196,21 +262,23 @@
         </div>
 
         <div>
-          <label for="eventStatus" class="font-bold block mb-2">สถานะ</label>
-          <select
-            id="eventStatus"
-            class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
+          <label class="font-bold block mb-2">สถานะ</label>
+
+          <input id="eventStatus" type="hidden" value="draft" />
+
+          <button
+            type="button"
+            id="eventStatusBtn"
+            onclick="openStatusPicker()"
+            class="custom-picker-btn bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
           >
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="published">Published</option>
-            <option value="closed">Closed</option>
-            <option value="archived">Archived</option>
-          </select>
+            <span id="eventStatusText">Draft</span>
+            <span>⌄</span>
+          </button>
         </div>
 
         <div>
-          <label for="coverInput" class="font-bold block mb-2">รูป Cover Event</label>
+          <label class="font-bold block mb-2">รูป Cover Event</label>
           <input
             id="coverInput"
             type="file"
@@ -267,6 +335,74 @@
 
   </main>
 
+  <div id="datePicker" class="picker-backdrop">
+    <div class="picker-panel">
+      <div class="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onclick="changePickerMonth(-1)"
+          class="bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-3 font-bold"
+        >
+          ‹
+        </button>
+
+        <div class="text-center">
+          <p class="text-xs text-slate-500 dark:text-slate-400">เลือกวันที่จัดงาน</p>
+          <h3 id="pickerMonthTitle" class="text-xl font-bold"></h3>
+        </div>
+
+        <button
+          type="button"
+          onclick="changePickerMonth(1)"
+          class="bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-3 font-bold"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="date-grid">
+        <div class="day-name">อา</div>
+        <div class="day-name">จ</div>
+        <div class="day-name">อ</div>
+        <div class="day-name">พ</div>
+        <div class="day-name">พฤ</div>
+        <div class="day-name">ศ</div>
+        <div class="day-name">ส</div>
+      </div>
+
+      <div id="dateGrid" class="date-grid"></div>
+
+      <button
+        type="button"
+        onclick="closeDatePicker()"
+        class="w-full mt-4 bg-slate-200 dark:bg-slate-800 rounded-2xl py-3 font-bold"
+      >
+        ปิด
+      </button>
+    </div>
+  </div>
+
+  <div id="statusPicker" class="picker-backdrop">
+    <div class="picker-panel">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">STATUS</p>
+          <h3 class="text-xl font-bold">เลือกสถานะ Event</h3>
+        </div>
+
+        <button
+          type="button"
+          onclick="closeStatusPicker()"
+          class="bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-3 font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div id="statusOptions"></div>
+    </div>
+  </div>
+
   <script>
     const db = window.sb || window.supabase.createClient(
       CONFIG.SUPABASE_URL,
@@ -280,33 +416,24 @@
     let editingEventId = null;
     let editingCoverUrl = null;
 
+    let pickerYear = new Date().getFullYear();
+    let pickerMonth = new Date().getMonth();
+
+    const statusList = [
+      { value: "draft", label: "Draft" },
+      { value: "active", label: "Active" },
+      { value: "published", label: "Published" },
+      { value: "closed", label: "Closed" },
+      { value: "archived", label: "Archived" }
+    ];
+
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
       setupPreview();
-      setupMobileInputs();
+      renderStatusOptions();
+      updateStatusDisplay("draft");
       await loadEvents();
     });
-
-    function setupMobileInputs() {
-      const eventDate = document.getElementById("eventDate");
-      const eventStatus = document.getElementById("eventStatus");
-
-      if (eventDate) {
-        eventDate.addEventListener("click", () => {
-          if (typeof eventDate.showPicker === "function") {
-            try {
-              eventDate.showPicker();
-            } catch (e) {}
-          }
-        });
-      }
-
-      if (eventStatus) {
-        eventStatus.addEventListener("click", () => {
-          eventStatus.focus();
-        });
-      }
-    }
 
     function setupPreview() {
       const input = document.getElementById("coverInput");
@@ -321,6 +448,149 @@
         img.src = URL.createObjectURL(file);
         img.classList.remove("hidden");
       });
+    }
+
+    function openDatePicker() {
+      const currentValue = document.getElementById("eventDate").value;
+
+      if (currentValue) {
+        const parts = currentValue.split("-");
+        pickerYear = Number(parts[0]);
+        pickerMonth = Number(parts[1]) - 1;
+      } else {
+        const now = new Date();
+        pickerYear = now.getFullYear();
+        pickerMonth = now.getMonth();
+      }
+
+      renderDatePicker();
+      document.getElementById("datePicker").classList.add("show");
+    }
+
+    function closeDatePicker() {
+      document.getElementById("datePicker").classList.remove("show");
+    }
+
+    function changePickerMonth(step) {
+      pickerMonth += step;
+
+      if (pickerMonth < 0) {
+        pickerMonth = 11;
+        pickerYear -= 1;
+      }
+
+      if (pickerMonth > 11) {
+        pickerMonth = 0;
+        pickerYear += 1;
+      }
+
+      renderDatePicker();
+    }
+
+    function renderDatePicker() {
+      const monthNames = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+
+      document.getElementById("pickerMonthTitle").textContent =
+        `${monthNames[pickerMonth]} ${pickerYear + 543}`;
+
+      const grid = document.getElementById("dateGrid");
+      grid.innerHTML = "";
+
+      const firstDay = new Date(pickerYear, pickerMonth, 1).getDay();
+      const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+      const selected = document.getElementById("eventDate").value;
+
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement("div");
+        blank.className = "date-cell disabled";
+        blank.textContent = "";
+        grid.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateValue =
+          `${pickerYear}-${String(pickerMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "date-cell";
+        btn.textContent = day;
+
+        if (dateValue === selected) {
+          btn.classList.add("active");
+        }
+
+        btn.onclick = () => {
+          setEventDate(dateValue);
+          closeDatePicker();
+        };
+
+        grid.appendChild(btn);
+      }
+    }
+
+    function setEventDate(value) {
+      document.getElementById("eventDate").value = value;
+
+      const text = document.getElementById("eventDateText");
+      text.textContent = formatThaiDate(value);
+      text.classList.remove("text-slate-400");
+    }
+
+    function formatThaiDate(value) {
+      if (!value) return "เลือกวันที่จัดงาน";
+
+      const date = new Date(value + "T00:00:00");
+      const monthNames = [
+        "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+      ];
+
+      return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear() + 543}`;
+    }
+
+    function openStatusPicker() {
+      renderStatusOptions();
+      document.getElementById("statusPicker").classList.add("show");
+    }
+
+    function closeStatusPicker() {
+      document.getElementById("statusPicker").classList.remove("show");
+    }
+
+    function renderStatusOptions() {
+      const box = document.getElementById("statusOptions");
+      const current = document.getElementById("eventStatus").value || "draft";
+
+      box.innerHTML = "";
+
+      statusList.forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "status-option";
+        btn.textContent = item.label;
+
+        if (item.value === current) {
+          btn.classList.add("active");
+        }
+
+        btn.onclick = () => {
+          updateStatusDisplay(item.value);
+          closeStatusPicker();
+        };
+
+        box.appendChild(btn);
+      });
+    }
+
+    function updateStatusDisplay(value) {
+      const found = statusList.find(item => item.value === value) || statusList[0];
+
+      document.getElementById("eventStatus").value = found.value;
+      document.getElementById("eventStatusText").textContent = found.label;
     }
 
     function generateSlug(text) {
@@ -370,7 +640,7 @@
         const description = document.getElementById("eventDescription").value.trim();
         const eventDate = document.getElementById("eventDate").value;
         const photoPrice = Number(document.getElementById("photoPrice").value || 50);
-        const status = document.getElementById("eventStatus").value;
+        const status = document.getElementById("eventStatus").value || "draft";
 
         if (!title) {
           throw new Error("กรุณากรอกชื่อ Event");
@@ -640,9 +910,9 @@
 
       document.getElementById("eventTitle").value = event.title || "";
       document.getElementById("eventDescription").value = event.description || "";
-      document.getElementById("eventDate").value = event.event_date || "";
+      setEventDate(event.event_date || "");
       document.getElementById("photoPrice").value = event.photo_price || 50;
-      document.getElementById("eventStatus").value = event.status || "draft";
+      updateStatusDisplay(event.status || "draft");
       document.getElementById("coverInput").value = "";
 
       const img = document.getElementById("coverPreview");
@@ -756,8 +1026,13 @@
       document.getElementById("eventTitle").value = "";
       document.getElementById("eventDescription").value = "";
       document.getElementById("eventDate").value = "";
+
+      const dateText = document.getElementById("eventDateText");
+      dateText.textContent = "เลือกวันที่จัดงาน";
+      dateText.classList.add("text-slate-400");
+
       document.getElementById("photoPrice").value = "50";
-      document.getElementById("eventStatus").value = "draft";
+      updateStatusDisplay("draft");
       document.getElementById("coverInput").value = "";
 
       const img = document.getElementById("coverPreview");
