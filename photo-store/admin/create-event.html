@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>สร้าง Event</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,6 +16,114 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script src="../js/config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      position: relative;
+    }
+
+    main,
+    header,
+    section,
+    div {
+      position: relative;
+    }
+
+    main {
+      z-index: 1;
+    }
+
+    header,
+    section {
+      z-index: 2;
+    }
+
+    header::before,
+    header::after,
+    section::before,
+    section::after,
+    main::before,
+    main::after,
+    body::before,
+    body::after {
+      pointer-events: none !important;
+    }
+
+    input,
+    select,
+    textarea,
+    button,
+    a {
+      position: relative;
+      z-index: 20;
+      pointer-events: auto !important;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input,
+    select,
+    textarea {
+      min-height: 56px;
+      font-size: 16px;
+      line-height: normal;
+    }
+
+    select,
+    input[type="date"],
+    input[type="number"],
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      -webkit-appearance: auto !important;
+      appearance: auto !important;
+    }
+
+    input[type="date"] {
+      color-scheme: light dark;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    textarea {
+      min-height: 120px;
+    }
+
+    .swal2-container {
+      z-index: 99999 !important;
+    }
+
+    @media (max-width: 768px) {
+      input,
+      select,
+      textarea,
+      button {
+        font-size: 16px !important;
+      }
+
+      select,
+      input[type="date"] {
+        min-height: 58px;
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+      }
+    }
+  </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white transition">
@@ -32,6 +140,7 @@
         </div>
 
         <button
+          type="button"
           onclick="toggleDarkMode()"
           id="darkBtn"
           class="shrink-0 bg-slate-100 dark:bg-slate-800 dark:text-white rounded-2xl px-4 py-3 font-bold transition"
@@ -45,7 +154,7 @@
       <div class="space-y-5">
 
         <div>
-          <label class="font-bold block mb-2">ชื่อ Event</label>
+          <label for="eventTitle" class="font-bold block mb-2">ชื่อ Event</label>
           <input
             id="eventTitle"
             type="text"
@@ -55,7 +164,7 @@
         </div>
 
         <div>
-          <label class="font-bold block mb-2">รายละเอียด</label>
+          <label for="eventDescription" class="font-bold block mb-2">รายละเอียด</label>
           <textarea
             id="eventDescription"
             rows="4"
@@ -66,7 +175,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="font-bold block mb-2">วันที่จัดงาน</label>
+            <label for="eventDate" class="font-bold block mb-2">วันที่จัดงาน</label>
             <input
               id="eventDate"
               type="date"
@@ -75,18 +184,19 @@
           </div>
 
           <div>
-            <label class="font-bold block mb-2">ราคาภาพ</label>
+            <label for="photoPrice" class="font-bold block mb-2">ราคาภาพ</label>
             <input
               id="photoPrice"
               type="number"
               value="50"
+              inputmode="numeric"
               class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
             />
           </div>
         </div>
 
         <div>
-          <label class="font-bold block mb-2">สถานะ</label>
+          <label for="eventStatus" class="font-bold block mb-2">สถานะ</label>
           <select
             id="eventStatus"
             class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white rounded-2xl p-4 outline-none"
@@ -100,7 +210,7 @@
         </div>
 
         <div>
-          <label class="font-bold block mb-2">รูป Cover Event</label>
+          <label for="coverInput" class="font-bold block mb-2">รูป Cover Event</label>
           <input
             id="coverInput"
             type="file"
@@ -111,10 +221,12 @@
           <img
             id="coverPreview"
             class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-cover"
+            alt="Cover Preview"
           />
         </div>
 
         <button
+          type="button"
           onclick="createNewEvent()"
           id="createBtn"
           class="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-4 font-bold text-lg"
@@ -123,6 +235,7 @@
         </button>
 
         <button
+          type="button"
           onclick="cancelEditEvent()"
           id="cancelEditBtn"
           class="hidden w-full bg-slate-200 dark:bg-slate-800 dark:text-white text-slate-700 rounded-2xl py-4 font-bold text-lg"
@@ -141,6 +254,7 @@
         </div>
 
         <button
+          type="button"
           onclick="loadEvents()"
           class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-4 py-2 font-bold"
         >
@@ -169,8 +283,30 @@
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
       setupPreview();
+      setupMobileInputs();
       await loadEvents();
     });
+
+    function setupMobileInputs() {
+      const eventDate = document.getElementById("eventDate");
+      const eventStatus = document.getElementById("eventStatus");
+
+      if (eventDate) {
+        eventDate.addEventListener("click", () => {
+          if (typeof eventDate.showPicker === "function") {
+            try {
+              eventDate.showPicker();
+            } catch (e) {}
+          }
+        });
+      }
+
+      if (eventStatus) {
+        eventStatus.addEventListener("click", () => {
+          eventStatus.focus();
+        });
+      }
+    }
 
     function setupPreview() {
       const input = document.getElementById("coverInput");
@@ -372,6 +508,7 @@
             <img
               src="${event.cover_url || 'https://placehold.co/800x600?text=EVENT'}"
               class="w-full h-full object-cover aspect-video bg-slate-200 dark:bg-slate-800"
+              alt="Event Cover"
             >
 
             <div class="p-4">
@@ -423,6 +560,7 @@
 
               <div class="mt-5">
                 <button
+                  type="button"
                   onclick="toggleMenu('${event.id}')"
                   class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl py-3 font-bold transition"
                 >
@@ -458,6 +596,7 @@
                   </a>
 
                   <button
+                    type="button"
                     onclick="startEditEvent('${event.id}')"
                     class="bg-amber-500 text-white rounded-2xl py-3 font-bold"
                   >
@@ -465,6 +604,7 @@
                   </button>
 
                   <button
+                    type="button"
                     onclick="deleteEventDeep('${event.id}')"
                     class="bg-red-600 text-white rounded-2xl py-3 font-bold"
                   >
