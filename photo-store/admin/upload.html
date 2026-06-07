@@ -325,7 +325,7 @@
       <div>
         <p class="text-xs text-slate-400">ADMIN PANEL</p>
         <h1 class="text-2xl font-bold">PHOTO UPLOAD</h1>
-        <p class="text-sm text-slate-400 mt-1">อัปโหลดรูปภาพเข้า Event</p>
+        <p class="text-sm text-slate-400 mt-1">อัปโหลดรูปภาพเข้า Event ผ่าน Cloudflare R2</p>
       </div>
 
       <button
@@ -350,11 +350,14 @@
         <select
           id="eventSelect"
           class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white rounded-xl p-3"
-        ></select>
+        >
+          <option value="">กำลังโหลด Event...</option>
+        </select>
+
+        <p id="eventHelp" class="text-xs text-slate-500 dark:text-slate-400 mt-2"></p>
       </div>
 
       <div class="mb-4">
-
         <label class="font-semibold block mb-2">
           ราคา
         </label>
@@ -365,13 +368,11 @@
           value="100"
           class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white rounded-xl p-3"
         />
-
       </div>
 
       <div
         class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center bg-slate-50 dark:bg-slate-800 transition"
       >
-
         <input
           type="file"
           id="fileInput"
@@ -391,6 +392,10 @@
           รองรับหลายไฟล์ / อัปโหลดเข้า Cloudflare R2
         </p>
 
+        <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Worker:
+          <span id="workerUrlText" class="break-all"></span>
+        </div>
       </div>
 
       <div
@@ -406,6 +411,8 @@
     const fileInput = document.getElementById("fileInput");
     const eventSelect = document.getElementById("eventSelect");
     const uploadStatus = document.getElementById("uploadStatus");
+    const eventHelp = document.getElementById("eventHelp");
+    const workerUrlText = document.getElementById("workerUrlText");
 
     const supabaseClient =
       window.sb ||
@@ -417,10 +424,67 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
+
+      workerUrlText.textContent = CONFIG.R2_WORKER_URL || "ยังไม่ได้ตั้งค่า R2_WORKER_URL";
+
+      await checkR2Config();
       await loadEvents();
     });
 
+    async function checkR2Config() {
+      if (!CONFIG.R2_ENABLED) {
+        Swal.fire({
+          icon: "warning",
+          title: "R2 ยังไม่เปิดใช้งาน",
+          text: "กรุณาตั้งค่า R2_ENABLED: true ใน config.js"
+        });
+        return false;
+      }
+
+      if (!CONFIG.R2_WORKER_URL) {
+        Swal.fire({
+          icon: "warning",
+          title: "ไม่พบ R2_WORKER_URL",
+          text: "กรุณาเพิ่ม R2_WORKER_URL ใน config.js"
+        });
+        return false;
+      }
+
+      if (!CONFIG.R2_PUBLIC_BASE_URL) {
+        Swal.fire({
+          icon: "warning",
+          title: "ไม่พบ R2_PUBLIC_BASE_URL",
+          text: "กรุณาเพิ่ม R2_PUBLIC_BASE_URL ใน config.js"
+        });
+        return false;
+      }
+
+      try {
+        const res = await fetch(`${CONFIG.R2_WORKER_URL}/health`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "R2 Worker ไม่พร้อมใช้งาน");
+        }
+
+        console.log("R2 Worker Health:", data);
+        return true;
+      } catch (err) {
+        console.error("R2 health error:", err);
+
+        Swal.fire({
+          icon: "error",
+          title: "เชื่อมต่อ R2 Worker ไม่ได้",
+          text: err.message
+        });
+
+        return false;
+      }
+    }
+
     async function loadEvents() {
+      eventSelect.innerHTML = `<option value="">กำลังโหลด Event...</option>`;
+      eventHelp.textContent = "";
 
       const { data, error } = await supabaseClient
         .from("events")
@@ -429,19 +493,27 @@
         .order("event_date", { ascending: false });
 
       if (error) {
-        console.error(error);
+        console.error("Load events error:", error);
+
         eventSelect.innerHTML = `<option value="">โหลด Event ไม่สำเร็จ</option>`;
+        eventHelp.innerHTML = `
+          Error: ${escapeHtml(error.message || "ไม่สามารถโหลด Event ได้")}
+          <br>
+          ถ้าขึ้น 401 ให้ตรวจสอบ RLS Policy ของตาราง events
+        `;
+
         return;
       }
 
-      if (!data?.length) {
+      if (!data || !data.length) {
         eventSelect.innerHTML = `<option value="">ยังไม่มี Event</option>`;
+        eventHelp.textContent = "กรุณาสร้าง Event ก่อนอัปโหลดรูป";
         return;
       }
 
       eventSelect.innerHTML = data.map(event => `
         <option value="${event.id}">
-          ${escapeHtml(event.title || event.name || event.id)}
+          ${escapeHtml(event.title || event.name || event.slug || event.id)}
         </option>
       `).join("");
 
@@ -451,6 +523,8 @@
       if (eventId) {
         eventSelect.value = eventId;
       }
+
+      eventHelp.textContent = `พบ Event ทั้งหมด ${data.length} รายการ`;
     }
 
     async function uploadFileToR2(file, eventId, folder = "preview") {
@@ -472,57 +546,33 @@
         body: formData
       });
 
-      const data = await res.json();
+      let data = null;
+
+      try {
+        data = await res.json();
+      } catch (err) {
+        throw new Error("Worker ไม่ได้ส่ง JSON กลับมา");
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Upload to R2 failed");
       }
 
+      if (!data.key || !data.publicUrl) {
+        throw new Error("Worker ส่งข้อมูล key หรือ publicUrl ไม่ครบ");
+      }
+
       return data;
     }
 
-    async function uploadFile(file) {
-
-      const eventId = eventSelect.value;
-      const price = Number(document.getElementById("price").value || 0);
-
-      if (!eventId) {
-        Swal.fire("กรุณาเลือก Event", "", "warning");
-        return;
-      }
-
-      const statusDiv = document.createElement("div");
-
-      statusDiv.className =
-        "bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-sm";
-
-      statusDiv.innerHTML = `
-        กำลังอัปโหลดเข้า R2: ${escapeHtml(file.name)}
-      `;
-
-      uploadStatus.prepend(statusDiv);
-
-      let r2Result;
-
-      try {
-        r2Result = await uploadFileToR2(file, eventId, "preview");
-      } catch (err) {
-        console.error(err);
-
-        statusDiv.innerHTML = `
-          ❌ ${escapeHtml(file.name)} : ${escapeHtml(err.message)}
-        `;
-
-        statusDiv.className =
-          "bg-red-100 text-red-700 rounded-xl p-3 text-sm";
-
-        return;
-      }
-
-      const r2Key = r2Result.key;
-      const publicUrl = r2Result.publicUrl;
-
-      const { error: insertError } = await supabaseClient
+    async function savePhotoToSupabase({
+      eventId,
+      file,
+      price,
+      r2Key,
+      publicUrl
+    }) {
+      const { data, error } = await supabaseClient
         .from("photos")
         .insert({
           event_id: eventId,
@@ -543,59 +593,160 @@
           filename: file.name,
           price: price,
           status: "active"
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || "บันทึกข้อมูลรูปลง Supabase ไม่สำเร็จ");
+      }
+
+      return data;
+    }
+
+    async function uploadFile(file) {
+      const eventId = eventSelect.value;
+      const price = Number(document.getElementById("price").value || 0);
+
+      if (!eventId) {
+        throw new Error("กรุณาเลือก Event");
+      }
+
+      const statusDiv = document.createElement("div");
+
+      statusDiv.className =
+        "bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-sm";
+
+      statusDiv.innerHTML = `
+        <div class="font-semibold">กำลังอัปโหลดเข้า R2</div>
+        <div>${escapeHtml(file.name)}</div>
+      `;
+
+      uploadStatus.prepend(statusDiv);
+
+      try {
+        const r2Result = await uploadFileToR2(file, eventId, "preview");
+
+        const r2Key = r2Result.key;
+        const publicUrl = r2Result.publicUrl;
+
+        await savePhotoToSupabase({
+          eventId,
+          file,
+          price,
+          r2Key,
+          publicUrl
         });
 
-      if (insertError) {
-
         statusDiv.innerHTML = `
-          ❌ ${escapeHtml(file.name)} : บันทึก Supabase ไม่สำเร็จ - ${escapeHtml(insertError.message)}
+          <div class="font-semibold">✅ อัปโหลดสำเร็จ</div>
+          <div>${escapeHtml(file.name)}</div>
+          <div class="mt-1 text-xs break-all">
+            Key: ${escapeHtml(r2Key)}
+          </div>
+          <a
+            href="${escapeHtml(publicUrl)}"
+            target="_blank"
+            class="underline text-green-800 dark:text-green-200 text-xs break-all"
+          >
+            เปิดรูปที่ R2
+          </a>
         `;
 
         statusDiv.className =
-          "bg-red-100 text-red-700 rounded-xl p-3 text-sm";
+          "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200 rounded-xl p-3 text-sm";
 
-        return;
+        return {
+          success: true,
+          fileName: file.name,
+          key: r2Key,
+          publicUrl
+        };
+
+      } catch (err) {
+        console.error("Upload file error:", err);
+
+        statusDiv.innerHTML = `
+          <div class="font-semibold">❌ อัปโหลดไม่สำเร็จ</div>
+          <div>${escapeHtml(file.name)}</div>
+          <div class="mt-1 text-xs break-all">
+            ${escapeHtml(err.message)}
+          </div>
+        `;
+
+        statusDiv.className =
+          "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200 rounded-xl p-3 text-sm";
+
+        throw err;
       }
-
-      statusDiv.innerHTML = `
-        ✅ อัปโหลดสำเร็จ: ${escapeHtml(file.name)}
-        <br>
-        <a href="${escapeHtml(publicUrl)}" target="_blank" class="underline">
-          เปิดรูปที่ R2
-        </a>
-      `;
-
-      statusDiv.className =
-        "bg-green-100 text-green-700 rounded-xl p-3 text-sm";
     }
 
     fileInput.addEventListener("change", async (e) => {
-
       const files = [...e.target.files];
 
       if (!files.length) return;
 
+      const eventId = eventSelect.value;
+
+      if (!eventId) {
+        Swal.fire("กรุณาเลือก Event", "", "warning");
+        fileInput.value = "";
+        return;
+      }
+
       Swal.fire({
         title: "กำลังอัปโหลด",
-        text: `ทั้งหมด ${files.length} ไฟล์`,
+        html: `
+          ทั้งหมด <b>${files.length}</b> ไฟล์<br>
+          <span id="swalProgressText">เริ่มอัปโหลด...</span>
+        `,
         allowOutsideClick: false,
+        showConfirmButton: false,
         didOpen: () => Swal.showLoading()
       });
 
       let successCount = 0;
       let failCount = 0;
+      const failedFiles = [];
 
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        const progressText = document.getElementById("swalProgressText");
+        if (progressText) {
+          progressText.textContent = `กำลังอัปโหลด ${i + 1}/${files.length}: ${file.name}`;
+        }
+
         try {
           await uploadFile(file);
           successCount++;
         } catch (err) {
-          console.error(err);
           failCount++;
+          failedFiles.push({
+            name: file.name,
+            message: err.message
+          });
         }
       }
 
       Swal.close();
+
+      let failHtml = "";
+
+      if (failedFiles.length) {
+        failHtml = `
+          <div class="mt-3 text-left text-xs">
+            <b>รายการที่ไม่สำเร็จ:</b>
+            <ul style="padding-left: 18px;">
+              ${failedFiles.map(item => `
+                <li>
+                  ${escapeHtml(item.name)} : ${escapeHtml(item.message)}
+                </li>
+              `).join("")}
+            </ul>
+          </div>
+        `;
+      }
 
       Swal.fire({
         icon: failCount > 0 ? "warning" : "success",
@@ -603,6 +754,7 @@
         html: `
           สำเร็จ: <b>${successCount}</b> ไฟล์<br>
           ไม่สำเร็จ: <b>${failCount}</b> ไฟล์
+          ${failHtml}
         `
       });
 
