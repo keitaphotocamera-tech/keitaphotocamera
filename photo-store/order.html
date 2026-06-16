@@ -5,7 +5,7 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
   <title>ออเดอร์ของฉัน</title>
@@ -17,28 +17,54 @@
       darkMode: "class"
     };
   </script>
-<script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
-  <!-- <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> -->
 
+  <script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="js/config.js"></script>
-  <script src="js/liff-helper.js"></script>
+  <script src="js/config.js?v=new-supabase-007"></script>
+  <script src="js/liff-helper.js?v=new-supabase-007"></script>
+  <script src="js/app-liff.js?v=new-supabase-007"></script>
 
+  <style>
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition safe-bottom">
 
   <main class="max-w-5xl mx-auto p-4 pb-24">
 
-    <!-- HEADER -->
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
 
       <div class="flex justify-between gap-3">
 
-        <div>
+        <div class="min-w-0">
 
           <p
             id="txtMiniApp"
@@ -49,7 +75,7 @@
 
           <h1
             id="txtPageTitle"
-            class="text-xl font-bold"
+            class="text-xl font-black"
           >
             ออเดอร์ของฉัน
           </h1>
@@ -63,7 +89,7 @@
 
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
 
           <button
             onclick="goHome()"
@@ -94,7 +120,6 @@
 
       </div>
 
-      <!-- PROFILE -->
       <div
         id="profileBox"
         class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition"
@@ -105,13 +130,14 @@
           <img
             id="linePicture"
             class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
+            referrerpolicy="no-referrer"
           />
 
-          <div>
+          <div class="min-w-0">
 
             <p
               id="lineName"
-              class="font-bold"
+              class="font-bold truncate"
             >
               -
             </p>
@@ -131,7 +157,6 @@
 
     </header>
 
-    <!-- LOADING -->
     <section
       id="loadingBox"
       class="text-center py-10 text-slate-500 dark:text-slate-400"
@@ -139,13 +164,11 @@
       กำลังโหลดออเดอร์...
     </section>
 
-    <!-- ORDER LIST -->
     <section
       id="orderList"
       class="space-y-4 hidden"
     ></section>
 
-    <!-- EMPTY -->
     <section
       id="emptyBox"
       class="hidden text-center py-16"
@@ -179,20 +202,18 @@
   </main>
 
   <script>
-
     const db =
       window.sb ||
-      window.supabaseClient;
+      window.supabaseClient ||
+      window.supabase.createClient(
+        CONFIG.SUPABASE_URL,
+        CONFIG.SUPABASE_ANON_KEY
+      );
 
     let profile = null;
     let orders = [];
 
-    /****************************************
-     * LANGUAGE
-     ****************************************/
-
     const LANG = {
-
       th: {
         miniApp: "LINE Mini App",
         pageTitle: "ออเดอร์ของฉัน",
@@ -214,6 +235,8 @@
         cancelled: "ยกเลิก",
         waiting: "รอดำเนินการ",
         paid: "ชำระเงินแล้ว",
+        approved: "อนุมัติแล้ว",
+        pending: "รอตรวจสอบ",
         errorTitle: "เกิดข้อผิดพลาด"
       },
 
@@ -238,6 +261,8 @@
         cancelled: "Cancelled",
         waiting: "Processing",
         paid: "Paid",
+        approved: "Approved",
+        pending: "Pending Review",
         errorTitle: "Error"
       },
 
@@ -262,82 +287,55 @@
         cancelled: "Отменено",
         waiting: "В обработке",
         paid: "Оплачено",
+        approved: "Одобрено",
+        pending: "Ожидает проверки",
         errorTitle: "Ошибка"
       }
-
     };
 
     let currentLang =
       localStorage.getItem("lang") || "th";
 
     function t() {
-      return LANG[currentLang];
+      return LANG[currentLang] || LANG.th;
     }
-
-    function applyLanguage() {
-
-      const x = t();
-
-      document.documentElement.lang =
-        currentLang;
-
-      document.getElementById("txtMiniApp").textContent = x.miniApp;
-      document.getElementById("txtPageTitle").textContent = x.pageTitle;
-      document.getElementById("txtPageDesc").textContent = x.pageDesc;
-      document.getElementById("txtHome").textContent = x.home;
-      document.getElementById("txtConnected").textContent = x.connected;
-      document.getElementById("loadingBox").textContent = x.loading;
-      document.getElementById("txtEmptyTitle").textContent = x.emptyTitle;
-      document.getElementById("txtEmptyDesc").textContent = x.emptyDesc;
-      document.getElementById("txtChooseEvent").textContent = x.chooseEvent;
-
-      document.getElementById("langSelect").value =
-        currentLang;
-    }
-
-    function changeLanguage(lang) {
-
-      currentLang = lang;
-
-      localStorage.setItem(
-        "lang",
-        lang
-      );
-
-      applyLanguage();
-
-      renderOrders();
-    }
-
-    /****************************************
-     * INIT
-     ****************************************/
 
     document.addEventListener(
       "DOMContentLoaded",
       async () => {
-
         try {
-
           initDarkMode();
-
           applyLanguage();
 
           if (!db) {
             throw new Error("ไม่พบ Supabase client");
           }
 
-          profile =
-            await AppLIFF.init();
+          try {
+            if (window.AppLIFF) {
+              profile = await AppLIFF.init();
+            }
+          } catch (liffErr) {
+            console.warn("LIFF init skipped:", liffErr);
+          }
 
-          if (!profile) return;
+          if (!profile) {
+            profile = {
+              userId: localStorage.getItem("line_user_id") || "",
+              displayName: localStorage.getItem("line_display_name") || "Guest",
+              pictureUrl: localStorage.getItem("line_picture") || ""
+            };
+          }
+
+          if (!profile.userId) {
+            throw new Error("ไม่พบ LINE user id กรุณาเปิดผ่าน LINE LIFF");
+          }
 
           showProfile();
 
           await loadOrders();
 
         } catch (err) {
-
           console.error(err);
 
           document
@@ -353,8 +351,34 @@
       }
     );
 
-    function showProfile() {
+    function applyLanguage() {
+      const x = t();
 
+      document.documentElement.lang = currentLang;
+
+      document.getElementById("txtMiniApp").textContent = x.miniApp;
+      document.getElementById("txtPageTitle").textContent = x.pageTitle;
+      document.getElementById("txtPageDesc").textContent = x.pageDesc;
+      document.getElementById("txtHome").textContent = x.home;
+      document.getElementById("txtConnected").textContent = x.connected;
+      document.getElementById("loadingBox").textContent = x.loading;
+      document.getElementById("txtEmptyTitle").textContent = x.emptyTitle;
+      document.getElementById("txtEmptyDesc").textContent = x.emptyDesc;
+      document.getElementById("txtChooseEvent").textContent = x.chooseEvent;
+
+      document.getElementById("langSelect").value = currentLang;
+    }
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+
+      localStorage.setItem("lang", lang);
+
+      applyLanguage();
+      renderOrders();
+    }
+
+    function showProfile() {
       document.getElementById("profileBox")
         .classList.remove("hidden");
 
@@ -367,34 +391,41 @@
     }
 
     async function loadOrders() {
+      document.getElementById("loadingBox").classList.remove("hidden");
+      document.getElementById("orderList").classList.add("hidden");
+      document.getElementById("emptyBox").classList.add("hidden");
 
-      const { data, error } =
-        await db
-          .from("orders")
-          .select(`
-            *,
-            order_items (
+      const { data, error } = await db
+        .from("orders")
+        .select(`
+          *,
+          order_items (
+            id,
+            photo_id,
+            event_id,
+            filename,
+            photo_url,
+            price,
+            photos (
               id,
-              photo_id,
-              price,
-              photos (
-                id,
-                filename,
-                preview_url,
-                watermark_url
-              )
+              filename,
+              preview_url,
+              watermark_url,
+              r2_preview_url,
+              r2_watermark_url,
+              r2_key,
+              preview_path,
+              watermark_path,
+              original_path
             )
-          `)
-          .eq(
-            "line_user_id",
-            profile.userId
           )
-          .order(
-            "created_at",
-            { ascending: false }
-          );
+        `)
+        .eq("line_user_id", profile.userId)
+        .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       orders = data || [];
 
@@ -406,7 +437,6 @@
     }
 
     function renderOrders() {
-
       const list =
         document.getElementById("orderList");
 
@@ -416,42 +446,35 @@
       list.innerHTML = "";
 
       if (!orders.length) {
-
         list.classList.add("hidden");
-
         empty.classList.remove("hidden");
-
         return;
       }
 
       empty.classList.add("hidden");
-
       list.classList.remove("hidden");
 
       orders.forEach(order => {
-
-        const items =
-          order.order_items || [];
+        const items = order.order_items || [];
 
         const total =
           Number(
             order.total_amount ||
             order.amount ||
-            0
+            items.reduce((sum, item) => sum + Number(item.price || 0), 0)
           );
 
-        const card =
-          document.createElement("article");
+        const card = document.createElement("article");
 
         card.className =
-          "bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm transition";
+          "bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm transition border border-slate-100 dark:border-slate-800";
 
         card.innerHTML = `
           <div class="flex justify-between gap-3">
 
-            <div>
+            <div class="min-w-0">
 
-              <p class="font-bold">
+              <p class="font-black truncate">
                 ${escapeHtml(order.order_no || order.id)}
               </p>
 
@@ -469,7 +492,7 @@
             ${renderPhotos(items)}
           </div>
 
-          <div class="mt-4 flex justify-between items-center">
+          <div class="mt-4 flex justify-between items-center gap-4">
 
             <div>
 
@@ -489,7 +512,7 @@
                 ${t().total}
               </p>
 
-              <p class="font-bold text-emerald-600">
+              <p class="font-black text-emerald-600">
                 ฿${formatMoney(total)}
               </p>
 
@@ -503,14 +526,11 @@
         `;
 
         list.appendChild(card);
-
       });
     }
 
     function renderPhotos(items) {
-
       if (!items.length) {
-
         return `
           <div class="col-span-4 text-center text-sm text-slate-400 py-6">
             ${t().noPhoto}
@@ -521,32 +541,78 @@
       return items
         .slice(0, 4)
         .map(item => {
-
-          const photo =
-            item.photos || {};
-
-          const img =
-            photo.watermark_url ||
-            photo.preview_url ||
-            "https://placehold.co/300x400?text=Photo";
+          const photo = item.photos || {};
+          const img = getOrderItemImage(item, photo);
 
           return `
             <img
-              src="${img}"
+              src="${escapeAttr(img)}"
               class="w-full h-20 object-cover rounded-2xl bg-slate-200 dark:bg-slate-800"
+              referrerpolicy="no-referrer"
+              onerror="this.onerror=null; this.src='https://placehold.co/300x400/111827/ffffff?text=Photo';"
             />
           `;
         })
         .join("");
     }
 
+    function getOrderItemImage(item, photo) {
+      const raw =
+        item.photo_url ||
+        photo.r2_watermark_url ||
+        photo.r2_preview_url ||
+        photo.watermark_url ||
+        photo.preview_url ||
+        photo.r2_key ||
+        photo.preview_path ||
+        photo.watermark_path ||
+        photo.original_path ||
+        "";
+
+      return normalizeImageUrl(raw);
+    }
+
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) {
+        return "https://placehold.co/300x400/111827/ffffff?text=Photo";
+      }
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_WORKER_URL) {
+        const base = String(CONFIG.R2_WORKER_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+
+        if (key.startsWith("events/")) {
+          return encodeURI(`${base}/file/${key}`);
+        }
+
+        return encodeURI(`${base}/file/${key}`);
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
+    }
+
     function actionButton(order) {
+      const status = String(order.status || "").toLowerCase();
 
-      if (order.status === "paid") {
-
+      if (
+        status === "approved" ||
+        status === "paid"
+      ) {
         return `
           <button
-            onclick="downloadOrder('${order.id}')"
+            onclick="downloadOrder('${escapeAttr(order.id)}')"
             class="w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold"
           >
             ${t().download}
@@ -554,8 +620,12 @@
         `;
       }
 
-      if (order.status === "waiting_approve") {
-
+      if (
+        status === "pending" ||
+        status === "waiting_approve" ||
+        status === "paid_pending" ||
+        status === "uploaded"
+      ) {
         return `
           <button
             disabled
@@ -566,14 +636,41 @@
         `;
       }
 
-      if (order.status === "rejected") {
-
+      if (status === "rejected") {
         return `
           <button
             disabled
             class="w-full bg-red-100 text-red-700 rounded-2xl py-3 font-bold"
           >
             ${t().rejected}
+          </button>
+        `;
+      }
+
+      if (
+        status === "pending_payment" ||
+        status === "unpaid"
+      ) {
+        return `
+          <button
+            disabled
+            class="w-full bg-yellow-100 text-yellow-700 rounded-2xl py-3 font-bold"
+          >
+            ${t().pendingPayment}
+          </button>
+        `;
+      }
+
+      if (
+        status === "cancelled" ||
+        status === "canceled"
+      ) {
+        return `
+          <button
+            disabled
+            class="w-full bg-slate-100 text-slate-600 rounded-2xl py-3 font-bold"
+          >
+            ${t().cancelled}
           </button>
         `;
       }
@@ -588,23 +685,33 @@
       `;
     }
 
-    /****************************************
-     * DOWNLOAD PAGE
-     ****************************************/
-
     function downloadOrder(orderId) {
-
       window.location.href =
         `download.html?order_id=${encodeURIComponent(orderId)}`;
     }
 
     function statusBadge(status) {
+      const s = String(status || "").toLowerCase();
 
       const map = {
+        pending: [
+          t().waitingApprove,
+          "bg-orange-100 text-orange-700"
+        ],
 
         waiting_approve: [
           t().waitingApprove,
           "bg-orange-100 text-orange-700"
+        ],
+
+        uploaded: [
+          t().waitingApprove,
+          "bg-orange-100 text-orange-700"
+        ],
+
+        approved: [
+          t().approved,
+          "bg-emerald-100 text-emerald-700"
         ],
 
         paid: [
@@ -622,34 +729,40 @@
           "bg-yellow-100 text-yellow-700"
         ],
 
+        unpaid: [
+          t().pendingPayment,
+          "bg-yellow-100 text-yellow-700"
+        ],
+
         cancelled: [
           t().cancelled,
           "bg-slate-100 text-slate-600"
-        ]
+        ],
 
+        canceled: [
+          t().cancelled,
+          "bg-slate-100 text-slate-600"
+        ]
       };
 
       const item =
-        map[status] || [
+        map[s] || [
           status || t().waiting,
           "bg-slate-100 text-slate-600"
         ];
 
       return `
-        <span class="rounded-full px-3 py-1 text-xs font-bold ${item[1]}">
-          ${item[0]}
+        <span class="rounded-full px-3 py-1 text-xs font-bold shrink-0 ${item[1]}">
+          ${escapeHtml(item[0])}
         </span>
       `;
     }
 
     function goHome() {
-
-      window.location.href =
-        "index.html";
+      window.location.href = "index.html";
     }
 
     function formatMoney(value) {
-
       return Number(value || 0)
         .toLocaleString(
           "th-TH",
@@ -661,7 +774,6 @@
     }
 
     function formatDate(dateString) {
-
       if (!dateString) return "-";
 
       return new Date(dateString)
@@ -681,12 +793,7 @@
         );
     }
 
-    /****************************************
-     * DARK MODE
-     ****************************************/
-
     function toggleDarkMode() {
-
       const html =
         document.documentElement;
 
@@ -704,7 +811,6 @@
     }
 
     function updateDarkButton() {
-
       const btn =
         document.getElementById("darkBtn");
 
@@ -722,12 +828,10 @@
     }
 
     function initDarkMode() {
-
       const saved =
         localStorage.getItem("darkMode");
 
       if (saved === "1") {
-
         document.documentElement
           .classList.add("dark");
       }
@@ -735,12 +839,7 @@
       updateDarkButton();
     }
 
-    /****************************************
-     * HELPERS
-     ****************************************/
-
     function escapeHtml(text) {
-
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -749,6 +848,43 @@
         .replace(/'/g, "&#039;");
     }
 
+    function escapeAttr(text) {
+      return escapeHtml(text);
+    }
+
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+    document.addEventListener("dragstart", e => {
+      if (e.target.tagName === "IMG") e.preventDefault();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "s"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "u"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "i"
+      ) {
+        e.preventDefault();
+      }
+    });
   </script>
 
 </body>
