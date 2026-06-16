@@ -16,7 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="../js/config.js?v=new-supabase-001"></script>
+  <script src="../js/config.js?v=new-supabase-002"></script>
 
   <style>
     html,
@@ -40,7 +40,6 @@
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white min-h-screen transition">
 
-  <!-- HEADER -->
   <header class="bg-black dark:bg-slate-900 text-white p-5 sticky top-0 z-40">
     <div class="max-w-5xl mx-auto flex items-start justify-between gap-4">
       <div class="min-w-0">
@@ -70,7 +69,6 @@
 
   <main class="max-w-5xl mx-auto p-4 pb-28">
 
-    <!-- FORM -->
     <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow mb-6 transition">
 
       <div class="flex items-center justify-between gap-3 mb-5">
@@ -178,8 +176,9 @@
                   id="coverPreview"
                   src=""
                   class="hidden w-full h-full object-cover"
+                  referrerpolicy="no-referrer"
                 />
-                <div id="coverPlaceholder" class="w-full h-full flex items-center justify-center text-slate-500 text-sm">
+                <div id="coverPlaceholder" class="w-full h-full flex items-center justify-center text-slate-500 text-sm text-center px-2">
                   ไม่มีรูปปก
                 </div>
               </div>
@@ -204,6 +203,8 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-3">
                   รูปปกจะอัปโหลดเข้า Cloudflare R2 หลังจากกดบันทึก
                 </p>
+
+                <p id="coverDebug" class="text-xs text-slate-500 dark:text-slate-400 mt-2 break-all"></p>
 
                 <input id="coverUrl" type="hidden" />
               </div>
@@ -240,7 +241,6 @@
 
     </section>
 
-    <!-- LIST -->
     <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow transition">
       <div class="flex items-center justify-between gap-3 mb-4">
         <div>
@@ -279,6 +279,7 @@
     const descriptionInput = document.getElementById("description");
     const coverInput = document.getElementById("coverInput");
     const coverUrlInput = document.getElementById("coverUrl");
+    const coverDebug = document.getElementById("coverDebug");
 
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
@@ -312,6 +313,24 @@
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "");
+    }
+
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) return "";
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
     }
 
     async function loadEvents() {
@@ -358,7 +377,7 @@
     }
 
     function renderEventItem(event) {
-      const cover = event.cover_url || "";
+      const cover = normalizeImageUrl(event.cover_url || "");
       const price = Number(event.price || CONFIG.DEFAULT_PHOTO_PRICE || 50);
       const status = event.status || "draft";
       const statusClass = getStatusClass(status);
@@ -370,7 +389,12 @@
             <div class="w-24 h-20 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0">
               ${
                 cover
-                  ? `<img src="${escapeAttr(cover)}" class="w-full h-full object-cover" onerror="this.style.display='none'">`
+                  ? `<img
+                      src="${escapeAttr(cover)}"
+                      class="w-full h-full object-cover"
+                      referrerpolicy="no-referrer"
+                      onerror="this.onerror=null; this.src='https://placehold.co/300x240/111827/ffffff?text=NO+COVER';"
+                    >`
                   : `<div class="w-full h-full flex items-center justify-center text-xs text-slate-500">No Cover</div>`
               }
             </div>
@@ -388,6 +412,10 @@
 
                   <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     วันที่: ${escapeHtml(event.event_date || "-")} | ราคา: ${price} บาท
+                  </p>
+
+                  <p class="text-[10px] text-slate-400 mt-1 break-all">
+                    cover: ${escapeHtml(event.cover_url || "-")}
                   </p>
                 </div>
 
@@ -454,12 +482,14 @@
       priceInput.value = event.price || CONFIG.DEFAULT_PHOTO_PRICE || 50;
       statusInput.value = event.status || "draft";
       descriptionInput.value = event.description || "";
-      coverUrlInput.value = event.cover_url || "";
+
+      const coverUrl = event.cover_url || "";
+      coverUrlInput.value = coverUrl;
 
       selectedCoverFile = null;
       coverInput.value = "";
 
-      setCoverPreview(event.cover_url || "");
+      setCoverPreview(coverUrl);
 
       document.getElementById("formTitle").textContent = "แก้ไข Event";
       document.getElementById("formSubtitle").textContent = `ID: ${event.id}`;
@@ -497,22 +527,41 @@
 
       selectedCoverFile = file;
 
-      const url = URL.createObjectURL(file);
-      setCoverPreview(url);
+      const localUrl = URL.createObjectURL(file);
+      setCoverPreview(localUrl);
+      coverDebug.textContent = `เลือกไฟล์ใหม่: ${file.name}`;
     }
 
     function setCoverPreview(url) {
       const img = document.getElementById("coverPreview");
       const placeholder = document.getElementById("coverPlaceholder");
 
-      if (url) {
-        img.src = url;
+      const finalUrl = normalizeImageUrl(url);
+
+      if (finalUrl) {
+        img.onload = function () {
+          img.classList.remove("hidden");
+          placeholder.classList.add("hidden");
+        };
+
+        img.onerror = function () {
+          console.warn("Cover preview load failed:", finalUrl);
+          img.classList.add("hidden");
+          placeholder.classList.remove("hidden");
+          placeholder.textContent = "โหลดรูปปกไม่ได้";
+        };
+
+        img.src = finalUrl;
         img.classList.remove("hidden");
         placeholder.classList.add("hidden");
+        coverDebug.textContent = finalUrl;
+
       } else {
         img.src = "";
         img.classList.add("hidden");
         placeholder.classList.remove("hidden");
+        placeholder.textContent = "ไม่มีรูปปก";
+        coverDebug.textContent = "";
       }
     }
 
@@ -567,7 +616,7 @@
               updated_at: new Date().toISOString()
             })
             .eq("id", id)
-            .select()
+            .select("*")
             .single();
 
           if (error) throw error;
@@ -585,7 +634,7 @@
               description,
               cover_url: coverUrl
             })
-            .select()
+            .select("*")
             .single();
 
           if (error) throw error;
@@ -593,21 +642,40 @@
         }
 
         if (selectedCoverFile) {
+          console.log("เริ่มอัปโหลดรูปปก:", selectedCoverFile.name);
+
           const uploaded = await uploadCoverToR2(selectedCoverFile, savedEvent.id);
+
+          if (!uploaded?.key || !uploaded?.publicUrl) {
+            throw new Error("R2 Worker ส่ง key หรือ publicUrl กลับมาไม่ครบ");
+          }
+
           coverUrl = uploaded.publicUrl;
 
-          const { data: updated, error: coverError } = await sb
+          console.log("Cover uploaded:", uploaded);
+
+          const { data: updatedEvent, error: coverError } = await sb
             .from("events")
             .update({
               cover_url: coverUrl,
               updated_at: new Date().toISOString()
             })
             .eq("id", savedEvent.id)
-            .select()
+            .select("*")
             .single();
 
-          if (coverError) throw coverError;
-          savedEvent = updated;
+          if (coverError) {
+            console.error("Update cover_url error:", coverError);
+            throw new Error("บันทึก cover_url ไม่สำเร็จ: " + coverError.message);
+          }
+
+          savedEvent = updatedEvent;
+          coverUrlInput.value = coverUrl;
+          selectedCoverFile = null;
+          coverInput.value = "";
+          setCoverPreview(coverUrl);
+
+          console.log("บันทึก cover_url สำเร็จ:", savedEvent.cover_url);
         }
 
         Swal.close();
@@ -637,8 +705,22 @@
     }
 
     async function uploadCoverToR2(file, eventId) {
+      if (!file) {
+        throw new Error("ไม่พบไฟล์รูปปก");
+      }
+
+      if (!eventId) {
+        throw new Error("ไม่พบ Event ID สำหรับอัปโหลดรูปปก");
+      }
+
       if (window.uploadToR2) {
-        return await window.uploadToR2(file, eventId, "cover");
+        const data = await window.uploadToR2(file, eventId, "cover");
+
+        if (!data?.key || !data?.publicUrl) {
+          throw new Error("uploadToR2 ส่ง key หรือ publicUrl กลับมาไม่ครบ");
+        }
+
+        return data;
       }
 
       if (!CONFIG.R2_WORKER_URL) {
@@ -659,6 +741,10 @@
 
       if (!res.ok || !data?.success) {
         throw new Error(data?.message || "Upload cover to R2 failed");
+      }
+
+      if (!data.key || !data.publicUrl) {
+        throw new Error("R2 Worker ส่ง key หรือ publicUrl กลับมาไม่ครบ");
       }
 
       return data;
@@ -807,10 +893,6 @@
     function goUpload() {
       window.location.href = "upload.html";
     }
-
-    /****************************************
-     * DARK MODE
-     ****************************************/
 
     function toggleDarkMode() {
       const html = document.documentElement;
