@@ -13,13 +13,12 @@
     };
   </script>
 
-  <!-- <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="js/config.js"></script>
-  <script src="js/liff-helper.js"></script>
+  <script src="js/config.js?v=new-supabase-002"></script>
+  <script src="js/liff-helper.js?v=new-supabase-002"></script>
 
   <style>
     * {
@@ -72,6 +71,18 @@
       white-space: normal;
       word-break: break-word;
     }
+
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
   </style>
 </head>
 
@@ -119,7 +130,10 @@
             🌙 Dark
           </button>
 
-          <button onclick="goOrder()" class="w-full max-w-full rounded-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-3 py-2 text-xs sm:text-sm font-bold shadow-sm active:scale-95 leading-tight text-center">
+          <button
+            onclick="goOrder()"
+            class="w-full max-w-full rounded-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-3 py-2 text-xs sm:text-sm font-bold shadow-sm active:scale-95 leading-tight text-center"
+          >
             <span id="txtMyOrders">ออเดอร์ของฉัน</span>
           </button>
 
@@ -210,13 +224,11 @@
   </nav>
 
   <script>
-
     /****************************************
      * LANGUAGE
      ****************************************/
 
     const LANG = {
-
       th: {
         miniApp: "LINE Mini App",
         title: "Photo Store",
@@ -261,39 +273,36 @@
         connected: "LINE подключён",
         viewPhotos: "Смотреть фото →"
       }
-
     };
 
-    let currentLang =
-      localStorage.getItem("lang") || "th";
-
+    let currentLang = localStorage.getItem("lang") || "th";
     let profile = null;
     let allEvents = [];
     let filteredEvents = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
-
       try {
-
         initDarkMode();
         applyLanguage();
 
-        profile = await AppLIFF.init();
-
-        if (!profile) return;
-
-        showProfile();
-
-        await saveUser();
+        try {
+          if (window.AppLIFF) {
+            profile = await AppLIFF.init();
+            if (profile) {
+              showProfile();
+              await saveUser();
+            }
+          }
+        } catch (liffErr) {
+          console.warn("LIFF init skipped:", liffErr);
+        }
 
         await loadEvents();
 
       } catch (err) {
-
         console.error(err);
 
-        document.getElementById("loadingBox")
-          .classList.add("hidden");
+        document.getElementById("loadingBox").classList.add("hidden");
 
         Swal.fire(
           "เกิดข้อผิดพลาด",
@@ -304,64 +313,35 @@
     });
 
     function applyLanguage() {
-
       const t = LANG[currentLang];
 
-      document.getElementById("txtMiniApp").textContent =
-        t.miniApp;
+      document.getElementById("txtMiniApp").textContent = t.miniApp;
+      document.getElementById("txtTitle").textContent = t.title;
+      document.getElementById("txtSubtitle").textContent = t.subtitle;
+      document.getElementById("txtMyOrders").textContent = t.myOrders;
+      document.getElementById("txtConnected").textContent = t.connected;
+      document.getElementById("searchInput").placeholder = t.searchPlaceholder;
+      document.getElementById("txtNoEvent").textContent = t.noEvent;
+      document.getElementById("langSelect").value = currentLang;
 
-      document.getElementById("txtTitle").textContent =
-        t.title;
+      const navs = document.querySelectorAll("nav a");
 
-      document.getElementById("txtSubtitle").textContent =
-        t.subtitle;
-
-      document.getElementById("txtMyOrders").textContent =
-        t.myOrders;
-
-      document.getElementById("txtConnected").textContent =
-        t.connected;
-
-      document.getElementById("searchInput").placeholder =
-        t.searchPlaceholder;
-
-      document.getElementById("txtNoEvent").textContent =
-        t.noEvent;
-
-      // document.getElementById("txtNoEventDesc").textContent =
-      //   t.noEventDesc;
-
-      document.getElementById("langSelect").value =
-        currentLang;
-
-      const navs =
-        document.querySelectorAll("nav a");
-
-      if (navs[0]) navs[0].innerHTML =
-        `🏠<br>${t.home}`;
-
-      if (navs[1]) navs[1].innerHTML =
-        `🛒<br>${t.cart}`;
-
-      if (navs[2]) navs[2].innerHTML =
-        `🧾<br>${t.order}`;
+      if (navs[0]) navs[0].innerHTML = `🏠<br>${t.home}`;
+      if (navs[1]) navs[1].innerHTML = `🛒<br>${t.cart}`;
+      if (navs[2]) navs[2].innerHTML = `🧾<br>${t.order}`;
     }
 
     function changeLanguage(lang) {
-
       currentLang = lang;
-
       localStorage.setItem("lang", lang);
-
       applyLanguage();
-
       renderEvents();
     }
 
     function showProfile() {
+      if (!profile) return;
 
-      document.getElementById("profileBox")
-        .classList.remove("hidden");
+      document.getElementById("profileBox").classList.remove("hidden");
 
       document.getElementById("lineName").textContent =
         profile.displayName || "LINE User";
@@ -372,73 +352,71 @@
     }
 
     async function saveUser() {
+      if (!profile?.userId) return;
 
       const { error } = await sb
         .from("users")
         .upsert({
           line_user_id: profile.userId,
-          line_display_name: profile.displayName || null,
-          line_picture: profile.pictureUrl || null,
+          display_name: profile.displayName || null,
+          picture_url: profile.pictureUrl || null,
           updated_at: new Date().toISOString()
         }, {
           onConflict: "line_user_id"
         });
 
       if (error) {
-        console.warn(
-          "users upsert error:",
-          error.message
-        );
+        console.warn("users upsert error:", error.message);
       }
     }
 
     async function loadEvents() {
+      const loadingBox = document.getElementById("loadingBox");
+      const grid = document.getElementById("eventGrid");
+      const empty = document.getElementById("emptyBox");
 
-     const { data, error } = await sb
-  .from("events")
-  .select("*")
-  .eq("status", "published")
-  .order("created_at", {
-    ascending: false
-  });
-      if (error) throw error;
+      loadingBox.classList.remove("hidden");
+      grid.classList.add("hidden");
+      empty.classList.add("hidden");
+
+      const { data, error } = await sb
+        .from("events")
+        .select("*")
+        .in("status", ["published", "active"])
+        .order("created_at", {
+          ascending: false
+        });
+
+      loadingBox.classList.add("hidden");
+
+      if (error) {
+        console.error("loadEvents error:", error);
+        throw error;
+      }
 
       allEvents = data || [];
       filteredEvents = [...allEvents];
-
-      document.getElementById("loadingBox")
-        .classList.add("hidden");
 
       renderEvents();
     }
 
     function renderEvents() {
-
-      const grid =
-        document.getElementById("eventGrid");
-
-      const empty =
-        document.getElementById("emptyBox");
+      const grid = document.getElementById("eventGrid");
+      const empty = document.getElementById("emptyBox");
 
       grid.innerHTML = "";
 
       if (!filteredEvents.length) {
-
         grid.classList.add("hidden");
-
         empty.classList.remove("hidden");
-
         return;
       }
 
       empty.classList.add("hidden");
-
       grid.classList.remove("hidden");
 
       filteredEvents.forEach(event => {
-
-        const cover =
-          getEventCover(event);
+        const cover = getEventCover(event);
 
         const title =
           event.name ||
@@ -450,21 +428,19 @@
           event.location ||
           LANG[currentLang].viewPhotos;
 
-        const dateText =
-          formatDate(
-            event.event_date ||
-            event.created_at
-          );
+        const dateText = formatDate(
+          event.event_date ||
+          event.created_at
+        );
 
-        const price =
-          Number(
-            event.photo_price ||
-            CONFIG.DEFAULT_PHOTO_PRICE ||
-            0
-          );
+        const price = Number(
+          event.price ||
+          event.photo_price ||
+          CONFIG.DEFAULT_PHOTO_PRICE ||
+          0
+        );
 
-        const card =
-          document.createElement("article");
+        const card = document.createElement("article");
 
         card.className =
           "overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.99] transition";
@@ -475,13 +451,15 @@
             class="block w-full text-left"
           >
 
-            <div class="aspect-[16/10] bg-slate-200 dark:bg-slate-800 overflow-hidden">
+            <div class="aspect-[16/10] bg-slate-200 dark:bg-slate-800 overflow-hidden relative">
 
               <img
-                src="${cover}"
+                src="${escapeAttr(cover)}"
                 alt="${escapeHtml(title)}"
                 class="w-full h-full object-cover"
                 loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="this.onerror=null; this.src='https://placehold.co/1200x750/111827/ffffff?text=NO+COVER';"
               />
 
             </div>
@@ -526,71 +504,83 @@
         `;
 
         grid.appendChild(card);
-
       });
     }
 
     function searchEvents() {
-
       const keyword =
         document.getElementById("searchInput")
-        .value
-        .trim()
-        .toLowerCase();
+          .value
+          .trim()
+          .toLowerCase();
 
       if (!keyword) {
-
         filteredEvents = [...allEvents];
-
       } else {
+        filteredEvents = allEvents.filter(event => {
+          const text = [
+            event.name,
+            event.title,
+            event.description,
+            event.location,
+            event.id,
+            event.slug
+          ].filter(Boolean)
+           .join(" ")
+           .toLowerCase();
 
-        filteredEvents =
-          allEvents.filter(event => {
-
-            const text = [
-
-              event.name,
-              event.title,
-              event.description,
-              event.location,
-              event.id
-
-            ].filter(Boolean)
-             .join(" ")
-             .toLowerCase();
-
-            return text.includes(keyword);
-          });
+          return text.includes(keyword);
+        });
       }
 
       renderEvents();
     }
 
     function openEvent(eventId) {
-
       window.location.href =
         `event.html?event=${encodeURIComponent(eventId)}`;
     }
 
     function goOrder() {
-
-      window.location.href =
-        "order.html";
+      window.location.href = "order.html";
     }
 
     function getEventCover(event) {
-
-      return (
+      const raw =
         event.cover_url ||
         event.thumbnail_url ||
         event.image_url ||
         event.banner_url ||
-        "https://placehold.co/1200x750?text=PHOTO+EVENT"
-      );
+        "";
+
+      if (!raw) {
+        return "https://placehold.co/1200x750/111827/ffffff?text=PHOTO+EVENT";
+      }
+
+      return normalizeImageUrl(raw);
+    }
+
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) {
+        return "https://placehold.co/1200x750/111827/ffffff?text=PHOTO+EVENT";
+      }
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
     }
 
     function formatDate(dateString) {
-
       if (!dateString) return "";
 
       return new Date(dateString)
@@ -602,7 +592,6 @@
     }
 
     function formatMoney(value) {
-
       return Number(value || 0)
         .toLocaleString("th-TH", {
           minimumFractionDigits: 0,
@@ -615,14 +604,11 @@
      ****************************************/
 
     function toggleDarkMode() {
-
-      const html =
-        document.documentElement;
+      const html = document.documentElement;
 
       html.classList.toggle("dark");
 
-      const isDark =
-        html.classList.contains("dark");
+      const isDark = html.classList.contains("dark");
 
       localStorage.setItem(
         "darkMode",
@@ -633,9 +619,7 @@
     }
 
     function updateDarkButton() {
-
-      const btn =
-        document.getElementById("darkBtn");
+      const btn = document.getElementById("darkBtn");
 
       if (!btn) return;
 
@@ -651,21 +635,16 @@
     }
 
     function initDarkMode() {
-
-      const saved =
-        localStorage.getItem("darkMode");
+      const saved = localStorage.getItem("darkMode");
 
       if (saved === "1") {
-
-        document.documentElement
-          .classList.add("dark");
+        document.documentElement.classList.add("dark");
       }
 
       updateDarkButton();
     }
 
     function escapeHtml(text) {
-
       return String(text ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -674,38 +653,25 @@
         .replace(/'/g, "&#039;");
     }
 
+    function escapeAttr(text) {
+      return escapeHtml(text);
+    }
   </script>
 
   <!-- ห้ามคลิกขวา -->
   <script>
     document.addEventListener(
-      'contextmenu',
+      "contextmenu",
       function(e) {
         e.preventDefault();
       }
     );
   </script>
 
-  <!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-  <style>
-    img {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    body {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-  </style>
-
   <!-- ปิดการลากรูป -->
   <script>
     document.addEventListener(
-      'dragstart',
+      "dragstart",
       function(e) {
         e.preventDefault();
       }
@@ -714,44 +680,36 @@
 
   <!-- ปิดปุ่มลัดบางอย่าง -->
   <script>
-
     document.addEventListener(
-      'keydown',
+      "keydown",
       function(e) {
-
-        // F12
         if (e.key === "F12") {
           e.preventDefault();
         }
 
-        // Ctrl+S / Cmd+S
         if (
           (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === 's'
+          e.key.toLowerCase() === "s"
         ) {
           e.preventDefault();
         }
 
-        // Ctrl+U
         if (
           (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === 'u'
+          e.key.toLowerCase() === "u"
         ) {
           e.preventDefault();
         }
 
-        // Ctrl+Shift+I
         if (
           (e.ctrlKey || e.metaKey) &&
           e.shiftKey &&
-          e.key.toLowerCase() === 'i'
+          e.key.toLowerCase() === "i"
         ) {
           e.preventDefault();
         }
-
       }
     );
-
   </script>
 
 </body>
