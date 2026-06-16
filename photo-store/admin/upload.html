@@ -16,35 +16,66 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="../js/config.js"></script>
+  <script src="../js/config.js?v=new-supabase-003"></script>
+
+  <style>
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select {
+      touch-action: manipulation;
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
 </head>
 
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white min-h-screen transition">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-white min-h-screen transition safe-bottom">
 
-  <header class="bg-black dark:bg-slate-900 text-white p-5">
-    <div class="max-w-3xl mx-auto flex items-start justify-between gap-4">
-      <div>
+  <header class="bg-black dark:bg-slate-900 text-white p-5 sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto flex items-start justify-between gap-4">
+      <div class="min-w-0">
         <p class="text-xs text-slate-400">ADMIN PANEL</p>
-        <h1 class="text-2xl font-bold">PHOTO UPLOAD</h1>
-        <p class="text-sm text-slate-400 mt-1">อัปโหลดรูปภาพเข้า Event ผ่าน Cloudflare R2</p>
+        <h1 class="text-2xl font-black leading-tight">PHOTO UPLOAD</h1>
+        <p class="text-sm text-slate-400 mt-1">
+          อัปโหลดรูปภาพเข้า Event ผ่าน Cloudflare R2 Worker
+        </p>
       </div>
 
-      <button
-        onclick="toggleDarkMode()"
-        id="darkBtn"
-        class="bg-white/10 hover:bg-white/20 rounded-2xl px-4 py-3 font-bold transition"
-      >
-        🌙 Dark
-      </button>
+      <div class="flex flex-col gap-2 shrink-0">
+        <button
+          onclick="toggleDarkMode()"
+          id="darkBtn"
+          class="bg-white/10 hover:bg-white/20 rounded-2xl px-4 py-3 font-bold transition"
+        >
+          🌙 Dark
+        </button>
+
+        <button
+          onclick="goCreateEvent()"
+          class="bg-white text-slate-900 rounded-2xl px-4 py-3 font-bold transition"
+        >
+          EVENT
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto p-4">
+  <main class="max-w-4xl mx-auto p-4 pb-28">
 
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow transition">
+    <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow transition">
 
       <div class="mb-4">
-        <label class="font-semibold block mb-2">เลือก Event</label>
+        <label class="font-semibold block mb-2">
+          เลือก Event
+        </label>
 
         <select
           id="eventSelect"
@@ -56,20 +87,39 @@
         <p id="eventHelp" class="text-xs text-slate-500 dark:text-slate-400 mt-2"></p>
       </div>
 
-      <div class="mb-4">
-        <label class="font-semibold block mb-2">ราคา</label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
-        <input
-          type="number"
-          id="price"
-          value="100"
-          min="0"
-          class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white rounded-xl p-3"
-        />
+        <div>
+          <label class="font-semibold block mb-2">
+            ราคา / รูป
+          </label>
+
+          <input
+            type="number"
+            id="price"
+            value="50"
+            min="0"
+            class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white rounded-xl p-3"
+          />
+        </div>
+
+        <div>
+          <label class="font-semibold block mb-2">
+            จำนวนไฟล์ที่เลือก
+          </label>
+
+          <div
+            id="fileCountBox"
+            class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-slate-500 dark:text-slate-400"
+          >
+            ยังไม่ได้เลือกรูป
+          </div>
+        </div>
+
       </div>
 
       <div
-        class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center bg-slate-50 dark:bg-slate-800 transition"
+        class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center bg-slate-50 dark:bg-slate-800 transition"
       >
         <input
           type="file"
@@ -80,16 +130,14 @@
         />
 
         <button
-          id="selectBtn"
-          type="button"
-          onclick="openFilePicker()"
-          class="bg-black dark:bg-white dark:text-slate-900 text-white px-6 py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          onclick="document.getElementById('fileInput').click()"
+          class="bg-black dark:bg-white dark:text-slate-900 text-white px-6 py-4 rounded-2xl font-black"
         >
           เลือกรูปภาพ
         </button>
 
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-3">
-          รองรับหลายไฟล์ / อัปโหลดเข้า Cloudflare R2
+          รองรับหลายไฟล์ / อัปโหลดเข้า R2 / URL เปิดผ่าน Worker /file
         </p>
 
         <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">
@@ -98,9 +146,29 @@
         </div>
       </div>
 
-      <div id="uploadStatus" class="mt-5 space-y-2"></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4">
+          <p class="text-xs text-slate-500 dark:text-slate-400">สำเร็จ</p>
+          <p id="successCountText" class="text-2xl font-black text-emerald-600">0</p>
+        </div>
 
-    </div>
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4">
+          <p class="text-xs text-slate-500 dark:text-slate-400">ไม่สำเร็จ</p>
+          <p id="failCountText" class="text-2xl font-black text-red-600">0</p>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4">
+          <p class="text-xs text-slate-500 dark:text-slate-400">รวม</p>
+          <p id="totalCountText" class="text-2xl font-black">0</p>
+        </div>
+      </div>
+
+      <div
+        id="uploadStatus"
+        class="mt-5 space-y-2"
+      ></div>
+
+    </section>
 
   </main>
 
@@ -110,9 +178,11 @@
     const uploadStatus = document.getElementById("uploadStatus");
     const eventHelp = document.getElementById("eventHelp");
     const workerUrlText = document.getElementById("workerUrlText");
-    const selectBtn = document.getElementById("selectBtn");
+    const fileCountBox = document.getElementById("fileCountBox");
 
-    let r2Ready = false;
+    const successCountText = document.getElementById("successCountText");
+    const failCountText = document.getElementById("failCountText");
+    const totalCountText = document.getElementById("totalCountText");
 
     const supabaseClient =
       window.sb ||
@@ -122,49 +192,24 @@
         CONFIG.SUPABASE_ANON_KEY
       );
 
+    let successCount = 0;
+    let failCount = 0;
+    let totalCount = 0;
+
     document.addEventListener("DOMContentLoaded", async () => {
       initDarkMode();
 
-      workerUrlText.textContent = getR2WorkerUrl() || "ยังไม่ได้ตั้งค่า R2_WORKER_URL";
+      workerUrlText.textContent =
+        CONFIG.R2_WORKER_URL || "ยังไม่ได้ตั้งค่า R2_WORKER_URL";
 
-      r2Ready = await checkR2Config();
-      updateSelectButton();
+      const ok = await checkR2Config();
 
       await loadEvents();
+
+      if (!ok) {
+        console.warn("R2 Worker ยังไม่พร้อม แต่ยังให้โหลดหน้าได้");
+      }
     });
-
-    function getR2WorkerUrl() {
-      return String(CONFIG.R2_WORKER_URL || "").replace(/\/+$/, "");
-    }
-
-    function getPublicBaseUrl() {
-      return String(CONFIG.R2_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
-    }
-
-    function updateSelectButton() {
-      if (!selectBtn) return;
-
-      if (!r2Ready) {
-        selectBtn.disabled = true;
-        selectBtn.textContent = "R2 ยังไม่พร้อม";
-      } else {
-        selectBtn.disabled = false;
-        selectBtn.textContent = "เลือกรูปภาพ";
-      }
-    }
-
-    function openFilePicker() {
-      if (!r2Ready) {
-        Swal.fire({
-          icon: "warning",
-          title: "R2 ยังไม่พร้อมใช้งาน",
-          text: "กรุณาตรวจสอบค่า R2_WORKER_URL / R2_PUBLIC_BASE_URL / Worker"
-        });
-        return;
-      }
-
-      fileInput.click();
-    }
 
     async function checkR2Config() {
       if (!CONFIG.R2_ENABLED) {
@@ -176,7 +221,7 @@
         return false;
       }
 
-      if (!getR2WorkerUrl()) {
+      if (!CONFIG.R2_WORKER_URL) {
         Swal.fire({
           icon: "warning",
           title: "ไม่พบ R2_WORKER_URL",
@@ -185,31 +230,16 @@
         return false;
       }
 
-      if (!getPublicBaseUrl()) {
-        Swal.fire({
-          icon: "warning",
-          title: "ไม่พบ R2_PUBLIC_BASE_URL",
-          text: "กรุณาเพิ่ม R2_PUBLIC_BASE_URL ใน config.js"
-        });
-        return false;
-      }
-
       try {
-        const res = await fetch(`${getR2WorkerUrl()}/health`, {
-          method: "GET",
-          cache: "no-store"
-        });
+        const res = await fetch(`${CONFIG.R2_WORKER_URL}/health`);
+        const data = await res.json().catch(() => null);
 
-        let data = null;
-
-        try {
-          data = await res.json();
-        } catch (err) {
-          throw new Error("Worker /health ไม่ได้ส่ง JSON กลับมา");
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.message || "R2 Worker ไม่พร้อมใช้งาน");
         }
 
-        if (!res.ok || data.success !== true) {
-          throw new Error(data.message || "R2 Worker ไม่พร้อมใช้งาน");
+        if (data.hasBucketBinding === false) {
+          throw new Error("Worker ยังไม่ได้ bind R2_BUCKET");
         }
 
         console.log("R2 Worker Health:", data);
@@ -221,7 +251,7 @@
         Swal.fire({
           icon: "error",
           title: "เชื่อมต่อ R2 Worker ไม่ได้",
-          text: err.message
+          text: err.message || String(err)
         });
 
         return false;
@@ -234,9 +264,9 @@
 
       const { data, error } = await supabaseClient
         .from("events")
-        .select("id,title,name,slug,event_date,status,price")
+        .select("*")
         .in("status", ["published", "active", "draft"])
-        .order("event_date", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Load events error:", error);
@@ -258,10 +288,7 @@
       }
 
       eventSelect.innerHTML = data.map(event => `
-        <option
-          value="${escapeHtml(event.id)}"
-          data-price="${escapeHtml(event.price || "")}"
-        >
+        <option value="${escapeAttr(event.id)}" data-price="${escapeAttr(event.price || CONFIG.DEFAULT_PHOTO_PRICE || 50)}">
           ${escapeHtml(event.title || event.name || event.slug || event.id)}
         </option>
       `).join("");
@@ -278,15 +305,31 @@
       eventHelp.textContent = `พบ Event ทั้งหมด ${data.length} รายการ`;
     }
 
-    eventSelect.addEventListener("change", setPriceFromSelectedEvent);
+    eventSelect.addEventListener("change", () => {
+      setPriceFromSelectedEvent();
+    });
 
     function setPriceFromSelectedEvent() {
       const selected = eventSelect.options[eventSelect.selectedIndex];
       const eventPrice = selected?.dataset?.price;
 
-      if (eventPrice && Number(eventPrice) > 0) {
-        document.getElementById("price").value = Number(eventPrice);
+      if (eventPrice) {
+        document.getElementById("price").value = Number(eventPrice || CONFIG.DEFAULT_PHOTO_PRICE || 50);
       }
+    }
+
+    function resetCounters(total = 0) {
+      successCount = 0;
+      failCount = 0;
+      totalCount = total;
+
+      updateCounters();
+    }
+
+    function updateCounters() {
+      successCountText.textContent = successCount;
+      failCountText.textContent = failCount;
+      totalCountText.textContent = totalCount;
     }
 
     async function uploadFileToR2(file, eventId, folder = "preview") {
@@ -294,7 +337,7 @@
         throw new Error("R2 ยังไม่ได้เปิดใช้งานใน config.js");
       }
 
-      if (!getR2WorkerUrl()) {
+      if (!CONFIG.R2_WORKER_URL) {
         throw new Error("ไม่พบ R2_WORKER_URL ใน config.js");
       }
 
@@ -303,36 +346,26 @@
       formData.append("event_id", eventId);
       formData.append("folder", folder);
 
-      const res = await fetch(`${getR2WorkerUrl()}/upload`, {
+      const res = await fetch(`${CONFIG.R2_WORKER_URL}/upload`, {
         method: "POST",
         body: formData
       });
 
-      let data = null;
+      const data = await res.json().catch(() => null);
 
-      try {
-        data = await res.json();
-      } catch (err) {
-        throw new Error("Worker ไม่ได้ส่ง JSON กลับมา");
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || "Upload to R2 failed");
       }
 
-      if (!res.ok || data.success !== true) {
-        throw new Error(data.message || data.error || "Upload to R2 failed");
+      if (!data.key || !data.publicUrl) {
+        throw new Error("Worker ส่งข้อมูล key หรือ publicUrl ไม่ครบ");
       }
 
-      if (!data.key) {
-        throw new Error("Worker ส่ง key กลับมาไม่ครบ");
+      if (!String(data.publicUrl).includes("/file/events/")) {
+        console.warn("publicUrl ไม่ใช่ Worker /file URL:", data.publicUrl);
       }
 
-      const publicUrl =
-        data.publicUrl ||
-        data.url ||
-        `${getPublicBaseUrl()}/${String(data.key).replace(/^\/+/, "")}`;
-
-      return {
-        ...data,
-        publicUrl
-      };
+      return data;
     }
 
     async function savePhotoToSupabase({
@@ -342,101 +375,54 @@
       r2Key,
       publicUrl
     }) {
-      const fullPayload = {
-        event_id: eventId,
-
-        original_path: r2Key,
-        preview_path: r2Key,
-        watermark_path: r2Key,
-
-        preview_url: publicUrl,
-        watermark_url: publicUrl,
-
-        storage_provider: "r2",
-        r2_key: r2Key,
-        r2_preview_url: publicUrl,
-        r2_watermark_url: publicUrl,
-        r2_original_key: r2Key,
-
-        filename: file.name,
-        price: price,
-        status: "active"
-      };
-
-      const minimalPayload = {
-        event_id: eventId,
-
-        original_path: r2Key,
-        preview_path: r2Key,
-        watermark_path: r2Key,
-
-        preview_url: publicUrl,
-        watermark_url: publicUrl,
-
-        filename: file.name,
-        price: price,
-        status: "active"
-      };
-
-      let result = await supabaseClient
+      const { data, error } = await supabaseClient
         .from("photos")
-        .insert(fullPayload)
-        .select()
+        .insert({
+          event_id: eventId,
+
+          original_path: r2Key,
+          preview_path: r2Key,
+          watermark_path: r2Key,
+
+          preview_url: publicUrl,
+          watermark_url: publicUrl,
+
+          storage_provider: "r2",
+          r2_key: r2Key,
+          r2_preview_url: publicUrl,
+          r2_watermark_url: publicUrl,
+          r2_original_key: r2Key,
+
+          filename: file.name,
+          price: price,
+          status: "active"
+        })
+        .select("*")
         .single();
 
-      if (!result.error) {
-        return result.data;
+      if (error) {
+        throw new Error(error.message || "บันทึกข้อมูลรูปลง Supabase ไม่สำเร็จ");
       }
 
-      console.warn("Insert full payload failed:", result.error);
-
-      const msg = String(result.error.message || "");
-
-      const maybeMissingR2Columns =
-        msg.includes("storage_provider") ||
-        msg.includes("r2_key") ||
-        msg.includes("r2_preview_url") ||
-        msg.includes("r2_watermark_url") ||
-        msg.includes("r2_original_key") ||
-        msg.includes("column");
-
-      if (!maybeMissingR2Columns) {
-        throw new Error(result.error.message || "บันทึกข้อมูลรูปลง Supabase ไม่สำเร็จ");
-      }
-
-      result = await supabaseClient
-        .from("photos")
-        .insert(minimalPayload)
-        .select()
-        .single();
-
-      if (result.error) {
-        throw new Error(result.error.message || "บันทึกข้อมูลรูปลง Supabase ไม่สำเร็จ");
-      }
-
-      return result.data;
+      return data;
     }
 
-    async function uploadFile(file) {
+    async function uploadFile(file, index, total) {
       const eventId = eventSelect.value;
-      const price = Number(document.getElementById("price").value || 0);
+      const price = Number(document.getElementById("price").value || CONFIG.DEFAULT_PHOTO_PRICE || 50);
 
       if (!eventId) {
         throw new Error("กรุณาเลือก Event");
       }
 
-      if (!file.type.startsWith("image/")) {
-        throw new Error(`${file.name} ไม่ใช่ไฟล์รูปภาพ`);
-      }
-
       const statusDiv = document.createElement("div");
 
       statusDiv.className =
-        "bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-sm";
+        "bg-slate-100 dark:bg-slate-800 rounded-2xl p-3 text-sm border border-slate-200 dark:border-slate-700";
 
       statusDiv.innerHTML = `
-        <div class="font-semibold">กำลังอัปโหลดเข้า R2</div>
-        <div>${escapeHtml(file.name)}</div>
+        <div class="font-bold">กำลังอัปโหลดเข้า R2 ${index}/${total}</div>
+        <div class="break-all">${escapeHtml(file.name)}</div>
       `;
 
       uploadStatus.prepend(statusDiv);
@@ -456,23 +442,38 @@
         });
 
         statusDiv.innerHTML = `
-          <div class="font-semibold">✅ อัปโหลดสำเร็จ</div>
-          <div>${escapeHtml(file.name)}</div>
-          <div class="mt-1 text-xs break-all">
-            Key: ${escapeHtml(r2Key)}
+          <div class="flex gap-3 items-start">
+            <div class="w-20 h-16 rounded-xl overflow-hidden bg-slate-200 shrink-0">
+              <img
+                src="${escapeAttr(publicUrl)}"
+                class="w-full h-full object-cover"
+                onerror="this.style.display='none'"
+              />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="font-bold">✅ อัปโหลดสำเร็จ</div>
+              <div class="break-all">${escapeHtml(file.name)}</div>
+              <div class="mt-1 text-xs break-all">
+                Key: ${escapeHtml(r2Key)}
+              </div>
+              <a
+                href="${escapeAttr(publicUrl)}"
+                target="_blank"
+                rel="noopener"
+                class="underline text-green-800 dark:text-green-200 text-xs break-all"
+              >
+                เปิดรูปผ่าน Worker
+              </a>
+            </div>
           </div>
-          <a
-            href="${escapeAttr(publicUrl)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="underline text-green-800 dark:text-green-200 text-xs break-all"
-          >
-            เปิดรูปที่ R2
-          </a>
         `;
 
         statusDiv.className =
-          "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200 rounded-xl p-3 text-sm";
+          "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200 rounded-2xl p-3 text-sm border border-green-200 dark:border-green-800";
+
+        successCount++;
+        updateCounters();
 
         return {
           success: true,
@@ -485,15 +486,18 @@
         console.error("Upload file error:", err);
 
         statusDiv.innerHTML = `
-          <div class="font-semibold">❌ อัปโหลดไม่สำเร็จ</div>
-          <div>${escapeHtml(file.name)}</div>
+          <div class="font-bold">❌ อัปโหลดไม่สำเร็จ</div>
+          <div class="break-all">${escapeHtml(file.name)}</div>
           <div class="mt-1 text-xs break-all">
-            ${escapeHtml(err.message)}
+            ${escapeHtml(err.message || String(err))}
           </div>
         `;
 
         statusDiv.className =
-          "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200 rounded-xl p-3 text-sm";
+          "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200 rounded-2xl p-3 text-sm border border-red-200 dark:border-red-800";
+
+        failCount++;
+        updateCounters();
 
         throw err;
       }
@@ -512,11 +516,8 @@
         return;
       }
 
-      if (!r2Ready) {
-        Swal.fire("R2 ยังไม่พร้อม", "กรุณาตรวจสอบ Worker ก่อนอัปโหลด", "warning");
-        fileInput.value = "";
-        return;
-      }
+      fileCountBox.textContent = `เลือกแล้ว ${files.length} ไฟล์`;
+      resetCounters(files.length);
 
       Swal.fire({
         title: "กำลังอัปโหลด",
@@ -529,26 +530,24 @@
         didOpen: () => Swal.showLoading()
       });
 
-      let successCount = 0;
-      let failCount = 0;
       const failedFiles = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
         const progressText = document.getElementById("swalProgressText");
+
         if (progressText) {
-          progressText.textContent = `กำลังอัปโหลด ${i + 1}/${files.length}: ${file.name}`;
+          progressText.textContent =
+            `กำลังอัปโหลด ${i + 1}/${files.length}: ${file.name}`;
         }
 
         try {
-          await uploadFile(file);
-          successCount++;
+          await uploadFile(file, i + 1, files.length);
         } catch (err) {
-          failCount++;
           failedFiles.push({
             name: file.name,
-            message: err.message
+            message: err.message || String(err)
           });
         }
       }
@@ -573,7 +572,7 @@
       }
 
       Swal.fire({
-        icon: failCount > 0 ? "warning" : "success",
+        icon: failedFiles.length > 0 ? "warning" : "success",
         title: "อัปโหลดเสร็จแล้ว",
         html: `
           สำเร็จ: <b>${successCount}</b> ไฟล์<br>
@@ -584,6 +583,10 @@
 
       fileInput.value = "";
     });
+
+    function goCreateEvent() {
+      window.location.href = "create-event.html";
+    }
 
     /****************************************
      * DARK MODE
@@ -627,7 +630,7 @@
     }
 
     function escapeAttr(text) {
-      return escapeHtml(text).replace(/`/g, "&#096;");
+      return escapeHtml(text);
     }
   </script>
 
