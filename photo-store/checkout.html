@@ -783,33 +783,50 @@
       }
     }
 
-    async function notifyTelegram(orderId) {
-      try {
-        const res = await fetch(
-          `${CONFIG.SUPABASE_URL}/functions/v1/send-slip-telegram`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: CONFIG.SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({
-              order_id: orderId
-            })
-          }
-        );
+   async function notifyTelegram(orderId) {
+  const functionUrl = `${CONFIG.SUPABASE_URL}/functions/v1/send-slip-telegram`;
 
-        const data = await res.json().catch(() => ({}));
+  console.log("Calling Telegram Function:", functionUrl);
+  console.log("Order ID:", orderId);
 
-        if (!res.ok || data.success === false) {
-          console.warn("Telegram notify failed:", data);
-        }
+  const res = await fetch(functionUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: CONFIG.SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+    },
+    body: JSON.stringify({
+      order_id: orderId
+    })
+  });
 
-      } catch (err) {
-        console.warn("Telegram notify error:", err.message);
-      }
-    }
+  const text = await res.text();
+
+  let data = null;
+
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = {
+      raw: text
+    };
+  }
+
+  console.log("Telegram Function status:", res.status);
+  console.log("Telegram Function response:", data);
+
+  if (!res.ok || data.success === false) {
+    throw new Error(
+      data.message ||
+      data.error ||
+      data.raw ||
+      `Telegram notify failed status ${res.status}`
+    );
+  }
+
+  return data;
+}
 
     function normalizeImageUrl(url) {
       const cleanUrl = String(url || "").trim();
