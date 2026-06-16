@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ดาวน์โหลดภาพ</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,28 +10,51 @@
     tailwind.config = { darkMode: "class" };
   </script>
 
-  <!-- <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="js/config.js"></script>
-  <script src="js/liff-helper.js"></script>
+  <script src="js/config.js?v=new-supabase-010"></script>
+  <script src="js/liff-helper.js?v=new-supabase-010"></script>
+  <script src="js/app-liff.js?v=new-supabase-010"></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition safe-bottom">
 
   <main class="max-w-5xl mx-auto p-4 pb-24">
 
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <div class="flex justify-between gap-3">
-        <div>
+        <div class="min-w-0">
           <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
-          <h1 id="txtPageTitle" class="text-xl font-bold">ดาวน์โหลดภาพ</h1>
+          <h1 id="txtPageTitle" class="text-xl font-black">ดาวน์โหลดภาพ</h1>
           <p id="orderText" class="text-sm text-slate-500 dark:text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
           <button onclick="goOrder()" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
             <span id="txtOrderBtn">ออเดอร์</span>
           </button>
@@ -84,7 +107,13 @@
   </main>
 
   <script>
-    const db = window.sb || window.supabaseClient;
+    const db =
+      window.sb ||
+      window.supabaseClient ||
+      window.supabase.createClient(
+        CONFIG.SUPABASE_URL,
+        CONFIG.SUPABASE_ANON_KEY
+      );
 
     let profile = null;
     let orderId = null;
@@ -164,6 +193,56 @@
       return LANG[currentLang] || LANG.th;
     }
 
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        initDarkMode();
+        applyLanguage();
+
+        if (!db) {
+          throw new Error("ไม่พบ Supabase client");
+        }
+
+        try {
+          if (window.AppLIFF) {
+            profile = await AppLIFF.init();
+          }
+        } catch (liffErr) {
+          console.warn("LIFF init skipped:", liffErr);
+        }
+
+        if (!profile) {
+          profile = {
+            userId: localStorage.getItem("line_user_id") || "",
+            displayName: localStorage.getItem("line_display_name") || "Guest",
+            pictureUrl: localStorage.getItem("line_picture") || ""
+          };
+        }
+
+        if (!profile.userId) {
+          throw new Error("ไม่พบ LINE user id กรุณาเปิดผ่าน LINE LIFF");
+        }
+
+        orderId = getOrderId();
+
+        if (!orderId) {
+          throw new Error("ไม่พบ order_id");
+        }
+
+        await loadOrder();
+
+      } catch (err) {
+        console.error(err);
+
+        document.getElementById("loadingBox").classList.add("hidden");
+
+        Swal.fire(
+          t().errorTitle,
+          err.message || "โหลดข้อมูลไม่สำเร็จ",
+          "error"
+        );
+      }
+    });
+
     function applyLanguage() {
       const x = t();
 
@@ -192,39 +271,6 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        initDarkMode();
-        applyLanguage();
-
-        if (!db) {
-          throw new Error("ไม่พบ Supabase client");
-        }
-
-        profile = await AppLIFF.init();
-        if (!profile) return;
-
-        orderId = getOrderId();
-
-        if (!orderId) {
-          throw new Error("ไม่พบ order_id");
-        }
-
-        await loadOrder();
-
-      } catch (err) {
-        console.error(err);
-
-        document.getElementById("loadingBox").classList.add("hidden");
-
-        Swal.fire(
-          t().errorTitle,
-          err.message || "โหลดข้อมูลไม่สำเร็จ",
-          "error"
-        );
-      }
-    });
-
     function getOrderId() {
       const params = new URLSearchParams(window.location.search);
       return params.get("order_id") || params.get("id");
@@ -238,12 +284,21 @@
           order_items (
             id,
             photo_id,
+            event_id,
+            filename,
+            photo_url,
             price,
             photos (
               id,
               filename,
               preview_url,
-              watermark_url
+              watermark_url,
+              r2_preview_url,
+              r2_watermark_url,
+              r2_key,
+              preview_path,
+              watermark_path,
+              original_path
             )
           )
         `)
@@ -251,7 +306,9 @@
         .eq("line_user_id", profile.userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       order = data;
 
@@ -260,7 +317,7 @@
       document.getElementById("orderText").textContent =
         `Order: ${order.order_no || order.id}`;
 
-      if (order.status !== "paid") {
+      if (!isApprovedStatus(order.status)) {
         document.getElementById("blockedBox").classList.remove("hidden");
         return;
       }
@@ -268,6 +325,11 @@
       document.getElementById("downloadAllBox").classList.remove("hidden");
 
       renderPhotos();
+    }
+
+    function isApprovedStatus(status) {
+      const s = String(status || "").toLowerCase();
+      return s === "approved" || s === "paid";
     }
 
     function renderPhotos() {
@@ -289,31 +351,26 @@
 
       items.forEach(item => {
         const photo = item.photos || {};
-
-        const preview =
-          photo.watermark_url ||
-          photo.preview_url ||
-          "https://placehold.co/600x800?text=Photo";
-
-        const downloadUrl =
-          photo.preview_url ||
-          photo.watermark_url ||
-          "";
+        const preview = getPreviewUrl(item, photo);
+        const downloadUrl = getDownloadUrl(item, photo);
+        const filename = photo.filename || item.filename || item.photo_id || "photo.jpg";
 
         const card = document.createElement("article");
 
         card.className =
-          "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
+          "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition border border-slate-100 dark:border-slate-800";
 
         card.innerHTML = `
           <img
-            src="${preview}"
+            src="${escapeAttr(preview)}"
             class="w-full aspect-[3/4] object-cover bg-slate-200 dark:bg-slate-800"
+            referrerpolicy="no-referrer"
+            onerror="this.onerror=null; this.src='https://placehold.co/600x800/111827/ffffff?text=Photo';"
           />
 
           <div class="p-4">
             <p class="font-bold truncate">
-              ${escapeHtml(photo.filename || item.photo_id)}
+              ${escapeHtml(filename)}
             </p>
 
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -322,7 +379,7 @@
 
             <button
               type="button"
-              onclick="downloadFile('${escapeAttr(downloadUrl)}', '${escapeAttr(photo.filename || item.photo_id)}')"
+              onclick="downloadFile('${escapeAttr(downloadUrl)}', '${escapeAttr(filename)}')"
               class="mt-4 w-full bg-emerald-600 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
               ${downloadUrl ? "" : "disabled"}
             >
@@ -335,6 +392,69 @@
       });
 
       grid.classList.remove("hidden");
+    }
+
+    function getPreviewUrl(item, photo) {
+      const raw =
+        item.photo_url ||
+        photo.r2_watermark_url ||
+        photo.r2_preview_url ||
+        photo.watermark_url ||
+        photo.preview_url ||
+        photo.r2_key ||
+        photo.preview_path ||
+        photo.watermark_path ||
+        photo.original_path ||
+        "";
+
+      return normalizeImageUrl(raw);
+    }
+
+    function getDownloadUrl(item, photo) {
+      const raw =
+        item.photo_url ||
+        photo.r2_preview_url ||
+        photo.preview_url ||
+        photo.r2_watermark_url ||
+        photo.watermark_url ||
+        photo.r2_key ||
+        photo.preview_path ||
+        photo.watermark_path ||
+        photo.original_path ||
+        "";
+
+      return normalizeImageUrl(raw);
+    }
+
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) {
+        return "";
+      }
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_WORKER_URL) {
+        const base = String(CONFIG.R2_WORKER_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+
+        if (key.startsWith("events/")) {
+          return encodeURI(`${base}/file/${key}`);
+        }
+
+        return encodeURI(`${base}/file/${key}`);
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
     }
 
     function downloadFile(url, filename) {
@@ -365,7 +485,7 @@
     }
 
     async function downloadAllFiles() {
-      if (!order || order.status !== "paid") {
+      if (!order || !isApprovedStatus(order.status)) {
         Swal.fire(
           t().blockedTitle,
           t().blockedDesc,
@@ -379,14 +499,8 @@
           const photo = item.photos || {};
 
           return {
-            url:
-              photo.preview_url ||
-              photo.watermark_url ||
-              "",
-
-            filename:
-              photo.filename ||
-              item.photo_id
+            url: getDownloadUrl(item, photo),
+            filename: photo.filename || item.filename || item.photo_id || "photo.jpg"
           };
         })
         .filter(item => item.url);
@@ -477,6 +591,42 @@
     function escapeAttr(text) {
       return escapeHtml(text).replace(/`/g, "&#096;");
     }
+
+    document.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("dragstart", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "s"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "u"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "i"
+      ) {
+        e.preventDefault();
+      }
+    });
   </script>
 
 </body>
