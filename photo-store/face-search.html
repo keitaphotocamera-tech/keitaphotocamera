@@ -10,19 +10,26 @@
     tailwind.config = { darkMode: "class" };
   </script>
 
-  <!-- <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-  <script src="js/config.js"></script>
-  <script src="js/liff-helper.js"></script>
+  <script src="js/config.js?v=new-supabase-005"></script>
+  <script src="js/liff-helper.js?v=new-supabase-005"></script>
 
   <style>
-    /* =========================
-       BASIC PROTECTION
-    ========================= */
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     img {
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -36,10 +43,10 @@
       -webkit-touch-callout: none;
     }
 
-    /* =========================
-       PHOTO PREVIEW MODAL
-       รูปแบบเดียวกับ event.html
-    ========================= */
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
     .photo-modal {
       position: fixed;
       inset: 0;
@@ -146,8 +153,13 @@
       text-shadow: 0 2px 12px rgba(0,0,0,.78);
     }
 
-    .wm-row:nth-child(even) { transform: translateX(-12%); }
-    .wm-row:nth-child(odd) { transform: translateX(4%); }
+    .wm-row:nth-child(even) {
+      transform: translateX(-12%);
+    }
+
+    .wm-row:nth-child(odd) {
+      transform: translateX(4%);
+    }
 
     .watermark-center {
       position: absolute;
@@ -197,23 +209,25 @@
         linear-gradient(90deg, rgba(0,0,0,.16), transparent 18%, transparent 82%, rgba(0,0,0,.16));
     }
 
-    .open-preview-btn { pointer-events: auto; }
+    .open-preview-btn {
+      pointer-events: auto;
+    }
   </style>
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition safe-bottom">
 
   <main class="max-w-5xl mx-auto p-4 pb-28">
 
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <div class="flex justify-between items-start gap-3">
-        <div>
+        <div class="min-w-0">
           <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
-          <h1 id="txtPageTitle" class="text-2xl font-bold">ค้นหาภาพด้วยใบหน้า</h1>
+          <h1 id="txtPageTitle" class="text-2xl font-black">ค้นหาภาพด้วยใบหน้า</h1>
           <p id="eventText" class="text-sm text-slate-500 dark:text-slate-400 mt-1">กำลังโหลดข้อมูล...</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
           <button onclick="goEvent()" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full px-4 py-2 font-bold">
             ← <span id="txtBack">กลับ</span>
           </button>
@@ -231,19 +245,37 @@
 
     <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm mb-4 transition">
       <h2 id="txtUploadTitle" class="font-bold text-lg">อัปโหลดรูปใบหน้า</h2>
-      <p id="txtUploadDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">กรุณาใช้รูปที่เห็นใบหน้าชัดเจน</p>
+      <p id="txtUploadDesc" class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        กรุณาใช้รูปที่เห็นใบหน้าชัดเจน
+      </p>
 
-      <input id="faceInput" type="file" accept="image/*" class="mt-4 w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4" />
+      <input
+        id="faceInput"
+        type="file"
+        accept="image/*"
+        class="mt-4 w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4"
+      />
 
-      <img id="previewImage" class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100 dark:bg-slate-800" />
+      <img
+        id="previewImage"
+        class="hidden mt-4 rounded-2xl w-full max-h-[420px] object-contain bg-slate-100 dark:bg-slate-800"
+        referrerpolicy="no-referrer"
+      />
 
-      <button id="searchBtn" onclick="searchByFace()" disabled class="mt-4 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40">
+      <button
+        id="searchBtn"
+        onclick="searchByFace()"
+        disabled
+        class="mt-4 w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl py-3 font-bold disabled:opacity-40"
+      >
         ค้นหาภาพของฉัน
       </button>
+
+      <p id="debugText" class="mt-3 text-xs text-slate-500 dark:text-slate-400 break-all"></p>
     </section>
 
     <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center gap-3">
         <div>
           <p id="txtSearchResult" class="text-xs text-slate-500 dark:text-slate-400">ผลการค้นหา</p>
           <p class="font-bold"><span id="resultCount">0</span> <span id="txtPhotoUnit">ภาพ</span></p>
@@ -265,12 +297,11 @@
 
   </main>
 
-  <!-- PHOTO PREVIEW MODAL : เหมือนหน้า event.html -->
   <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
     <button class="photo-close" onclick="closePhotoModal()" aria-label="Close">✕</button>
 
     <div class="photo-modal-box" onclick="event.stopPropagation()">
-      <img id="photoModalImg" class="photo-modal-img" src="" alt="Photo Preview" draggable="false">
+      <img id="photoModalImg" class="photo-modal-img" src="" alt="Photo Preview" draggable="false" referrerpolicy="no-referrer">
 
       <div class="preview-soft-mask"></div>
       <div class="preview-noise"></div>
@@ -286,17 +317,23 @@
       <div class="watermark-center"><span>KEITA PHOTO CAMERA</span></div>
 
       <div class="photo-modal-info">
-        <div>
-          <p class="font-bold" id="photoModalName">-</p>
+        <div class="min-w-0">
+          <p class="font-bold truncate" id="photoModalName">-</p>
           <p class="opacity-75">Preview only · Watermarked</p>
         </div>
-        <div class="font-bold">฿<span id="photoModalPrice">0.00</span></div>
+        <div class="font-bold shrink-0">฿<span id="photoModalPrice">0.00</span></div>
       </div>
     </div>
   </div>
 
   <script>
-    const db = window.sb || window.supabaseClient;
+    const db =
+      window.sb ||
+      window.supabaseClient ||
+      window.supabase.createClient(
+        CONFIG.SUPABASE_URL,
+        CONFIG.SUPABASE_ANON_KEY
+      );
 
     let profile = null;
     let eventId = null;
@@ -304,9 +341,6 @@
     let selectedFile = null;
     let results = [];
 
-    /****************************************
-     * LANGUAGE
-     ****************************************/
     const LANG = {
       th: {
         miniApp: "LINE Mini App",
@@ -388,6 +422,43 @@
       return LANG[currentLang] || LANG.th;
     }
 
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        initDarkMode();
+        applyLanguage();
+
+        eventId = getEventId();
+
+        if (!eventId) {
+          throw new Error("ไม่พบ event id");
+        }
+
+        try {
+          if (window.AppLIFF) {
+            profile = await AppLIFF.init();
+          }
+        } catch (liffErr) {
+          console.warn("LIFF skipped:", liffErr);
+        }
+
+        if (!profile) {
+          profile = {
+            userId: localStorage.getItem("line_user_id") || "guest",
+            displayName: localStorage.getItem("line_display_name") || "Guest"
+          };
+        }
+
+        await loadModels();
+        await loadEvent();
+
+        document.getElementById("faceInput").addEventListener("change", handleFile);
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", err.message || "เปิดหน้าไม่สำเร็จ", "error");
+      }
+    });
+
     function applyLanguage() {
       const x = t();
 
@@ -413,33 +484,6 @@
       renderResults();
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        initDarkMode();
-        applyLanguage();
-
-        if (!db) {
-          throw new Error("ไม่พบ Supabase client");
-        }
-
-        eventId = getEventId();
-        if (!eventId) {
-          throw new Error("ไม่พบ event id");
-        }
-
-        profile = await AppLIFF.init();
-        if (!profile) return;
-
-        await loadModels();
-        await loadEvent();
-
-        document.getElementById("faceInput").addEventListener("change", handleFile);
-      } catch (err) {
-        console.error(err);
-        Swal.fire("Error", err.message || "เปิดหน้าไม่สำเร็จ", "error");
-      }
-    });
-
     function getEventId() {
       const params = new URLSearchParams(window.location.search);
       return params.get("event") || params.get("event_id") || params.get("id");
@@ -449,11 +493,14 @@
       Swal.fire({
         title: t().loadingSystem,
         allowOutsideClick: false,
+        showConfirmButton: false,
         didOpen: () => Swal.showLoading()
       });
 
       const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
       await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
@@ -467,14 +514,19 @@
         .eq("id", eventId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       eventData = data;
-      document.getElementById("eventText").textContent = data.name || data.title || "Face Search";
+
+      document.getElementById("eventText").textContent =
+        data.title || data.name || "Face Search";
     }
 
     function handleFile(e) {
-      const file = e.target.files[0];
+      const file = e.target.files?.[0];
+
       if (!file) return;
 
       selectedFile = file;
@@ -484,28 +536,39 @@
       img.classList.remove("hidden");
 
       document.getElementById("searchBtn").disabled = false;
+      document.getElementById("debugText").textContent = `เลือกไฟล์: ${file.name}`;
     }
 
     async function searchByFace() {
       try {
         if (!selectedFile) {
-          Swal.fire("Warning", "", "warning");
+          Swal.fire("Warning", "กรุณาเลือกรูปก่อน", "warning");
           return;
         }
 
         Swal.fire({
           title: t().loadingFace,
           allowOutsideClick: false,
+          showConfirmButton: false,
           didOpen: () => Swal.showLoading()
         });
 
         const img = await faceapi.bufferToImage(selectedFile);
-        const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
 
-        const detection = await faceapi
-          .detectSingleFace(img, options)
+        let detection = await faceapi
+          .detectSingleFace(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.18 }))
           .withFaceLandmarks()
           .withFaceDescriptor();
+
+        if (!detection) {
+          detection = await faceapi
+            .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({
+              inputSize: 512,
+              scoreThreshold: 0.12
+            }))
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+        }
 
         if (!detection) {
           Swal.fire(t().noFace, t().noFaceDesc, "warning");
@@ -514,33 +577,99 @@
 
         const descriptor = Array.from(detection.descriptor);
 
-        Swal.update({ title: t().loadingSearch });
-
-        const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/search-face`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event_id: eventId,
-            descriptor,
-            threshold: 0.40,
-            max_results: 99,
-            gap_limit: 0.08
-          })
+        Swal.update({
+          title: t().loadingSearch
         });
 
-        const data = await res.json();
+        const data = await callFaceSearchFunction({
+          event_id: eventId,
+          descriptor,
+          threshold: 0.55,
+          max_results: 99,
+          gap_limit: 0.18
+        });
 
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || "ค้นหาไม่สำเร็จ");
-        }
+        results = normalizeResults(data.results || data.matches || []);
 
-        results = data.results || [];
         Swal.close();
+
         renderResults();
+
       } catch (err) {
         console.error(err);
         Swal.fire("Error", err.message || "ค้นหาไม่สำเร็จ", "error");
       }
+    }
+
+    async function callFaceSearchFunction(payload) {
+      const functionName = "face-search";
+      const url = `${CONFIG.SUPABASE_URL}/functions/v1/${functionName}`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: CONFIG.SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.success === false) {
+        throw new Error(
+          data?.message ||
+          data?.error ||
+          `เรียก Edge Function ${functionName} ไม่สำเร็จ`
+        );
+      }
+
+      return data || {};
+    }
+
+    function normalizeResults(items) {
+      return (items || []).map(item => {
+        if (item.photo) {
+          item.photo = normalizePhoto(item.photo);
+          return item;
+        }
+
+        const photo = normalizePhoto({
+          id: item.photo_id || item.id,
+          filename: item.filename,
+          price: item.price,
+          preview_url: item.preview_url || item.image_url || item.url,
+          watermark_url: item.watermark_url,
+          r2_preview_url: item.r2_preview_url,
+          r2_watermark_url: item.r2_watermark_url,
+          r2_key: item.r2_key
+        });
+
+        return {
+          ...item,
+          photo
+        };
+      });
+    }
+
+    function normalizePhoto(photo) {
+      return {
+        ...photo,
+        preview_url: normalizeImageUrl(
+          photo.r2_preview_url ||
+          photo.preview_url ||
+          photo.r2_watermark_url ||
+          photo.watermark_url ||
+          photo.image_url ||
+          photo.public_url ||
+          photo.url ||
+          photo.r2_key ||
+          photo.preview_path ||
+          photo.watermark_path ||
+          ""
+        )
+      };
     }
 
     function renderResults() {
@@ -561,11 +690,12 @@
         const photo = item.photo || {};
         const img = getSafePreviewUrl(photo);
         const price = getPhotoPrice(photo);
-        const fileName = escapeHtml(photo.filename || photo.file_name || photo.name || photo.id);
-        const photoId = escapeAttribute(photo.id);
+        const fileName = escapeHtml(photo.filename || photo.file_name || photo.name || photo.id || "Photo");
+        const photoId = escapeAttribute(photo.id || "");
 
         const card = document.createElement("article");
-        card.className = "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition";
+        card.className =
+          "bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm transition border border-slate-100 dark:border-slate-800";
 
         card.innerHTML = `
           <div class="relative aspect-[3/4] bg-slate-200 dark:bg-slate-800">
@@ -573,6 +703,8 @@
               src="${escapeAttribute(img)}"
               class="w-full h-full object-cover bg-slate-200 dark:bg-slate-800"
               draggable="false"
+              referrerpolicy="no-referrer"
+              onerror="this.onerror=null; this.src='https://placehold.co/600x800/111827/ffffff?text=NO+IMAGE';"
             >
 
             <button
@@ -590,7 +722,7 @@
               🔍 ${t().viewPhoto}
             </button>
 
-            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black/50 text-white p-2 text-xs pointer-events-none">
+            <div class="absolute bottom-0 left-0 right-0 z-20 bg-black/50 text-white p-2 text-xs pointer-events-none truncate">
               ${fileName}
             </div>
           </div>
@@ -620,7 +752,13 @@
 
     function formatConfidence(confidence, distance) {
       if (confidence !== undefined && confidence !== null) {
-        return `${Math.round(Number(confidence))}%`;
+        const num = Number(confidence);
+
+        if (num <= 1) {
+          return `${Math.round(num * 100)}%`;
+        }
+
+        return `${Math.round(num)}%`;
       }
 
       if (distance !== undefined && distance !== null) {
@@ -632,23 +770,33 @@
 
     function addToCart(photoId) {
       const item = results.find(r => String(r.photo?.id) === String(photoId));
-      if (!item) return;
+
+      if (!item?.photo) return;
 
       const photo = item.photo;
       const price = getPhotoPrice(photo);
-      const cartKey = AppLIFF.getCartKey();
+
+      let cartKey = "photo_cart_guest";
+
+      if (window.AppLIFF && AppLIFF.getCartKey) {
+        cartKey = AppLIFF.getCartKey();
+      } else {
+        const userId = profile?.userId || localStorage.getItem("line_user_id") || "guest";
+        cartKey = `photo_cart_${userId}`;
+      }
+
       const oldCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
       const map = new Map(oldCart.map(i => [String(i.photo_id), i]));
 
       map.set(String(photo.id), {
         event_id: eventId,
-        event_name: eventData?.name || eventData?.title || "",
+        event_name: eventData?.title || eventData?.name || "",
         photo_id: photo.id,
         filename: photo.filename || photo.file_name || photo.name || "",
         file_name: photo.filename || photo.file_name || photo.name || "",
         preview_url: getSafePreviewUrl(photo),
         price,
-        line_user_id: profile.userId
+        line_user_id: profile?.userId || "guest"
       });
 
       localStorage.setItem(cartKey, JSON.stringify([...map.values()]));
@@ -665,40 +813,79 @@
     }
 
     function goEvent() {
-      window.location.href = `event.html?event=${encodeURIComponent(eventId)}`;
+      window.location.href = `event.html?event=${encodeURIComponent(eventId || "")}`;
     }
 
     function goCart() {
-      window.location.href = `cart.html?event=${encodeURIComponent(eventId)}`;
+      window.location.href = `cart.html?event=${encodeURIComponent(eventId || "")}`;
     }
 
     function getPhotoPrice(photo) {
-      return Number(photo.price || eventData?.photo_price || CONFIG.DEFAULT_PHOTO_PRICE || 0);
+      return Number(
+        photo.price ||
+        eventData?.price ||
+        eventData?.photo_price ||
+        CONFIG.DEFAULT_PHOTO_PRICE ||
+        0
+      );
     }
 
     function getSafePreviewUrl(photo) {
-      // เหมือน event.html: ใช้เฉพาะรูป preview/watermark/thumbnail ไม่ดึง full_url ก่อน
-      return (
-        photo.watermarked_url ||
-        photo.watermark_url ||
+      return normalizeImageUrl(
         photo.preview_url ||
+        photo.r2_preview_url ||
+        photo.watermark_url ||
+        photo.r2_watermark_url ||
         photo.thumbnail_url ||
         photo.public_url ||
         photo.url ||
-        "https://placehold.co/600x800?text=Preview"
+        photo.r2_key ||
+        "https://placehold.co/600x800/111827/ffffff?text=Preview"
       );
+    }
+
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) {
+        return "https://placehold.co/600x800/111827/ffffff?text=Preview";
+      }
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_WORKER_URL) {
+        const base = String(CONFIG.R2_WORKER_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+
+        if (key.startsWith("events/")) {
+          return encodeURI(`${base}/file/${key}`);
+        }
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
     }
 
     function openPhotoModal(photoId) {
       const item = results.find(r => String(r.photo?.id) === String(photoId));
+
       if (!item?.photo) return;
 
       const photo = item.photo;
       const img = getSafePreviewUrl(photo);
 
       document.getElementById("photoModalImg").src = img || "";
-      document.getElementById("photoModalName").textContent = photo.filename || photo.file_name || photo.name || photo.id || "Photo";
-      document.getElementById("photoModalPrice").textContent = formatMoney(getPhotoPrice(photo));
+      document.getElementById("photoModalName").textContent =
+        photo.filename || photo.file_name || photo.name || photo.id || "Photo";
+      document.getElementById("photoModalPrice").textContent =
+        formatMoney(getPhotoPrice(photo));
       document.getElementById("photoModal").classList.add("show");
       document.body.style.overflow = "hidden";
     }
@@ -736,7 +923,11 @@
 
     function initDarkMode() {
       const saved = localStorage.getItem("darkMode");
-      if (saved === "1") document.documentElement.classList.add("dark");
+
+      if (saved === "1") {
+        document.documentElement.classList.add("dark");
+      }
+
       updateDarkButton();
     }
 
@@ -758,9 +949,6 @@
         .replace(/>/g, "&gt;");
     }
 
-    /* =========================
-       PROTECTION EVENTS
-    ========================= */
     document.addEventListener("contextmenu", function(e) {
       e.preventDefault();
     });
@@ -771,11 +959,34 @@
 
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") closePhotoModal();
-      if (e.key === "F12") e.preventDefault();
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") e.preventDefault();
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") e.preventDefault();
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "i") e.preventDefault();
+
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "s"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "u"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "i"
+      ) {
+        e.preventDefault();
+      }
     });
   </script>
+
 </body>
 </html>
