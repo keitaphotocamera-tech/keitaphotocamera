@@ -10,28 +10,58 @@
     tailwind.config = { darkMode: "class" };
   </script>
 
-  <!-- <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.29.0/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="js/config.js"></script>
-  <script src="js/liff-helper.js"></script>
+  <script src="js/config.js?v=new-supabase-009"></script>
+  <script src="js/liff-helper.js?v=new-supabase-009"></script>
+  <script src="js/app-liff.js?v=new-supabase-009"></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  </style>
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white transition safe-bottom">
 
   <main class="max-w-4xl mx-auto p-4 pb-40">
 
     <header class="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm mb-4 transition">
       <div class="flex justify-between gap-3">
-        <div>
+        <div class="min-w-0">
           <p id="txtMiniApp" class="text-xs text-slate-500 dark:text-slate-400">LINE Mini App</p>
-          <h1 id="txtPageTitle" class="text-xl font-bold">ชำระเงิน</h1>
+          <h1 id="txtPageTitle" class="text-xl font-black">ชำระเงิน</h1>
           <p id="txtPageDesc" class="text-sm text-slate-500 dark:text-slate-400">ตรวจสอบรายการและแนบสลิป</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
           <button onclick="goCart()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-bold">
             ← <span id="txtBack">กลับ</span>
           </button>
@@ -50,10 +80,14 @@
 
       <div id="profileBox" class="hidden mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 transition">
         <div class="flex items-center gap-3">
-          <img id="linePicture" class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700" />
+          <img
+            id="linePicture"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
+            referrerpolicy="no-referrer"
+          />
 
-          <div>
-            <p id="lineName" class="font-bold">-</p>
+          <div class="min-w-0">
+            <p id="lineName" class="font-bold truncate">-</p>
             <p id="txtConnected" class="text-xs text-emerald-600">เชื่อมต่อ LINE แล้ว</p>
           </div>
         </div>
@@ -80,13 +114,17 @@
       </h2>
 
       <div class="flex flex-col items-center">
-        <img id="qrImage" class="w-72 max-w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white" />
+        <img
+          id="qrImage"
+          class="w-72 max-w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white"
+          alt="PromptPay QR"
+        />
 
         <p id="txtPromptpay" class="mt-4 text-sm text-slate-500 dark:text-slate-400">PromptPay</p>
         <p id="promptpayNumber" class="font-bold text-xl">-</p>
 
         <p id="txtTotalPay" class="mt-2 text-sm text-slate-500 dark:text-slate-400">ยอดชำระ</p>
-        <p id="totalAmountText" class="text-4xl font-bold text-emerald-600">฿0.00</p>
+        <p id="totalAmountText" class="text-4xl font-black text-emerald-600">฿0.00</p>
 
         <p id="txtSlipDesc" class="mt-3 text-xs text-slate-400 text-center">
           หลังชำระเงิน กรุณาแนบสลิปเพื่อให้แอดมินตรวจสอบ
@@ -109,18 +147,19 @@
       <img
         id="slipPreview"
         class="hidden mt-4 rounded-2xl w-full object-cover border border-slate-200 dark:border-slate-700"
+        referrerpolicy="no-referrer"
       />
     </section>
 
   </main>
 
-  <footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition">
+  <footer class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shadow-lg transition safe-bottom">
     <div class="max-w-4xl mx-auto p-4">
       <div class="flex justify-between items-center gap-3">
-        <div>
+        <div class="min-w-0">
           <p id="txtSummary" class="text-xs text-slate-500 dark:text-slate-400">รวมทั้งหมด</p>
 
-          <p class="text-xl font-bold">
+          <p class="text-xl font-black">
             <span id="totalItems">0</span>
             <span id="txtPhotoUnit">ภาพ</span>
             ·
@@ -131,7 +170,7 @@
         <button
           id="submitBtn"
           onclick="submitOrder()"
-          class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40"
+          class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40 shrink-0"
         >
           <span id="txtSubmit">ยืนยันส่งสลิป</span>
         </button>
@@ -140,7 +179,13 @@
   </footer>
 
   <script>
-    const db = window.sb || window.supabaseClient;
+    const db =
+      window.sb ||
+      window.supabaseClient ||
+      window.supabase.createClient(
+        CONFIG.SUPABASE_URL,
+        CONFIG.SUPABASE_ANON_KEY
+      );
 
     let profile = null;
     let cartKey = null;
@@ -148,27 +193,7 @@
     let eventId = null;
     let isSubmitting = false;
 
-    const NORMAL_PHOTO_PRICE = 50;
-
-    function calculatePromoTotal(count) {
-      if (count >= 20) {
-        return 500 + ((count - 20) * NORMAL_PHOTO_PRICE);
-      }
-
-      if (count >= 10) {
-        return 250 + ((count - 10) * NORMAL_PHOTO_PRICE);
-      }
-
-      return count * NORMAL_PHOTO_PRICE;
-    }
-
-    function calculateNormalTotal(count) {
-      return count * NORMAL_PHOTO_PRICE;
-    }
-
-    function calculateSaving(count) {
-      return calculateNormalTotal(count) - calculatePromoTotal(count);
-    }
+    const DEFAULT_PRICE = Number(CONFIG.DEFAULT_PHOTO_PRICE || 50);
 
     const LANG = {
       th: {
@@ -271,6 +296,77 @@
       return LANG[currentLang] || LANG.th;
     }
 
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        initDarkMode();
+        applyLanguage();
+
+        if (!db) {
+          throw new Error("ไม่พบ Supabase client");
+        }
+
+        try {
+          if (window.AppLIFF) {
+            profile = await AppLIFF.init();
+          }
+        } catch (liffErr) {
+          console.warn("LIFF init skipped:", liffErr);
+        }
+
+        if (!profile) {
+          profile = {
+            userId: localStorage.getItem("line_user_id") || "guest",
+            displayName: localStorage.getItem("line_display_name") || "Guest",
+            pictureUrl: localStorage.getItem("line_picture") || ""
+          };
+        }
+
+        cartKey = getCartKey();
+
+        showProfile();
+        loadCart();
+
+        if (!cart.length) {
+          Swal.fire({
+            icon: "warning",
+            title: t().emptyCart,
+            text: t().emptyCartDesc,
+            confirmButtonText: t().backHome
+          }).then(() => {
+            window.location.href = "index.html";
+          });
+
+          return;
+        }
+
+        normalizeCartItems();
+        saveCart();
+
+        renderCart();
+        generateQR();
+
+        document.getElementById("slipInput").addEventListener("change", previewSlip);
+
+      } catch (err) {
+        console.error(err);
+
+        Swal.fire(
+          t().errorTitle,
+          err.message || "โหลดหน้าไม่สำเร็จ",
+          "error"
+        );
+      }
+    });
+
+    function getCartKey() {
+      if (window.AppLIFF && AppLIFF.getCartKey) {
+        return AppLIFF.getCartKey();
+      }
+
+      const userId = profile?.userId || localStorage.getItem("line_user_id") || "guest";
+      return `photo_cart_${userId}`;
+    }
+
     function applyLanguage() {
       const x = t();
 
@@ -303,52 +399,6 @@
       updateSummary();
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        initDarkMode();
-        applyLanguage();
-
-        if (!db) {
-          throw new Error("ไม่พบ Supabase client");
-        }
-
-        profile = await AppLIFF.init();
-        if (!profile) return;
-
-        cartKey = AppLIFF.getCartKey();
-
-        showProfile();
-        loadCart();
-
-        if (!cart.length) {
-          Swal.fire({
-            icon: "warning",
-            title: t().emptyCart,
-            text: t().emptyCartDesc,
-            confirmButtonText: t().backHome
-          }).then(() => {
-            window.location.href = "index.html";
-          });
-
-          return;
-        }
-
-        renderCart();
-        generateQR();
-
-        document.getElementById("slipInput").addEventListener("change", previewSlip);
-
-      } catch (err) {
-        console.error(err);
-
-        Swal.fire(
-          t().errorTitle,
-          err.message || "โหลดหน้าไม่สำเร็จ",
-          "error"
-        );
-      }
-    });
-
     function showProfile() {
       document.getElementById("profileBox").classList.remove("hidden");
 
@@ -368,22 +418,80 @@
       }
     }
 
+    function saveCart() {
+      localStorage.setItem(cartKey, JSON.stringify(cart));
+    }
+
     function getEventIdFromUrl() {
       const params = new URLSearchParams(window.location.search);
       return params.get("event") || params.get("event_id") || params.get("id") || null;
     }
 
+    function normalizeCartItems() {
+      cart = cart.map(item => {
+        const price = Number(item.price || DEFAULT_PRICE);
+        const img = normalizeImageUrl(
+          item.preview_url ||
+          item.photo_url ||
+          item.watermark_url ||
+          item.watermarked_url ||
+          item.thumbnail_url ||
+          item.r2_preview_url ||
+          item.r2_watermark_url ||
+          item.r2_key ||
+          ""
+        );
+
+        return {
+          ...item,
+          price,
+          preview_url: img,
+          photo_url: img,
+          watermark_url: img,
+          file_name: item.file_name || item.filename || item.photo_id,
+          filename: item.filename || item.file_name || item.photo_id,
+          event_name: item.event_name || t().photoEvent
+        };
+      });
+    }
+
+    function getNormalTotal() {
+      return cart.reduce((sum, item) => {
+        return sum + Number(item.price || DEFAULT_PRICE);
+      }, 0);
+    }
+
+    function calculatePromoTotal() {
+      const count = cart.length;
+
+      if (!count) return 0;
+
+      const basePrice = DEFAULT_PRICE;
+
+      if (count >= 20) {
+        return 500 + ((count - 20) * basePrice);
+      }
+
+      if (count >= 10) {
+        return 250 + ((count - 10) * basePrice);
+      }
+
+      return getNormalTotal();
+    }
+
+    function calculateSaving() {
+      return Math.max(0, getNormalTotal() - calculatePromoTotal());
+    }
+
     function getPromoData() {
       const saved = JSON.parse(localStorage.getItem(`${cartKey}_promo`) || "{}");
 
-      const count = cart.length;
-
       return {
-        promo_total: Number(saved.promo_total ?? calculatePromoTotal(count)),
-        normal_total: Number(saved.normal_total ?? calculateNormalTotal(count)),
-        saving: Number(saved.saving ?? calculateSaving(count)),
-        item_count: count,
-        normal_photo_price: NORMAL_PHOTO_PRICE
+        promo_total: Number(saved.promo_total ?? calculatePromoTotal()),
+        normal_total: Number(saved.normal_total ?? getNormalTotal()),
+        saving: Number(saved.saving ?? calculateSaving()),
+        item_count: cart.length,
+        normal_photo_price: DEFAULT_PRICE
       };
     }
 
@@ -396,21 +504,29 @@
       list.innerHTML = "";
 
       cart.forEach(item => {
-        const img =
+        const img = normalizeImageUrl(
           item.preview_url ||
+          item.photo_url ||
           item.watermark_url ||
           item.watermarked_url ||
-          "https://placehold.co/300x400?text=Photo";
+          item.thumbnail_url ||
+          item.r2_key ||
+          ""
+        );
+
+        const price = Number(item.price || DEFAULT_PRICE);
 
         const card = document.createElement("article");
 
         card.className =
-          "bg-white dark:bg-slate-900 rounded-3xl p-3 shadow-sm flex gap-3 transition";
+          "bg-white dark:bg-slate-900 rounded-3xl p-3 shadow-sm flex gap-3 transition border border-slate-100 dark:border-slate-800";
 
         card.innerHTML = `
           <img
-            src="${img}"
+            src="${escapeAttr(img)}"
             class="w-24 h-28 rounded-2xl object-cover bg-slate-200 dark:bg-slate-800"
+            referrerpolicy="no-referrer"
+            onerror="this.onerror=null; this.src='https://placehold.co/300x400/111827/ffffff?text=Photo';"
           />
 
           <div class="flex-1 min-w-0">
@@ -423,7 +539,7 @@
             </p>
 
             <p class="mt-2 text-lg font-bold text-emerald-600">
-              ฿${formatMoney(NORMAL_PHOTO_PRICE)}
+              ฿${formatMoney(price)}
             </p>
           </div>
         `;
@@ -509,79 +625,28 @@
           title: t().sendingSlip,
           text: t().telegramNotify,
           allowOutsideClick: false,
+          showConfirmButton: false,
           didOpen: () => Swal.showLoading()
         });
 
-        const ext = slipFile.name.split(".").pop()?.toLowerCase() || "jpg";
-        const filePath = `slips/${profile.userId}/${Date.now()}.${ext}`;
-        const slipBucket = CONFIG.STORAGE_BUCKETS?.SLIPS || "slips";
+        const slipData = await uploadSlip(slipFile);
 
-        const { error: uploadError } = await db.storage
-          .from(slipBucket)
-          .upload(filePath, slipFile, {
-            cacheControl: "3600",
-            upsert: true
-          });
+        const orderData = await createOrder({
+          totalAmount,
+          slipUrl: slipData.slipUrl,
+          slipPath: slipData.slipPath
+        });
 
-        if (uploadError) throw uploadError;
+        await createOrderItems(orderData.id, totalAmount);
 
-        const { data: publicData } = db.storage
-          .from(slipBucket)
-          .getPublicUrl(filePath);
+        await createPayment({
+          orderId: orderData.id,
+          amount: totalAmount,
+          slipUrl: slipData.slipUrl,
+          slipPath: slipData.slipPath
+        });
 
-        const slipUrl = publicData.publicUrl;
-        const orderNo = "ORD-" + Date.now();
-
-        const { data: orderData, error: orderError } = await db
-  .from("orders")
-  .insert({
-    order_no: orderNo,
-    line_user_id: profile.userId,
-    line_display_name: profile.displayName || null,
-    line_picture: profile.pictureUrl || null,
-    event_id: eventId,
-    total_amount: totalAmount,
-    status: "waiting_approve",
-    slip_url: slipUrl,
-    language: currentLang || "th"
-  })
-  .select()
-  .single();
-
-        if (orderError) throw orderError;
-
-        const orderId = orderData.id;
-
-        const perPhotoPrice =
-          cart.length > 0
-            ? Number((totalAmount / cart.length).toFixed(2))
-            : NORMAL_PHOTO_PRICE;
-
-        const orderItems = cart.map(item => ({
-          order_id: orderId,
-          photo_id: item.photo_id,
-          price: perPhotoPrice
-        }));
-
-        const { error: itemError } = await db
-          .from("order_items")
-          .insert(orderItems);
-
-        if (itemError) throw itemError;
-
-        const { error: paymentError } = await db
-          .from("payments")
-          .insert({
-            order_id: orderId,
-            line_user_id: profile.userId,
-            amount: totalAmount,
-            slip_url: slipUrl,
-            status: "waiting_approve"
-          });
-
-        if (paymentError) throw paymentError;
-
-        await notifyTelegram(orderId);
+        await notifyTelegram(orderData.id);
 
         localStorage.removeItem(cartKey);
         localStorage.removeItem(`${cartKey}_promo`);
@@ -591,7 +656,7 @@
           title: t().orderSuccess,
           html: `
             <div style="text-align:left">
-              <p><b>Order:</b> ${orderNo}</p>
+              <p><b>Order:</b> ${escapeHtml(orderData.order_no || orderData.id)}</p>
               <p><b>Amount:</b> ฿${formatMoney(totalAmount)}</p>
               ${promoData.saving > 0 ? `
                 <p><b>Promotion saving:</b> ฿${formatMoney(promoData.saving)}</p>
@@ -621,6 +686,103 @@
       }
     }
 
+    async function uploadSlip(file) {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
+      const slipBucket = CONFIG.STORAGE_BUCKETS?.SLIPS || "slips";
+
+      const userId = profile.userId || "guest";
+      const slipPath = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
+
+      const { error: uploadError } = await db.storage
+        .from(slipBucket)
+        .upload(slipPath, file, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: file.type || "image/jpeg"
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicData } = db.storage
+        .from(slipBucket)
+        .getPublicUrl(slipPath);
+
+      return {
+        slipPath,
+        slipUrl: publicData.publicUrl
+      };
+    }
+
+    async function createOrder({ totalAmount, slipUrl, slipPath }) {
+      const orderNo = "ORD-" + Date.now();
+
+      const payload = {
+        order_no: orderNo,
+        line_user_id: profile.userId || "guest",
+        line_display_name: profile.displayName || null,
+        line_picture_url: profile.pictureUrl || null,
+        event_id: eventId,
+        total_amount: totalAmount,
+        status: "pending",
+        language: currentLang || "th"
+      };
+
+      const { data, error } = await db
+        .from("orders")
+        .insert(payload)
+        .select("*")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    }
+
+    async function createOrderItems(orderId, totalAmount) {
+      const perPhotoPrice =
+        cart.length > 0
+          ? Number((totalAmount / cart.length).toFixed(2))
+          : DEFAULT_PRICE;
+
+      const orderItems = cart.map(item => ({
+        order_id: orderId,
+        photo_id: item.photo_id,
+        event_id: item.event_id || eventId,
+        filename: item.filename || item.file_name || "",
+        photo_url: item.photo_url || item.preview_url || "",
+        price: perPhotoPrice
+      }));
+
+      const { error } = await db
+        .from("order_items")
+        .insert(orderItems);
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    async function createPayment({ orderId, amount, slipUrl, slipPath }) {
+      const { error } = await db
+        .from("payments")
+        .insert({
+          order_id: orderId,
+          amount: amount,
+          slip_url: slipUrl,
+          slip_path: slipPath,
+          status: "uploaded"
+        });
+
+      if (error) {
+        throw error;
+      }
+    }
+
     async function notifyTelegram(orderId) {
       try {
         const res = await fetch(
@@ -628,7 +790,9 @@
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              apikey: CONFIG.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
               order_id: orderId
@@ -647,8 +811,45 @@
       }
     }
 
+    function normalizeImageUrl(url) {
+      const cleanUrl = String(url || "").trim();
+
+      if (!cleanUrl) {
+        return "https://placehold.co/300x400/111827/ffffff?text=Photo";
+      }
+
+      if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+        return encodeURI(cleanUrl);
+      }
+
+      if (CONFIG.R2_WORKER_URL) {
+        const base = String(CONFIG.R2_WORKER_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+
+        if (key.startsWith("events/")) {
+          return encodeURI(`${base}/file/${key}`);
+        }
+
+        return encodeURI(`${base}/file/${key}`);
+      }
+
+      if (CONFIG.R2_PUBLIC_BASE_URL) {
+        const base = String(CONFIG.R2_PUBLIC_BASE_URL).replace(/\/+$/, "");
+        const key = cleanUrl.replace(/^\/+/, "");
+        return encodeURI(`${base}/${key}`);
+      }
+
+      return encodeURI(cleanUrl);
+    }
+
     function goCart() {
-      window.location.href = "cart.html";
+      const backEventId = eventId || getEventIdFromUrl();
+
+      if (backEventId) {
+        window.location.href = `cart.html?event=${encodeURIComponent(backEventId)}`;
+      } else {
+        window.location.href = "cart.html";
+      }
     }
 
     function formatMoney(value) {
@@ -695,63 +896,47 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
+    function escapeAttr(text) {
+      return escapeHtml(text);
+    }
+
+    document.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("dragstart", function(e) {
+      e.preventDefault();
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "s"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "u"
+      ) {
+        e.preventDefault();
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "i"
+      ) {
+        e.preventDefault();
+      }
+    });
   </script>
 
-  <!-- ห้ามคลิกขวา -->
-<script>
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-</script>
-
-<!-- ห้ามกดค้างบันทึกภาพบนมือถือ -->
-<style>
-img {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: none;
-}
-
-body {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-</style>
-
-<!-- ปิดการลากรูป -->
-<script>
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-});
-</script>
-
-<!-- ปิดปุ่มลัดบางอย่าง -->
-<script>
-document.addEventListener('keydown', function(e) {
-
-  // F12
-  if (e.key === "F12") {
-    e.preventDefault();
-  }
-
-  // Ctrl+S / Cmd+S
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-  }
-
-  // Ctrl+U
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-    e.preventDefault();
-  }
-
-  // Ctrl+Shift+I
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-    e.preventDefault();
-  }
-
-});
-</script>
 </body>
 </html>
