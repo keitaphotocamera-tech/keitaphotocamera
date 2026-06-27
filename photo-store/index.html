@@ -35,6 +35,9 @@
     body {
       min-height: 100vh;
       background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     html.dark body {
@@ -73,15 +76,45 @@
     }
 
     img {
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* ================================
+       IMAGE PROTECTION
+       กันกดค้าง / ลาก / save image
+    ================================ */
+
+    .protected-media {
+      position: relative;
+      display: block;
+      overflow: hidden;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
     }
 
-    body {
+    .protected-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: transparent;
+      -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
+    }
+
+    .protected-media img,
+    .protected-img {
+      pointer-events: none;
+      -webkit-user-drag: none;
       -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
   </style>
 </head>
@@ -147,8 +180,10 @@
 
           <img
             id="linePicture"
-            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-800"
+            class="w-11 h-11 rounded-full object-cover bg-slate-200 dark:bg-slate-800 protected-img"
             alt="LINE Profile"
+            draggable="false"
+            oncontextmenu="return false;"
           />
 
           <div class="min-w-0">
@@ -349,6 +384,8 @@
       document.getElementById("linePicture").src =
         profile.pictureUrl ||
         "https://placehold.co/100x100?text=LINE";
+
+      protectImages();
     }
 
     async function saveUser() {
@@ -451,14 +488,16 @@
             class="block w-full text-left"
           >
 
-            <div class="aspect-[16/10] bg-slate-200 dark:bg-slate-800 overflow-hidden relative">
+            <div class="aspect-[16/10] bg-slate-200 dark:bg-slate-800 overflow-hidden relative protected-media">
 
               <img
                 src="${escapeAttr(cover)}"
                 alt="${escapeHtml(title)}"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-cover protected-img"
                 loading="lazy"
                 referrerpolicy="no-referrer"
+                draggable="false"
+                oncontextmenu="return false;"
                 onerror="this.onerror=null; this.src='https://placehold.co/1200x750/111827/ffffff?text=NO+COVER';"
               />
 
@@ -505,6 +544,8 @@
 
         grid.appendChild(card);
       });
+
+      protectImages();
     }
 
     function searchEvents() {
@@ -656,115 +697,121 @@
     function escapeAttr(text) {
       return escapeHtml(text);
     }
-  </script>
 
-  <!-- ห้ามคลิกขวา -->
-  <script>
-    document.addEventListener(
-      "contextmenu",
-      function(e) {
+    /****************************************
+     * IMAGE / PAGE PROTECTION
+     * กันบันทึกรูปทั้งมือถือและคอม
+     ****************************************/
+
+    function protectImages() {
+      document.querySelectorAll("img").forEach(img => {
+        if (!img || img.dataset.protected === "1") return;
+
+        img.dataset.protected = "1";
+        img.classList.add("protected-img");
+        img.setAttribute("draggable", "false");
+        img.setAttribute("oncontextmenu", "return false;");
+        img.setAttribute("alt", img.getAttribute("alt") || "Protected Image");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      protectImages();
+    });
+
+    const imageObserver = new MutationObserver(function () {
+      protectImages();
+    });
+
+    imageObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    document.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener("dragstart", function (e) {
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener("selectstart", function (e) {
+      const tag = String(e.target?.tagName || "").toLowerCase();
+
+      if (
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select"
+      ) {
+        return true;
+      }
+
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener("copy", function (e) {
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener("cut", function (e) {
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener("touchstart", function (e) {
+      if (e.target && e.target.tagName === "IMG") {
         e.preventDefault();
+        return false;
       }
-    );
-  </script>
+    }, {
+      passive: false,
+      capture: true
+    });
 
-  <!-- ปิดการลากรูป -->
-  <script>
-    document.addEventListener(
-      "dragstart",
-      function(e) {
+    document.addEventListener("keydown", function (e) {
+      const key = String(e.key || "").toLowerCase();
+
+      if (e.key === "F12") {
         e.preventDefault();
+        return false;
       }
-    );
+
+      if ((e.ctrlKey || e.metaKey) && key === "s") {
+        e.preventDefault();
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && key === "u") {
+        e.preventDefault();
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && key === "p") {
+        e.preventDefault();
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "i") {
+        e.preventDefault();
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "j") {
+        e.preventDefault();
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "c") {
+        e.preventDefault();
+        return false;
+      }
+    }, true);
   </script>
 
-  <!-- ปิดปุ่มลัดบางอย่าง -->
-  <script>
-    document.addEventListener(
-      "keydown",
-      function(e) {
-        if (e.key === "F12") {
-          e.preventDefault();
-        }
-
-        if (
-          (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === "s"
-        ) {
-          e.preventDefault();
-        }
-
-        if (
-          (e.ctrlKey || e.metaKey) &&
-          e.key.toLowerCase() === "u"
-        ) {
-          e.preventDefault();
-        }
-
-        if (
-          (e.ctrlKey || e.metaKey) &&
-          e.shiftKey &&
-          e.key.toLowerCase() === "i"
-        ) {
-          e.preventDefault();
-        }
-      }
-    );
-  </script>
-
-  <script>
-  // ป้องกันคลิกขวา
-  document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-    alert("ไม่อนุญาตให้คลิกขวา");
-  });
-
-  // ป้องกัน F12 / Inspect / View Source / Save
-  document.addEventListener("keydown", function (e) {
-    // F12
-    if (e.key === "F12") {
-      e.preventDefault();
-      alert("ไม่อนุญาตให้เปิด Developer Tools");
-      return false;
-    }
-
-    // Ctrl + Shift + I
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") {
-      e.preventDefault();
-      return false;
-    }
-
-    // Ctrl + Shift + J
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
-      e.preventDefault();
-      return false;
-    }
-
-    // Ctrl + Shift + C
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
-      e.preventDefault();
-      return false;
-    }
-
-    // Ctrl + U = View Source
-    if (e.ctrlKey && e.key.toLowerCase() === "u") {
-      e.preventDefault();
-      return false;
-    }
-
-    // Ctrl + S = Save Page
-    if (e.ctrlKey && e.key.toLowerCase() === "s") {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // ป้องกันลากรูปออกจากหน้าเว็บ
-  document.addEventListener("dragstart", function (e) {
-    if (e.target.tagName === "IMG") {
-      e.preventDefault();
-    }
-  });
-</script>
 </body>
 </html>
