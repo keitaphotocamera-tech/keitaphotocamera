@@ -753,5 +753,59 @@
     });
   </script>
 
+  <script>
+  // ป้องกันคลิกขวา
+  document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    alert("ไม่อนุญาตให้คลิกขวา");
+  });
+
+  // ป้องกัน F12 / Inspect / View Source / Save
+  document.addEventListener("keydown", function (e) {
+    // F12
+    if (e.key === "F12") {
+      e.preventDefault();
+      alert("ไม่อนุญาตให้เปิด Developer Tools");
+      return false;
+    }
+
+    // Ctrl + Shift + I
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl + Shift + J
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl + Shift + C
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl + U = View Source
+    if (e.ctrlKey && e.key.toLowerCase() === "u") {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl + S = Save Page
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // ป้องกันลากรูปออกจากหน้าเว็บ
+  document.addEventListener("dragstart", function (e) {
+    if (e.target.tagName === "IMG") {
+      e.preventDefault();
+    }
+  });
+</script>
 </body>
 </html>
