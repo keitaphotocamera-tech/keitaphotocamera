@@ -936,6 +936,7 @@
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
+      pointer-events: none;
     }
 
     .protected-img {
@@ -986,6 +987,30 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    .lang-select {
+      color: #ffffff;
+      appearance: auto;
+      -webkit-appearance: menulist;
+    }
+
+    .lang-select option {
+      color: #0f172a;
+      background: #ffffff;
+      font-weight: 700;
+    }
+
+    .dark .lang-select option {
+      color: #ffffff;
+      background: #0f172a;
+    }
+
+    select,
+    button,
+    a {
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
   </style>
 </head>
 
@@ -996,22 +1021,26 @@
 
       <div class="min-w-0">
         <p id="appLabel" class="text-xs text-slate-400">LINE Mini App</p>
+
         <h1 id="eventTitle" class="text-2xl font-black leading-tight truncate">
           Photo Store
         </h1>
+
         <p id="eventSubtitle" class="text-sm text-slate-400 mt-1">
           เลือกรูปภาพที่ต้องการ
         </p>
       </div>
 
       <div class="flex flex-col gap-2 shrink-0">
-        <button
-          onclick="toggleLang()"
-          id="langBtn"
-          class="bg-white/10 hover:bg-white/20 rounded-2xl px-4 py-2 font-bold text-sm"
+        <select
+          id="langSelect"
+          onchange="changeLang(this.value)"
+          class="lang-select bg-white/10 hover:bg-white/20 rounded-2xl px-4 py-2 font-bold text-sm outline-none"
         >
-          🇹🇭 TH
-        </button>
+          <option value="th">🇹🇭 TH</option>
+          <option value="en">🇬🇧 EN</option>
+          <option value="ru">🇷🇺 RU</option>
+        </select>
 
         <button
           onclick="toggleDarkMode()"
@@ -1040,7 +1069,9 @@
           <p id="photoCountText" class="text-sm text-slate-300">
             กำลังโหลดรูปภาพ...
           </p>
+
           <p id="priceText" class="text-xs text-slate-500 mt-1"></p>
+
           <p id="debugText" class="text-[10px] text-slate-600 mt-1 break-all"></p>
         </div>
 
@@ -1086,6 +1117,7 @@
       >
         <div class="text-xl">🛒</div>
         <div id="navCart">ตะกร้า</div>
+
         <span
           id="cartBadge"
           class="hidden absolute top-2 right-1/2 translate-x-8 bg-red-500 text-white text-xs rounded-full min-w-[22px] h-[22px] px-1 flex items-center justify-center"
@@ -1190,94 +1222,121 @@
     const I18N = {
       th: {
         htmlLang: "th",
-        langBtn: "🇹🇭 TH",
         appLabel: "LINE Mini App",
         photoStore: "Photo Store",
         subtitle: "เลือกรูปภาพที่ต้องการ",
         orderBtn: "ออเดอร์ของฉัน",
+
         darkLight: "☀️ Light",
         darkDark: "🌙 Dark",
+
         loadingPhotos: "กำลังโหลดรูปภาพ...",
         noPhotos: "ยังไม่มีรูปภาพใน Event นี้",
         faceSearch: "🔍 ค้นหาใบหน้า",
+
         navHome: "หน้าแรก",
         navCart: "ตะกร้า",
         navOrder: "ออเดอร์",
+
         modalAdd: "เพิ่มลงตะกร้า",
         modalClose: "ปิด",
-        selected: "เลือก",
+
+        select: "เลือก",
         remove: "ลบ",
         photoNameFallback: "รูปภาพ",
+
         priceText: "ราคาเริ่มต้น {price} บาท / รูป",
         photoCount: "พบรูปภาพ {count} รูป",
+
         cartEmptyTitle: "ตะกร้าว่าง",
         cartEmptyText: "กรุณาเลือกรูปก่อน",
+
         noEventTitle: "ไม่พบ Event",
         noEventText: "กรุณาเลือก Event จากหน้าแรก",
+
         loadEventErrorTitle: "เกิดข้อผิดพลาด",
         loadPhotoErrorTitle: "โหลดรูปไม่สำเร็จ",
+
         noImage: "ไม่มีรูปภาพ"
       },
 
       en: {
         htmlLang: "en",
-        langBtn: "🇬🇧 EN",
         appLabel: "LINE Mini App",
         photoStore: "Photo Store",
         subtitle: "Choose your photos",
         orderBtn: "My Orders",
+
         darkLight: "☀️ Light",
         darkDark: "🌙 Dark",
+
         loadingPhotos: "Loading photos...",
         noPhotos: "No photos in this event yet",
         faceSearch: "🔍 Face Search",
+
         navHome: "Home",
         navCart: "Cart",
         navOrder: "Orders",
+
         modalAdd: "Add to Cart",
         modalClose: "Close",
-        selected: "Select",
+
+        select: "Select",
         remove: "Remove",
         photoNameFallback: "photo",
+
         priceText: "Price from {price} THB / photo",
         photoCount: "{count} photos found",
+
         cartEmptyTitle: "Cart is empty",
         cartEmptyText: "Please select photos first",
+
         noEventTitle: "Event not found",
         noEventText: "Please choose an event from the home page",
+
         loadEventErrorTitle: "Error",
         loadPhotoErrorTitle: "Failed to load photos",
+
         noImage: "No Image"
       },
 
       ru: {
         htmlLang: "ru",
-        langBtn: "🇷🇺 RU",
         appLabel: "LINE Mini App",
         photoStore: "Photo Store",
         subtitle: "Выберите нужные фотографии",
         orderBtn: "Мои заказы",
+
         darkLight: "☀️ Светлая",
         darkDark: "🌙 Тёмная",
+
         loadingPhotos: "Загрузка фотографий...",
         noPhotos: "В этом событии пока нет фотографий",
         faceSearch: "🔍 Поиск по лицу",
+
         navHome: "Главная",
         navCart: "Корзина",
         navOrder: "Заказы",
+
         modalAdd: "Добавить в корзину",
         modalClose: "Закрыть",
-        selected: "Выбрать",
+
+        select: "Выбрать",
         remove: "Удалить",
         photoNameFallback: "фото",
+
         priceText: "Цена от {price} бат / фото",
         photoCount: "Найдено фотографий: {count}",
+
         cartEmptyTitle: "Корзина пуста",
         cartEmptyText: "Сначала выберите фотографии",
+
         noEventTitle: "Событие не найдено",
         noEventText: "Пожалуйста, выберите событие на главной странице",
+
         loadEventErrorTitle: "Ошибка",
         loadPhotoErrorTitle: "Не удалось загрузить фотографии",
+
         noImage: "Нет изображения"
       }
     };
@@ -1321,6 +1380,21 @@
       });
 
       return value;
+    }
+
+    function changeLang(lang) {
+      currentLang = lang || "th";
+      localStorage.setItem("lang", currentLang);
+
+      updateLangUI();
+      updateEventTexts();
+      updatePhotoCountText();
+
+      if (photos && photos.length) {
+        renderPhotoGrid();
+        updateSelectedUI();
+        protectImages();
+      }
     }
 
     async function loadEvent() {
@@ -1439,7 +1513,7 @@
                 id="cartBtn-${escapeAttr(photo.id)}"
                 class="${isInCart ? "bg-red-500" : "bg-emerald-500"} text-white rounded-xl px-3 py-2 text-xs font-bold"
               >
-                ${isInCart ? t("remove") : t("selected")}
+                ${isInCart ? t("remove") : t("select")}
               </button>
             </div>
           </div>
@@ -1491,11 +1565,6 @@
       if (CONFIG.R2_WORKER_URL) {
         const base = String(CONFIG.R2_WORKER_URL).replace(/\/+$/, "");
         const key = cleanUrl.replace(/^\/+/, "");
-
-        if (key.startsWith("events/")) {
-          return encodeURI(`${base}/file/${key}`);
-        }
-
         return encodeURI(`${base}/file/${key}`);
       }
 
@@ -1569,7 +1638,7 @@
 
         const isInCart = cart.some(item => String(item.photo_id) === String(photo.id));
 
-        btn.textContent = isInCart ? t("remove") : t("selected");
+        btn.textContent = isInCart ? t("remove") : t("select");
         btn.className =
           `${isInCart ? "bg-red-500" : "bg-emerald-500"} text-white rounded-xl px-3 py-2 text-xs font-bold`;
       });
@@ -1641,29 +1710,14 @@
       window.location.href = `face-search.html?event=${encodeURIComponent(eventId)}`;
     }
 
-    function toggleLang() {
-      if (currentLang === "th") {
-        currentLang = "en";
-      } else if (currentLang === "en") {
-        currentLang = "ru";
-      } else {
-        currentLang = "th";
-      }
-
-      localStorage.setItem("lang", currentLang);
-
-      updateLangUI();
-      updateEventTexts();
-      updatePhotoCountText();
-      renderPhotoGrid();
-      updateSelectedUI();
-      protectImages();
-    }
-
     function updateLangUI() {
       document.documentElement.lang = t("htmlLang");
 
-      document.getElementById("langBtn").textContent = t("langBtn");
+      const langSelect = document.getElementById("langSelect");
+      if (langSelect) {
+        langSelect.value = currentLang;
+      }
+
       document.getElementById("appLabel").textContent = t("appLabel");
       document.getElementById("eventSubtitle").textContent = t("subtitle");
       document.getElementById("orderBtn").textContent = t("orderBtn");
@@ -1716,6 +1770,7 @@
     function updateDarkButton() {
       const btn = document.getElementById("darkBtn");
       const isDark = document.documentElement.classList.contains("dark");
+
       btn.innerHTML = isDark ? t("darkLight") : t("darkDark");
     }
 
