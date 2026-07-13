@@ -958,6 +958,7 @@
 </body>
 </html> -->
 
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1004,6 +1005,17 @@
       pointer-events: none;
     }
 
+    button,
+    select {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    select {
+      appearance: auto;
+      -webkit-appearance: menulist;
+    }
+
     .real-file-input {
       position: absolute !important;
       width: 1px !important;
@@ -1025,18 +1037,12 @@
       justify-content: center;
       gap: 10px;
       cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
     }
 
     .custom-file-name {
       margin-top: 10px;
       font-size: 13px;
       word-break: break-all;
-    }
-
-    button,
-    select {
-      -webkit-tap-highlight-color: transparent;
     }
   </style>
 </head>
@@ -1054,17 +1060,29 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 shrink-0">
-          <button onclick="goCart()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-bold">
+          <button
+            type="button"
+            onclick="goCart()"
+            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 font-bold"
+          >
             ← <span id="txtBack">กลับ</span>
           </button>
 
-          <select id="langSelect" onchange="changeLanguage(this.value)" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none">
+          <select
+            id="langSelect"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm font-bold outline-none"
+          >
             <option value="th">🇹🇭 TH</option>
             <option value="en">🇺🇸 EN</option>
             <option value="ru">🇷🇺 RU</option>
           </select>
 
-          <button onclick="toggleDarkMode()" id="darkBtn" class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold">
+          <button
+            type="button"
+            onclick="toggleDarkMode()"
+            id="darkBtn"
+            class="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2 text-sm font-bold"
+          >
             🌙 Dark
           </button>
         </div>
@@ -1091,9 +1109,11 @@
       <p id="txtPromoTitle" class="font-bold text-emerald-700 dark:text-emerald-300">
         🎉 โปรเหมา
       </p>
+
       <p id="txtPromoDesc" class="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
         ซื้อครบ 10 รูป เหลือ 250 บาท • 20 รูป เหลือ 500 บาท
       </p>
+
       <p id="promoSavingText" class="hidden text-sm font-bold text-emerald-700 dark:text-emerald-300 mt-2">
         ประหยัด 0 บาท
       </p>
@@ -1180,6 +1200,7 @@
 
         <button
           id="submitBtn"
+          type="button"
           onclick="submitOrder()"
           class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl px-5 py-3 font-bold disabled:opacity-40 shrink-0"
         >
@@ -1379,6 +1400,7 @@
       try {
         initDarkMode();
         applyLanguage();
+        bindLanguageSelect();
 
         if (!db) {
           throw new Error(t().supabaseNotFound);
@@ -1424,7 +1446,10 @@
         renderCart();
         generateQR();
 
-        document.getElementById("slipInput").addEventListener("change", previewSlip);
+        const slipInput = document.getElementById("slipInput");
+        if (slipInput) {
+          slipInput.addEventListener("change", previewSlip);
+        }
 
       } catch (err) {
         console.error(err);
@@ -1437,13 +1462,18 @@
       }
     });
 
-    function getCartKey() {
-      if (window.AppLIFF && AppLIFF.getCartKey) {
-        return AppLIFF.getCartKey();
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = value;
       }
+    }
 
-      const userId = profile?.userId || localStorage.getItem("line_user_id") || "guest";
-      return `photo_cart_${userId}`;
+    function setValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = value;
+      }
     }
 
     function applyLanguage() {
@@ -1451,32 +1481,29 @@
 
       document.documentElement.lang = currentLang;
 
-      document.getElementById("txtMiniApp").textContent = x.miniApp;
-      document.getElementById("txtPageTitle").textContent = x.pageTitle;
-      document.getElementById("txtPageDesc").textContent = x.pageDesc;
-      document.getElementById("txtBack").textContent = x.back;
-      document.getElementById("txtConnected").textContent = x.connected;
+      setText("txtMiniApp", x.miniApp);
+      setText("txtPageTitle", x.pageTitle);
+      setText("txtPageDesc", x.pageDesc);
+      setText("txtBack", x.back);
+      setText("txtConnected", x.connected);
 
-      document.getElementById("txtPromptpayTitle").textContent = x.promptpayTitle;
-      document.getElementById("txtPromptpay").textContent = x.promptpay;
-      document.getElementById("txtTotalPay").textContent = x.totalPay;
-      document.getElementById("txtSlipDesc").textContent = x.slipDesc;
-      document.getElementById("txtUploadSlip").textContent = x.uploadSlip;
+      setText("txtPromptpayTitle", x.promptpayTitle);
+      setText("txtPromptpay", x.promptpay);
+      setText("txtTotalPay", x.totalPay);
+      setText("txtSlipDesc", x.slipDesc);
+      setText("txtUploadSlip", x.uploadSlip);
 
-      document.getElementById("txtChooseFile").textContent = x.chooseFile;
+      setText("txtChooseFile", x.chooseFile);
       updateSlipFileLabel();
 
-      document.getElementById("txtSummary").textContent = x.summary;
-      document.getElementById("txtPhotoUnit").textContent = x.photoUnit;
-      document.getElementById("txtSubmit").textContent = x.submit;
+      setText("txtSummary", x.summary);
+      setText("txtPhotoUnit", x.photoUnit);
+      setText("txtSubmit", x.submit);
 
-      document.getElementById("txtPromoTitle").textContent = x.promoTitle;
-      document.getElementById("txtPromoDesc").textContent = x.promoDesc;
+      setText("txtPromoTitle", x.promoTitle);
+      setText("txtPromoDesc", x.promoDesc);
 
-      const langSelect = document.getElementById("langSelect");
-      if (langSelect) {
-        langSelect.value = currentLang;
-      }
+      setValue("langSelect", currentLang);
 
       updateDarkButton();
     }
@@ -1486,8 +1513,25 @@
       localStorage.setItem("lang", currentLang);
 
       applyLanguage();
-      renderCart();
+
+      if (cart && cart.length) {
+        renderCart();
+      }
+
       updateSummary();
+    }
+
+    window.changeLanguage = changeLanguage;
+
+    function bindLanguageSelect() {
+      const langSelect = document.getElementById("langSelect");
+      if (!langSelect) return;
+
+      langSelect.value = currentLang;
+
+      langSelect.addEventListener("change", function () {
+        changeLanguage(this.value);
+      });
     }
 
     function openSlipPicker() {
@@ -1512,18 +1556,36 @@
       }
     }
 
+    function getCartKey() {
+      if (window.AppLIFF && AppLIFF.getCartKey) {
+        return AppLIFF.getCartKey();
+      }
+
+      const userId = profile?.userId || localStorage.getItem("line_user_id") || "guest";
+      return `photo_cart_${userId}`;
+    }
+
     function showProfile() {
-      document.getElementById("profileBox").classList.remove("hidden");
+      const profileBox = document.getElementById("profileBox");
+      if (profileBox) {
+        profileBox.classList.remove("hidden");
+      }
 
-      document.getElementById("lineName").textContent =
-        profile.displayName || "LINE User";
+      setText("lineName", profile.displayName || "LINE User");
 
-      document.getElementById("linePicture").src =
-        profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+      const linePicture = document.getElementById("linePicture");
+      if (linePicture) {
+        linePicture.src = profile.pictureUrl || "https://placehold.co/100x100?text=LINE";
+      }
     }
 
     function loadCart() {
-      cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      try {
+        cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      } catch {
+        cart = [];
+      }
+
       cart = cart.filter(item => item && item.photo_id);
 
       if (cart.length > 0) {
@@ -1597,7 +1659,13 @@
     }
 
     function getPromoData() {
-      const saved = JSON.parse(localStorage.getItem(`${cartKey}_promo`) || "{}");
+      let saved = {};
+
+      try {
+        saved = JSON.parse(localStorage.getItem(`${cartKey}_promo`) || "{}");
+      } catch {
+        saved = {};
+      }
 
       return {
         promo_total: Number(saved.promo_total ?? calculatePromoTotal()),
@@ -1614,6 +1682,8 @@
 
     function renderCart() {
       const list = document.getElementById("cartList");
+      if (!list) return;
+
       list.innerHTML = "";
 
       cart.forEach(item => {
@@ -1665,22 +1735,23 @@
     }
 
     function updateSummary() {
-      const totalItems = cart.length;
       const promoData = getPromoData();
       const totalAmount = getTotalAmount();
 
-      document.getElementById("totalItems").textContent = totalItems;
-      document.getElementById("totalAmount").textContent = formatMoney(totalAmount);
-      document.getElementById("totalAmountText").textContent = `฿${formatMoney(totalAmount)}`;
+      setText("totalItems", cart.length);
+      setText("totalAmount", formatMoney(totalAmount));
+      setText("totalAmountText", `฿${formatMoney(totalAmount)}`);
 
       const savingText = document.getElementById("promoSavingText");
 
-      if (promoData.saving > 0) {
-        savingText.textContent =
-          `${t().saving} ฿${formatMoney(promoData.saving)} · ${t().normalPrice} ฿${formatMoney(promoData.normal_total)}`;
-        savingText.classList.remove("hidden");
-      } else {
-        savingText.classList.add("hidden");
+      if (savingText) {
+        if (promoData.saving > 0) {
+          savingText.textContent =
+            `${t().saving} ฿${formatMoney(promoData.saving)} · ${t().normalPrice} ฿${formatMoney(promoData.normal_total)}`;
+          savingText.classList.remove("hidden");
+        } else {
+          savingText.classList.add("hidden");
+        }
       }
     }
 
@@ -1692,10 +1763,12 @@
         CONFIG.PROMPTPAY_NUMBER ||
         "0936494961";
 
-      document.getElementById("promptpayNumber").textContent = number;
+      setText("promptpayNumber", number);
 
-      document.getElementById("qrImage").src =
-        `https://promptpay.io/${number}/${totalAmount}.png`;
+      const qrImage = document.getElementById("qrImage");
+      if (qrImage) {
+        qrImage.src = `https://promptpay.io/${number}/${totalAmount}.png`;
+      }
     }
 
     function previewSlip(event) {
@@ -1709,8 +1782,10 @@
 
       reader.onload = e => {
         const img = document.getElementById("slipPreview");
-        img.src = e.target.result;
-        img.classList.remove("hidden");
+        if (img) {
+          img.src = e.target.result;
+          img.classList.remove("hidden");
+        }
       };
 
       reader.readAsDataURL(file);
@@ -1720,7 +1795,7 @@
       if (isSubmitting) return;
 
       try {
-        const slipFile = document.getElementById("slipInput").files[0];
+        const slipFile = document.getElementById("slipInput")?.files?.[0];
 
         if (!slipFile) {
           Swal.fire(t().uploadSlipFirst, "", "warning");
@@ -1733,7 +1808,11 @@
         }
 
         isSubmitting = true;
-        document.getElementById("submitBtn").disabled = true;
+
+        const submitBtn = document.getElementById("submitBtn");
+        if (submitBtn) {
+          submitBtn.disabled = true;
+        }
 
         const totalAmount = getTotalAmount();
         const promoData = getPromoData();
@@ -1799,7 +1878,11 @@
 
       } finally {
         isSubmitting = false;
-        document.getElementById("submitBtn").disabled = false;
+
+        const submitBtn = document.getElementById("submitBtn");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+        }
       }
     }
 
@@ -2044,29 +2127,21 @@
     });
 
     document.addEventListener("keydown", function(e) {
+      const key = String(e.key || "").toLowerCase();
+
       if (e.key === "F12") {
         e.preventDefault();
       }
 
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.key.toLowerCase() === "s"
-      ) {
+      if ((e.ctrlKey || e.metaKey) && key === "s") {
         e.preventDefault();
       }
 
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.key.toLowerCase() === "u"
-      ) {
+      if ((e.ctrlKey || e.metaKey) && key === "u") {
         e.preventDefault();
       }
 
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "i"
-      ) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "i") {
         e.preventDefault();
       }
     });
